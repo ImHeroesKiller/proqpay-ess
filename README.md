@@ -24,10 +24,21 @@ npm run preview
 
 ## Deploy (Cloudflare Workers)
 
-1. Isi `database_id` D1 Lite di `wrangler.jsonc` (database **yang sama** dengan Lite).
+Jangan pakai Cloudflare **Pages** + `npm run build` (`next build`) sebagai satu-satunya langkah. ESS adalah Worker OpenNext.
+
+Di dashboard: **Workers & Pages → Create → Connect to Git** dengan tipe **Worker** (bukan Pages), lalu:
+
+| Field | Value |
+|---|---|
+| Build command | `npx opennextjs-cloudflare build` |
+| Deploy command | `npx wrangler deploy` |
+
+Atau dari laptop: `npm run deploy`.
+
+1. Isi `database_id` D1 Lite di `wrangler.jsonc`.
 2. `npx wrangler secret put PORTAL_BOOTSTRAP_PIN`
 3. `npx wrangler secret put PORTAL_JWT_SECRET`
-4. `npm run deploy`
+4. Deploy ulang.
 
 Jangan jalankan migrasi D1 dari repo ini.
 
