@@ -67,7 +67,7 @@ export function EssPortal() {
         const s = JSON.parse(raw);
         setToken(s.token || "");
         setLoggedIn(true);
-        if (s.token) {
+        if (s.token && s.token !== "demo-session") {
           fetch("/api/portal/init", { headers: { Authorization: "Bearer " + s.token } })
             .then((r) => {
               if (!r.ok) throw new Error("init");
@@ -94,7 +94,8 @@ export function EssPortal() {
     const empId = empInput.trim();
     const pass = passInput;
     try {
-      if (empId === DEMO_EMP_ID && pass === DEMO_PASS) {
+      const localHost = typeof location !== "undefined" && /localhost|127\.0\.0\.1/.test(location.hostname);
+      if (localHost && empId === DEMO_EMP_ID && pass === DEMO_PASS) {
         const session = { emp_id: DEMO_EMP_ID, company_id: "MAJU01", token: "demo-session", t: Date.now() };
         (remember ? localStorage : sessionStorage).setItem(AUTH_KEY, JSON.stringify(session));
         setToken("demo-session");
@@ -234,19 +235,19 @@ export function EssPortal() {
             </button>
             <div className="lg-demo">
               <div>
-                <b>Mode demo</b> — gunakan kredensial contoh, atau Employee ID dari D1 Lite + PIN portal.
+                <b>Terhubung ke database Lite</b> — Employee ID = NRK atau kode karyawan. Password = PIN portal.
               </div>
               <div>
-                Employee ID: <code>{DEMO_EMP_ID}</code> · Password: <code>{DEMO_PASS}</code>
+                Contoh: <code>EMP-209200339</code> atau <code>209200339</code> · PIN yang sama dengan secret Cloudflare
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  setEmpInput(DEMO_EMP_ID);
-                  setPassInput(DEMO_PASS);
+                  setEmpInput("EMP-209200339");
+                  setPassInput("");
                 }}
               >
-                Isi otomatis kredensial demo
+                Isi contoh Employee ID
               </button>
             </div>
             <div className="lg-foot">Lupa kata sandi? Hubungi HR perusahaan Anda. · © 2026 ProQPay</div>
