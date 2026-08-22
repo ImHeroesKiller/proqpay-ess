@@ -27,9 +27,4 @@ Indeks dokumentasi. Baca sesuai kebutuhan Anda.
 - **Status**: demo berjalan penuh (login, tracker, slip + PDF, riwayat, Advance
   Salary, notifikasi, profil, bantuan).
 
-Mulai dari mana:
-
-1. Pelajari alur data → `01-architecture.md`.
-2. Siapkan database → `02-database-schema.md`.
-3. Hubungkan backend → `03-api-integration.md`.
-4. Uji pemakaian → `04-user-guide.md`.
+Salinan lama. Indeks terkini: [docs/README.md](../../docs/README.md). Integrasi Lite: [docs/LITE-INTEGRATION.md](../../docs/LITE-INTEGRATION.md).

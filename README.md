@@ -44,4 +44,4 @@ Jangan jalankan migrasi D1 dari repo ini.
 
 ## Mapping data
 
-Lihat `docs/06-d1-mapping.md`.
+Dokumentasi: `docs/README.md`. Integrasi Lite nanti: `docs/LITE-INTEGRATION.md`. Changelog: `docs/CHANGELOG.md`.

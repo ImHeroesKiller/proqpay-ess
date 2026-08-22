@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cf";
 import { buildPortalPayload, findEmployee } from "@/lib/d1-portal";
-import { bearer, verifyToken } from "@/lib/d1-shared";
+import { verifyToken } from "@/lib/d1-shared";
+import { securityHeaders, tokenFromRequest } from "@/lib/security";
 
 export async function GET(request: NextRequest) {
+  const headers = securityHeaders();
   const env = await getEnv();
-  if (!env.DB) return NextResponse.json({ error: "D1 belum di-bind (env.DB)." }, { status: 503 });
+  if (!env.DB) return NextResponse.json({ error: "Service unavailable." }, { status: 503, headers });
   const secret = env.PORTAL_JWT_SECRET;
-  if (!secret) return NextResponse.json({ error: "Portal JWT secret belum di-set." }, { status: 503 });
+  if (!secret) return NextResponse.json({ error: "Service unavailable." }, { status: 503, headers });
 
-  const payload = await verifyToken(bearer(request), secret);
-  if (!payload?.sub) return NextResponse.json({ error: "Sesi tidak valid atau kedaluwarsa." }, { status: 401 });
+  const token = tokenFromRequest(request);
+  const payload = await verifyToken(token, secret);
+  if (!payload?.sub) return NextResponse.json({ error: "Sesi tidak valid atau kedaluwarsa." }, { status: 401, headers });
 
   const employee = await findEmployee(env.DB, payload.sub);
-  if (!employee) return NextResponse.json({ error: "Karyawan tidak ditemukan." }, { status: 404 });
+  if (!employee) return NextResponse.json({ error: "Karyawan tidak ditemukan." }, { status: 404, headers });
 
   const data = await buildPortalPayload(env.DB, employee);
-  return NextResponse.json(data);
+  return NextResponse.json(data, { headers });
 }

@@ -6,7 +6,6 @@ import { DEMO_EMP_ID, DEMO_PASS, demoPayload } from "@/lib/demo";
 import { enPeriod, fmt, initials, slipRef, totalOf } from "@/lib/format";
 import type { EwaApp, EwaState, Payslip, PortalConfig, PortalPayload } from "@/lib/types";
 
-const AUTH_KEY = "proqpay-auth";
 const RING_C = 163.4;
 
 type Modal = "payslip" | "profile" | "help" | "notify" | "ewa" | null;
@@ -30,8 +29,8 @@ export function EssPortal() {
   const [loaded, setLoaded] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [payload, setPayload] = useState<PortalPayload>(demoPayload);
-  const [token, setToken] = useState("");
   const [stage, setStage] = useState(demoPayload.config.payroll.stage);
+  const [isLocalHost, setIsLocalHost] = useState(false);
   const [modal, setModal] = useState<Modal>(null);
   const [tab, setTab] = useState<Tab>("home");
   const [slipIdx, setSlipIdx] = useState(0);
@@ -61,31 +60,22 @@ export function EssPortal() {
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
-    const raw = localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY);
-    if (raw) {
-      try {
-        const s = JSON.parse(raw);
-        setToken(s.token || "");
+    setIsLocalHost(/localhost|127\.0\.0\.1/.test(location.hostname));
+    fetch("/api/portal/init", { credentials: "include" })
+      .then((r) => {
+        if (!r.ok) throw new Error("no-session");
+        return r.json();
+      })
+      .then((data: PortalPayload) => {
+        setPayload(data);
+        setStage(data.config.payroll.stage);
+        setEwaApp(data.ewa.app);
         setLoggedIn(true);
-        if (s.token && s.token !== "demo-session") {
-          fetch("/api/portal/init", { headers: { Authorization: "Bearer " + s.token } })
-            .then((r) => {
-              if (!r.ok) throw new Error("init");
-              return r.json();
-            })
-            .then((data: PortalPayload) => {
-              setPayload(data);
-              setStage(data.config.payroll.stage);
-              setEwaApp(data.ewa.app);
-            })
-            .catch(() => {});
-        }
-      } catch {
-        /* demo */
-      }
-    }
-    const t = window.setTimeout(() => setLoaded(true), 900);
-    return () => window.clearTimeout(t);
+      })
+      .catch(() => {})
+      .finally(() => {
+        window.setTimeout(() => setLoaded(true), 400);
+      });
   }, []);
 
   async function doLogin() {
@@ -94,11 +84,7 @@ export function EssPortal() {
     const empId = empInput.trim();
     const pass = passInput;
     try {
-      const localHost = typeof location !== "undefined" && /localhost|127\.0\.0\.1/.test(location.hostname);
-      if (localHost && empId === DEMO_EMP_ID && pass === DEMO_PASS) {
-        const session = { emp_id: DEMO_EMP_ID, company_id: "MAJU01", token: "demo-session", t: Date.now() };
-        (remember ? localStorage : sessionStorage).setItem(AUTH_KEY, JSON.stringify(session));
-        setToken("demo-session");
+      if (isLocalHost && empId === DEMO_EMP_ID && pass === DEMO_PASS) {
         setPayload(demoPayload);
         setStage(demoPayload.config.payroll.stage);
         setEwaApp(demoPayload.ewa.app);
@@ -108,19 +94,14 @@ export function EssPortal() {
       }
       const r = await fetch("/api/portal/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emp_id: empId, password: pass }),
+        body: JSON.stringify({ emp_id: empId, password: pass, remember }),
       });
       if (r.status === 401) throw new Error("Employee ID atau password salah.");
       if (r.status === 429) throw new Error("Terlalu banyak percobaan. Tunggu beberapa saat lalu coba lagi.");
       if (!r.ok) throw new Error("Gagal masuk ke server (" + r.status + ").");
-      const session = await r.json();
-      (remember ? localStorage : sessionStorage).setItem(
-        AUTH_KEY,
-        JSON.stringify({ emp_id: session.emp_id, company_id: session.company_id, token: session.token, t: Date.now() }),
-      );
-      setToken(session.token);
-      const init = await fetch("/api/portal/init", { headers: { Authorization: "Bearer " + session.token } });
+      const init = await fetch("/api/portal/init", { credentials: "include" });
       if (!init.ok) throw new Error("Login berhasil tetapi data D1 gagal dimuat.");
       const data: PortalPayload = await init.json();
       setPayload(data);
@@ -136,10 +117,10 @@ export function EssPortal() {
   }
 
   function logout() {
-    localStorage.removeItem(AUTH_KEY);
-    sessionStorage.removeItem(AUTH_KEY);
-    showToast("Anda telah keluar. Sampai jumpa!");
-    window.location.reload();
+    fetch("/api/portal/logout", { method: "POST", credentials: "include" }).finally(() => {
+      showToast("Anda telah keluar. Sampai jumpa!");
+      window.location.reload();
+    });
   }
 
   function openSlip(i: number) {
@@ -235,20 +216,8 @@ export function EssPortal() {
             </button>
             <div className="lg-demo">
               <div>
-                <b>Terhubung ke database Lite</b> — Employee ID = NRK atau kode karyawan. Password = PIN portal.
+                <b>Portal karyawan</b> — masukkan NRK atau kode karyawan dan PIN yang diberikan HR.
               </div>
-              <div>
-                Contoh: <code>EMP-209200339</code> atau <code>209200339</code> · PIN yang sama dengan secret Cloudflare
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmpInput("EMP-209200339");
-                  setPassInput("");
-                }}
-              >
-                Isi contoh Employee ID
-              </button>
             </div>
             <div className="lg-foot">Lupa kata sandi? Hubungi HR perusahaan Anda. · © 2026 ProQPay</div>
           </div>
@@ -431,16 +400,18 @@ export function EssPortal() {
                 </span>
               )}
             </div>
-            <div className="demo">
-              <span className="lbl">Simulate stage (demo)</span>
-              <div className="seg">
-                {[1, 2, 3, 4].map((n) => (
-                  <button key={n} className={stage === n ? "active" : ""} onClick={() => setStage(n)}>
-                    {n}
-                  </button>
-                ))}
+            {isLocalHost ? (
+              <div className="demo">
+                <span className="lbl">Simulate stage (local only)</span>
+                <div className="seg">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button key={n} className={stage === n ? "active" : ""} onClick={() => setStage(n)}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
           </section>
 
           <section className="quick reveal" aria-label="Aksi cepat">
@@ -510,6 +481,11 @@ export function EssPortal() {
               </div>
               <span className="pill info">{config.payslips.length} months</span>
             </div>
+            {config.payslips.length === 0 ? (
+              <p className="ewaa-sub" style={{ marginTop: 12 }}>
+                Belum ada slip gaji untuk akun ini. Slip muncul setelah payroll diproses di ProQPay Lite.
+              </p>
+            ) : null}
             {config.payslips.map((p, i) => (
               <div className="hist-item" key={p.period} onClick={() => openSlip(i)}>
                 <div>
