@@ -1,76 +1,163 @@
 # Changelog — ProQPay ESS
 
-Format: perubahan terbaru di atas. Repo: [ImHeroesKiller/proqpay-ess](https://github.com/ImHeroesKiller/proqpay-ess).  
-**Tidak mengubah kode proqpay-lite.**
+Repo: [ImHeroesKiller/proqpay-ess](https://github.com/ImHeroesKiller/proqpay-ess)  
+Kode **proqpay-lite tidak diubah**. ESS hanya **membaca** D1 Lite.
+
+---
+
+## Snapshot produksi (2026-08-22)
+
+| Item | Nilai |
+|---|---|
+| URL | https://proqpay-ess.arywibowo.workers.dev/ |
+| Worker | `proqpay-ess` |
+| Akun Cloudflare | `arywibowo` (`1692da3e9a67ee5dbb1bba473cb9296a`) |
+| D1 | `proqpay-lite-production` · `ac3f8b48-bd87-44bd-9286-f0e0bab6e39f` |
+| Karyawan di D1 | 666 (cek `/api/health` tidak lagi menampilkan angka ini) |
+| Organisasi | `ORG-OTSINDO` |
+| Commit `main` | `e1056e0` |
+| Stack | Next.js 16.3.2 · React 19 · Tailwind 4.3.3 · OpenNext Cloudflare 1.20.2 · Wrangler 4.125 |
+
+### Binding & secret
+
+| Nama | Jenis | Fungsi |
+|---|---|---|
+| `DB` | D1 | Baca payroll/karyawan Lite |
+| `AI` | Workers AI | Label baris slip (bukan hitung uang) |
+| `WORKERS_AI_MODEL` | var | `@cf/meta/llama-3.1-8b-instruct-fast` |
+| `PORTAL_BOOTSTRAP_PIN` | secret | PIN bersama sementara (bukan password per orang) |
+| `PORTAL_JWT_SECRET` | secret | HMAC cookie `proqpay_ess` |
+| `DEFAULT_ORG_ID` | var | `ORG-OTSINDO` |
+
+Cookie sesi: `proqpay_ess` (HttpOnly, Secure, SameSite=Lax, 12 jam jika “Ingat saya”).
+
+### Data uji yang sudah diverifikasi
+
+Login API ke D1 (bukan persona demo):
+
+| Field | Isi D1 |
+|---|---|
+| Nama | ABDUL AZIZ |
+| ID | `EMP-209200339` / NRK `209200339` |
+| Perusahaan | PT QJOB SAKA GEMILANG |
+| Jabatan | AGENT NOC PARTNERSHIP 1 |
+| Bank | MANDIRI •••• 0580 |
+| Periode | Agustus 2026 |
+| Stage tracker | 1 (menunggu data / state submission) |
+| Komponen slip | 12+ baris dari `employee_compensation.payroll_components` |
+
+Contoh kunci JSON D1 → judul slip (setelah kamus IDA):
+
+| Kunci D1 | Jenis | Judul UI |
+|---|---|---|
+| `basicSalary` | Penghasilan | Gaji pokok |
+| `positionAllowance` | Penghasilan | Tunjangan jabatan |
+| `transportAllowance` | Penghasilan | Tunjangan transport |
+| `mealAllowance` | Penghasilan | Tunjangan makan |
+| `phoneAllowance` | Penghasilan | Tunjangan pulsa |
+| `overtime` | Penghasilan | Upah lembur |
+| `otherAllowance` | Penghasilan | Tunjangan lain |
+| `bpjsHealthDeduction` | Potongan | Iuran BPJS Kesehatan karyawan |
+| `jhtDeduction` | Potongan | Iuran JHT karyawan |
+| `pensionDeduction` | Potongan | Iuran JP karyawan |
+| `taxDeduction` | Potongan | PPh 21 |
+| `bpjsTk` / `bpjsHealth` | Iuran perusahaan | **Tidak** mengurangi gaji bersih |
+
+Urutan tampil: **Penghasilan** → **Potongan** → **Gaji bersih**.
+
+Persona Andi Pratama / `EMP-2023-0187` **tidak** dipakai di produksi.
+
+---
 
 ## 2026-08-22 — Slip gaji Indonesia + urutan proper
 
-- Istilah baris: Gaji pokok, tunjangan, iuran BPJS/JHT/JP, PPh 21.
-- Urutan: penghasilan dulu, lalu potongan.
-- Iuran perusahaan (BPJS pemberi kerja) tidak dipotong dari gaji bersih.
-- Modal dan cetak memakai bagian Penghasilan / Potongan / Gaji bersih.
+Commit: `e1056e0`
 
-## 2026-08-22 — Label slip (Workers AI)
+- Istilah baris resmi Indonesia.
+- Urutan: penghasilan dulu, lalu potongan (modal + cetak).
+- Iuran pemberi kerja tidak masuk hitungan THP.
+- Header cetak: Penghasilan, Potongan, Gaji bersih (THP).
 
-- Baris slip dari `payroll_components` (camelCase) diubah jadi judul resmi.
-- Kamus baku dulu; kunci tak dikenal dihaluskan IDA via Workers AI (`@cf/meta/llama-3.1-8b-instruct-fast`).
-- Jumlah uang tidak pernah dikirim ke model.
+## 2026-08-22 — Service worker
+
+Commit: `8689232`
+
+- Install/fetch SW tidak menggantung.
+- Error konsol *message channel closed* umumnya dari **ekstensi Chrome**, bukan API portal.
+
+## 2026-08-22 — Label slip (Workers AI / IDA)
+
+Commit: `b63416d`
+
+- Binding `AI` di Worker.
+- Kamus kunci camelCase dulu; sisanya IDA (`llama-3.1-8b-instruct-fast`).
+- Nominal **tidak** dikirim ke model. Gagal AI → title-case.
 
 ## 2026-08-22 — PWA
 
-- Manifest, ikon 192/512, Apple touch icon, `theme-color`.
-- Service worker: cache aset statis saja; `/api/*` dan HTML aplikasi tidak di-cache.
-- Halaman offline generik (tanpa data gaji).
-- CSP `worker-src` / `manifest-src`; `sw.js` `no-cache`.
+Commit: `433ab1e`
+
+- `manifest.webmanifest`, ikon 192/512, Apple 180, favicon 32, `theme-color` `#0b1226`.
+- SW cache hanya `/_next/static`, `/icons`, `/brand`.
+- `/api/*` dan HTML aplikasi: network only.
+- Offline: `public/offline.html` (tanpa data gaji).
+- Lihat [PWA.md](./PWA.md).
 
 ## 2026-08-22 — Rapikan produksi
 
-- Hapus kredensial/data dummy Andi Pratama dari UI production.
-- Hapus kotak demo login, simulator tahap, dan pengajuan advance palsu.
-- Teks pengguna tidak menyebut nama produk internal atau contoh NRK.
-- Arsip Perchance dipindah ke `legacy/`; API Pages Functions lama dihapus.
+Commit: `4ee8e6d`
 
-## 2026-08-22 — Hardening portal (tanpa Lite)
+- Hapus dummy Andi, kotak demo, simulator tahap, advance palsu.
+- Hapus `functions/` (Pages lama), `main.pjs`, duplikat `src/docs` / `src/brand`.
+- Arsip Perchance: `legacy/`.
 
-### Keamanan
-- Login: cookie `proqpay_ess` HttpOnly + Secure + SameSite=Lax. JWT **tidak** dikembalikan di JSON dan tidak disimpan di `localStorage`.
-- Rate limit gagal login: 5× / 10 menit per IP dan per Employee ID (Cache API Worker, tanpa tabel Lite).
-- `/api/health` hanya `{ ok, d1 }` — tidak lagi menampilkan jumlah karyawan.
-- Header: CSP, `X-Frame-Options: DENY`, nosniff, Referrer-Policy, Permissions-Policy.
-- CORS origin allowlist (bukan `*`).
-- Pesan error generik (`Service unavailable` / kredensial salah) tanpa stack.
+## 2026-08-22 — Hardening (tanpa Lite)
 
-### UX
-- Form login tidak menampilkan NRK produksi.
-- Simulator tahap payroll hanya di localhost.
-- Empty state jika belum ada slip di D1.
-- Logout memanggil `POST /api/portal/logout` (hapus cookie).
+Commit: `0d471b7`
 
-### Yang **belum** (butuh Lite)
-- Password per karyawan (masih `PORTAL_BOOTSTRAP_PIN`).
-- Tabel `t_login_attempt` / `t_session` di D1.
-- Advance Salary (EWA) persist ke server.
-- Notifikasi dari tabel Lite.
+- Cookie HttpOnly; JWT tidak di JSON/localStorage.
+- Rate limit 5 gagal / 10 menit per IP dan per Employee ID.
+- `/api/health` → `{ "ok": true, "d1": "ok" }` (tanpa count karyawan).
+- CSP, `X-Frame-Options: DENY`, nosniff, Referrer-Policy.
+- CORS allowlist origin.
+- `POST /api/portal/logout`.
+- Empty state slip/notifikasi.
 
-Lihat [LITE-INTEGRATION.md](./LITE-INTEGRATION.md).
+**Masih butuh Lite:** password per karyawan, audit login D1, EWA persist, notifikasi tabel.  
+[LITE-INTEGRATION.md](./LITE-INTEGRATION.md).
 
-## 2026-08-22 — Portal live di Cloudflare Workers
+## 2026-08-22 — Portal live + D1
 
-- Next.js 16 + Tailwind 4 + OpenNext Worker.
-- Binding D1 `proqpay-lite-production` (baca saja).
-- Secret: `PORTAL_BOOTSTRAP_PIN`, `PORTAL_JWT_SECRET`.
-- Login produksi memakai `employees.id` / `employee_code`.
-- UI diselaraskan ke generator Perchance (CSS asli, tanpa Tailwind Preflight).
-- Demo Andi Pratama (`EMP-2023-0187`) hanya localhost.
+Commit: `2d01f08`, `7158725`, `5189473`, `e08cc19`, `500aa47`
 
-## 2026-08-21 — Fase 0 adapter D1 (repo lokal)
+- Next.js di Cloudflare Workers (OpenNext). Build: `npx opennextjs-cloudflare build`.
+- D1 `proqpay-lite-production` (baca saja).
+- Login: `employees.id` atau `employee_code`.
+- CSS Perchance (tanpa Tailwind Preflight).
+- Perbaikan CI: `CloudflareEnv` kosong → tipe `AppEnv`.
 
-- Pages Functions baca D1 Lite.
-- Mapping `CONFIG` ESS ← tabel Lite (`06-d1-mapping.md`).
-- Tidak ada migrasi dari repo ESS.
+Health yang diuji: `GET /api/health` → D1 ok.
 
-## 2026-08 — Generator Perchance (legacy)
+## 2026-08-21 — Adapter D1 (fase 0)
 
-- SPA `index.html` + data demo.
-- Kontrak `SQL_BIND` / skema fiktif `m_employee` (bukan skema Lite).
-- Sumber UI: https://perchance.org/proqpay-ess — salinan di `legacy/`.
+- Mapping UI ← tabel Lite: [06-d1-mapping.md](./06-d1-mapping.md).
+- ESS tidak menjalankan migrasi D1.
+
+## 2026-08 — Generator Perchance (arsip)
+
+- SPA `legacy/index.html`.
+- Skema fiktif `m_employee` / `SQL_BIND` **bukan** skema Lite.
+- UI acuan: https://perchance.org/proqpay-ess
+
+---
+
+## Endpoint ESS saat ini
+
+| Method | Path | Keterangan |
+|---|---|---|
+| GET | `/api/health` | Ping D1 |
+| POST | `/api/portal/login` | Cookie sesi; body `{ emp_id, password, remember }` |
+| GET | `/api/portal/init` | `config` + `ewa` dari D1 (identitas dari cookie) |
+| POST | `/api/portal/logout` | Hapus cookie |
+
+Identitas query selalu `sub` JWT (`employees.id`), bukan `emp_id` dari klien.
