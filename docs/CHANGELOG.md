@@ -3,6 +3,12 @@
 Format: perubahan terbaru di atas. Repo: [ImHeroesKiller/proqpay-ess](https://github.com/ImHeroesKiller/proqpay-ess).  
 **Tidak mengubah kode proqpay-lite.**
 
+## 2026-08-22 — Label slip (Workers AI)
+
+- Baris slip dari `payroll_components` (camelCase) diubah jadi judul resmi.
+- Kamus baku dulu; kunci tak dikenal dihaluskan IDA via Workers AI (`@cf/meta/llama-3.1-8b-instruct-fast`).
+- Jumlah uang tidak pernah dikirim ke model.
+
 ## 2026-08-22 — PWA
 
 - Manifest, ikon 192/512, Apple touch icon, `theme-color`.

@@ -10,6 +10,7 @@ import {
   slipStatus,
   stageFromState,
 } from "./d1-shared";
+import { polishPayslipRows } from "./ida-labels";
 
 export async function findEmployee(db, empId) {
   const id = String(empId || "").trim();
@@ -27,7 +28,7 @@ export async function findEmployee(db, empId) {
   );
 }
 
-export async function buildPortalPayload(db, employee) {
+export async function buildPortalPayload(db, employee, env) {
   const empId = employee.id;
   const assignment = await d1First(
     db,
@@ -107,6 +108,10 @@ export async function buildPortalPayload(db, employee) {
       status: slipStatus(st),
       rows: [["Net pay", Number(line.amount) || 0]],
     });
+  }
+
+  for (const slip of payslips) {
+    slip.rows = await polishPayslipRows(slip.rows, env);
   }
 
   const phone = employee.mobile || employee.phone || "";

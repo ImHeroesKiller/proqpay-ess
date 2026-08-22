@@ -144,3 +144,7 @@ Bentuk JSON `PortalPayload` (jangan dipecah tanpa versi): lihat `src/lib/types.t
 Cookie: `proqpay_ess`. Rotasi `PORTAL_JWT_SECRET` memaksa login ulang semua karyawan.
 
 PWA ESS tidak menyimpan slip di Cache Storage / IndexedDB. Integrasi Lite nanti jangan mengandalkan offline payroll di klien.
+
+### IDA / Workers AI (label slip)
+
+ESS memakai binding `AI` (Cloudflare Workers AI) **hanya untuk menamai baris slip** (`basicSalary` → `Basic salary`). Nominal selalu dari D1. LLM gagal → kamus/title-case. Lite nanti boleh memindahkan kamus komponen resmi ke master data agar AI tidak diperlukan.

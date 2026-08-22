@@ -15,7 +15,9 @@
       "database_id": "ac3f8b48-bd87-44bd-9286-f0e0bab6e39f"
     }
   ],
+  "ai": { "binding": "AI" },
   "vars": {
-    "DEFAULT_ORG_ID": "ORG-OTSINDO"
+    "DEFAULT_ORG_ID": "ORG-OTSINDO",
+    "WORKERS_AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast"
   }
 }

@@ -18,6 +18,6 @@ export async function GET(request: NextRequest) {
   const employee = await findEmployee(env.DB, payload.sub);
   if (!employee) return NextResponse.json({ error: "Karyawan tidak ditemukan." }, { status: 404, headers });
 
-  const data = await buildPortalPayload(env.DB, employee);
+  const data = await buildPortalPayload(env.DB, employee, env);
   return NextResponse.json(data, { headers });
 }
