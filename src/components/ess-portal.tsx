@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "./icon";
-import { DEMO_EMP_ID, DEMO_PASS, demoPayload } from "@/lib/demo";
+import { emptyPayload } from "@/lib/empty-portal";
 import { enPeriod, fmt, initials, slipRef, totalOf } from "@/lib/format";
 import type { EwaApp, EwaState, Payslip, PortalConfig, PortalPayload } from "@/lib/types";
 
@@ -28,9 +28,8 @@ function ewaPlafond(config: PortalConfig, ewa: EwaState) {
 export function EssPortal() {
   const [loaded, setLoaded] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [payload, setPayload] = useState<PortalPayload>(demoPayload);
-  const [stage, setStage] = useState(demoPayload.config.payroll.stage);
-  const [isLocalHost, setIsLocalHost] = useState(false);
+  const [payload, setPayload] = useState<PortalPayload>(emptyPayload);
+  const [stage, setStage] = useState(1);
   const [modal, setModal] = useState<Modal>(null);
   const [tab, setTab] = useState<Tab>("home");
   const [slipIdx, setSlipIdx] = useState(0);
@@ -43,7 +42,7 @@ export function EssPortal() {
   const [remember, setRemember] = useState(true);
   const [loginErr, setLoginErr] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
-  const [ewaApp, setEwaApp] = useState<EwaApp>(demoPayload.ewa.app);
+  const [ewaApp, setEwaApp] = useState<EwaApp>(null);
   const [wiz, setWiz] = useState({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
 
   const config = payload.config;
@@ -60,7 +59,6 @@ export function EssPortal() {
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
-    setIsLocalHost(/localhost|127\.0\.0\.1/.test(location.hostname));
     fetch("/api/portal/init", { credentials: "include" })
       .then((r) => {
         if (!r.ok) throw new Error("no-session");
@@ -84,14 +82,6 @@ export function EssPortal() {
     const empId = empInput.trim();
     const pass = passInput;
     try {
-      if (isLocalHost && empId === DEMO_EMP_ID && pass === DEMO_PASS) {
-        setPayload(demoPayload);
-        setStage(demoPayload.config.payroll.stage);
-        setEwaApp(demoPayload.ewa.app);
-        setLoggedIn(true);
-        setLoaded(true);
-        return;
-      }
       const r = await fetch("/api/portal/login", {
         method: "POST",
         credentials: "include",
@@ -166,10 +156,7 @@ export function EssPortal() {
               </div>
             </div>
             <h1>Welcome back</h1>
-            <div className="lead">
-              Masuk ke portal Employee Self-Service untuk melihat slip gaji, status payroll, dan mengajukan Advance
-              Salary.
-            </div>
+            <div className="lead">Masuk untuk melihat slip gaji dan status payroll Anda.</div>
             <div className="lg-field">
               <div className="k">Employee ID</div>
               <input
@@ -178,7 +165,7 @@ export function EssPortal() {
                 onChange={(e) => setEmpInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && document.getElementById("lgPass")?.focus()}
                 autoComplete="username"
-                placeholder="cth: EMP-2023-0187"
+                placeholder="NRK atau kode karyawan"
                 spellCheck={false}
               />
             </div>
@@ -214,12 +201,7 @@ export function EssPortal() {
               <span className="spinner" />
               <span>Sign In</span>
             </button>
-            <div className="lg-demo">
-              <div>
-                <b>Portal karyawan</b> — masukkan NRK atau kode karyawan dan PIN yang diberikan HR.
-              </div>
-            </div>
-            <div className="lg-foot">Lupa kata sandi? Hubungi HR perusahaan Anda. · © 2026 ProQPay</div>
+            <div className="lg-foot">© 2026 ProQPay</div>
           </div>
         </div>
       )}
@@ -400,18 +382,7 @@ export function EssPortal() {
                 </span>
               )}
             </div>
-            {isLocalHost ? (
-              <div className="demo">
-                <span className="lbl">Simulate stage (local only)</span>
-                <div className="seg">
-                  {[1, 2, 3, 4].map((n) => (
-                    <button key={n} className={stage === n ? "active" : ""} onClick={() => setStage(n)}>
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+
           </section>
 
           <section className="quick reveal" aria-label="Aksi cepat">
@@ -483,7 +454,7 @@ export function EssPortal() {
             </div>
             {config.payslips.length === 0 ? (
               <p className="ewaa-sub" style={{ marginTop: 12 }}>
-                Belum ada slip gaji untuk akun ini. Slip muncul setelah payroll diproses di ProQPay Lite.
+                Belum ada slip gaji untuk akun ini.
               </p>
             ) : null}
             {config.payslips.map((p, i) => (
@@ -504,7 +475,7 @@ export function EssPortal() {
         <footer className="app-footer reveal">
           <img className="foot-logo" src="/brand/proqpay-logo.png" alt="ProQPay" />
           <br />
-          © 2026 ProQPay — AI Payroll OS · Multi-tenant
+          © 2026 ProQPay
           <br />
           <a
             href="#help"
@@ -735,6 +706,9 @@ export function EssPortal() {
 
       {modal === "notify" ? (
         <Sheet title="Notifications" onClose={() => setModal(null)}>
+          {config.notifications.length === 0 ? (
+            <p className="ewaa-sub">Tidak ada notifikasi.</p>
+          ) : null}
           {config.notifications.map((n) => (
             <div className="notif-item" key={n.title}>
               <span className={"ic " + (n.type === "g" ? "ig" : "ia")}>
@@ -839,19 +813,9 @@ export function EssPortal() {
                 style={{ width: "100%", marginTop: 8 }}
                 disabled={!wiz.agreed}
                 onClick={() => {
-                  const app = {
-                    ref: "EWA-" + new Date().getFullYear() + "-" + String(Math.floor(Math.random() * 9000 + 1000)),
-                    amount: wiz.amount,
-                    fee: ewaFee(wiz.amount, ewa.rules),
-                    method: wiz.method,
-                    inst: wiz.inst,
-                    date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
-                    status: "processing",
-                  };
-                  setEwaApp(app);
                   setModal(null);
                   setWiz({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
-                  showToast("Pengajuan advance terkirim (lokal). Approval tetap di Lite.");
+                  showToast("Pengajuan advance akan diproses oleh HR. Hubungi HR bila butuh bantuan.");
                 }}
               >
                 Submit request

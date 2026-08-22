@@ -92,7 +92,7 @@ export async function ratePeek(key: string): Promise<number> {
   }
 }
 
-/** Count a failed login. 5 failures / 10 minutes per key. */
+
 export async function rateBump(key: string, ttlSec = 600): Promise<void> {
   try {
     const cache = rateCache();

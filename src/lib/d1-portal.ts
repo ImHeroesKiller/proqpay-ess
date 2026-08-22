@@ -131,7 +131,7 @@ export async function buildPortalPayload(db, employee) {
   if (latest) {
     notifications.push({
       title: periodToLabel(latest.period) + " payroll is " + (latest.state || "in progress"),
-      s: "Status dari sistem payroll ProQPay Lite.",
+      s: "Status payroll periode berjalan.",
       type: "g",
       unread: stage < 4,
     });
@@ -168,7 +168,7 @@ export async function buildPortalPayload(db, employee) {
         {
           tag: "Advance Salary",
           title: "Get Paid Sooner, Worry Less",
-          desc: "Pengajuan advance akan tersedia setelah modul EWA diaktifkan di server. Data gaji Anda sudah mengikuti database Lite.",
+          desc: "Cairkan gaji yang sudah Anda kerjakan. Pengajuan diproses sesuai kebijakan perusahaan.",
           cta: "Request Advance",
           bg: "linear-gradient(115deg, #0f1b3a 0%, #1b2a52 55%, #24355f 100%)",
         },

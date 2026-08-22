@@ -3,6 +3,13 @@
 Format: perubahan terbaru di atas. Repo: [ImHeroesKiller/proqpay-ess](https://github.com/ImHeroesKiller/proqpay-ess).  
 **Tidak mengubah kode proqpay-lite.**
 
+## 2026-08-22 — Rapikan produksi
+
+- Hapus kredensial/data dummy Andi Pratama dari UI production.
+- Hapus kotak demo login, simulator tahap, dan pengajuan advance palsu.
+- Teks pengguna tidak menyebut nama produk internal atau contoh NRK.
+- Arsip Perchance dipindah ke `legacy/`; API Pages Functions lama dihapus.
+
 ## 2026-08-22 — Hardening portal (tanpa Lite)
 
 ### Keamanan

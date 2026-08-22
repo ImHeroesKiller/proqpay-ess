@@ -1,12 +1,14 @@
 # ProQPay ESS
 
-Portal **Employee Self-Service** ProQPay. Companion dari [proqpay-lite](https://github.com/ImHeroesKiller/proqpay-lite): Lite menulis payroll ke Cloudflare D1, ESS hanya membaca.
+Portal Employee Self-Service. Data payroll berasal dari [proqpay-lite](https://github.com/ImHeroesKiller/proqpay-lite) (Cloudflare D1, baca saja).
 
-- **Next.js 16** · **React 19** · **Tailwind CSS 4**
-- Deploy ke **Cloudflare Workers** via `@opennextjs/cloudflare`
-- UI & aset brand dipertahankan dari portal v2 (navy + oranye)
+Produksi: https://proqpay-ess.arywibowo.workers.dev/
 
-## Develop
+## Stack
+
+Next.js 16 · React 19 · Tailwind CSS 4 · Cloudflare Workers (OpenNext)
+
+## Pengembangan
 
 ```bash
 npm install
@@ -14,34 +16,20 @@ cp .dev.vars.example .dev.vars
 npm run dev
 ```
 
-Buka http://localhost:3000 — login demo `EMP-2023-0187` / `proqpay`.
-
-API D1 (`/api/portal/*`, `/api/health`) membutuhkan Worker runtime + binding D1:
+API D1 membutuhkan Worker:
 
 ```bash
 npm run preview
 ```
 
-## Deploy (Cloudflare Workers)
-
-Jangan pakai Cloudflare **Pages** + `npm run build` (`next build`) sebagai satu-satunya langkah. ESS adalah Worker OpenNext.
-
-Di dashboard: **Workers & Pages → Create → Connect to Git** dengan tipe **Worker** (bukan Pages), lalu:
+## Deploy
 
 | Field | Value |
 |---|---|
 | Build command | `npx opennextjs-cloudflare build` |
 | Deploy command | `npx wrangler deploy` |
 
-Atau dari laptop: `npm run deploy`.
+Secret: `PORTAL_BOOTSTRAP_PIN`, `PORTAL_JWT_SECRET`.  
+Jangan menjalankan migrasi D1 dari repo ini.
 
-1. `wrangler.jsonc` sudah mengikat D1 `proqpay-lite-production` (`ac3f8b48-bd87-44bd-9286-f0e0bab6e39f`).
-2. `npx wrangler secret put PORTAL_BOOTSTRAP_PIN`
-3. `npx wrangler secret put PORTAL_JWT_SECRET`
-4. Deploy ulang.
-
-Jangan jalankan migrasi D1 dari repo ini.
-
-## Mapping data
-
-Dokumentasi: `docs/README.md`. Integrasi Lite nanti: `docs/LITE-INTEGRATION.md`. Changelog: `docs/CHANGELOG.md`.
+Dokumentasi: `docs/README.md` · Integrasi Lite: `docs/LITE-INTEGRATION.md`

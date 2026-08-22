@@ -1,4 +1,4 @@
-/** Runtime bindings. Do not use the generated CloudflareEnv (often empty on CI). */
+/** Worker bindings (D1 + secrets). */
 export type AppEnv = {
   DB?: {
     prepare: (query: string) => {

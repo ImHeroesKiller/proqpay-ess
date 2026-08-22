@@ -1,5 +1,4 @@
 // @ts-nocheck
-/** Shared helpers for ESS portal. Read-only against Lite D1. */
 
 const ID_MONTHS = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -53,32 +52,6 @@ export const STAGES = [
     eta: "Done",
   },
 ];
-
-export function json(data, status, request, extra) {
-  const origin = request.headers.get("Origin") || "";
-  const headers = {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    "X-Content-Type-Options": "nosniff",
-    ...corsHeaders(origin),
-    ...(extra || {}),
-  };
-  return new Response(JSON.stringify(data), { status: status || 200, headers });
-}
-
-export function corsHeaders(origin) {
-  return {
-    "Access-Control-Allow-Origin": origin || "*",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Max-Age": "86400",
-    Vary: "Origin",
-  };
-}
-
-export function onOptions(request) {
-  return new Response(null, { status: 204, headers: corsHeaders(request.headers.get("Origin") || "") });
-}
 
 export async function d1First(db, sql, binds) {
   const res = await db.prepare(sql).bind(...(binds || [])).first();
