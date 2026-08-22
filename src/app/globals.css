@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "../styles/portal.css";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+  --color-navy: #0f1b3a;
+  --color-brand: #f26522;
+  --color-brand-2: #ff8a3d;
+}
+
+html {
+  @apply font-sans;
+}

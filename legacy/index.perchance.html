@@ -1,0 +1,2714 @@
+<!-- ============================================================
+     ProQPay — ESS Portal v2 (Employee Self-Service)
+     Mobile-first 2026 · Pure HTML + CSS + Vanilla JS (no frameworks)
+     Design benchmark: Workday, ADP, Deel, HiBob, Gusto, Rippling,
+     Personio, SAP SuccessFactors, UKG, Paychex (top-10 global
+     employee portals: bottom-tab navigation, glassmorphism, FAB,
+     skeleton loaders, staggered entrance, progress ring, dark mode)
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add("dark");</script>
+
+<style>
+  /* ============================================================
+     TOKENS — light & dark
+     ============================================================ */
+  :root {
+    --font: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --bg: #f3f4fb;
+    --glass: rgba(255, 255, 255, .72);
+    --glass-strong: rgba(255, 255, 255, .9);
+    --surface: rgba(255, 255, 255, .62);
+    --solid: #ffffff;
+    --border: rgba(15, 23, 42, .08);
+    --border-strong: rgba(15, 23, 42, .14);
+    --ink: #0f1b3a;
+    --ink-2: #3f4a6e;
+    --muted: #7c87a6;
+    --navy: #0f1b3a;
+    --navy-2: #24355f;
+    --brand: #f26522;
+    --brand-2: #ff8a3d;
+    --grad: linear-gradient(135deg, #f26522 0%, #ff8a3d 100%);
+    --grad-navy: linear-gradient(135deg, #0f1b3a 0%, #24355f 100%);
+    --grad-soft: linear-gradient(135deg, rgba(242, 101, 34, .10), rgba(255, 138, 61, .16));
+    --primary: #f26522;
+    --primary-2: #ff8a3d;
+    --ok: #0ca678;
+    --ok-bg: rgba(12, 166, 120, .12);
+    --warn: #e8930c;
+    --warn-bg: rgba(232, 147, 12, .15);
+    --danger: #e5484d;
+    --shadow: 0 1px 2px rgba(15, 27, 58, .05), 0 12px 32px rgba(15, 27, 58, .08);
+    --shadow-lg: 0 18px 50px rgba(15, 27, 58, .18);
+    --ring: 0 0 0 4px rgba(242, 101, 34, .16);
+    --grain-op: .5;
+    --ease: cubic-bezier(.16, 1, .3, 1);
+    --r-xl: 26px;
+    --r-lg: 20px;
+    --r-md: 14px;
+    --r-sm: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+      --bg: #0b1226;
+      --glass: rgba(18, 25, 51, .66);
+      --glass-strong: rgba(18, 25, 51, .92);
+      --surface: rgba(255, 255, 255, .05);
+      --solid: #111a33;
+      --border: rgba(255, 255, 255, .08);
+      --border-strong: rgba(255, 255, 255, .16);
+      --ink: #f0f2ff;
+      --ink-2: #c2c7e0;
+      --muted: #8389a5;
+      --grad-soft: linear-gradient(135deg, rgba(242, 101, 34, .16), rgba(255, 138, 61, .22));
+      --ok: #34d399;
+      --ok-bg: rgba(52, 211, 153, .14);
+      --warn: #fbbf24;
+      --warn-bg: rgba(251, 191, 36, .14);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+      --shadow-lg: 0 18px 50px rgba(0, 0, 0, .55);
+      --grain-op: .35;
+    }
+  }
+  :root.dark {
+    --bg: #0b1226;
+    --glass: rgba(18, 25, 51, .66);
+    --glass-strong: rgba(18, 25, 51, .92);
+    --surface: rgba(255, 255, 255, .05);
+    --solid: #111a33;
+    --border: rgba(255, 255, 255, .08);
+    --border-strong: rgba(255, 255, 255, .16);
+    --ink: #f0f2ff;
+    --ink-2: #c2c7e0;
+    --muted: #8389a5;
+    --grad-soft: linear-gradient(135deg, rgba(242, 101, 34, .16), rgba(255, 138, 61, .22));
+    --ok: #34d399;
+    --ok-bg: rgba(52, 211, 153, .14);
+    --warn: #fbbf24;
+    --warn-bg: rgba(251, 191, 36, .14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 12px 32px rgba(0, 0, 0, .35);
+    --shadow-lg: 0 18px 50px rgba(0, 0, 0, .55);
+    --grain-op: .35;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.5;
+    text-align: left;
+    overflow-x: hidden;
+    transition: background .4s ease, color .4s ease;
+  }
+
+  /* ============================================================
+     PREMIUM BACKGROUND — ambient orbs + film grain
+     ============================================================ */
+  .bg-orbs { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+  .bg-orbs span { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .55; will-change: transform; }
+  .bg-orbs .o1 { width: 430px; height: 430px; top: -140px; right: -110px; background: #f97316; animation: drift1 34s ease-in-out infinite alternate; }
+  .bg-orbs .o2 { width: 380px; height: 380px; bottom: -130px; left: -120px; background: #24355f; opacity: .5; animation: drift2 42s ease-in-out infinite alternate; }
+  .bg-orbs .o3 { width: 300px; height: 300px; top: 42%; left: 28%; background: #ffb37a; opacity: .35; animation: drift3 30s ease-in-out infinite alternate; }
+  @media (prefers-color-scheme: dark) { :root:not(.light) .bg-orbs span { opacity: .8; } }
+  :root.dark .bg-orbs span { opacity: .8; }
+  @keyframes drift1 { from { transform: translate(0, 0) scale(1); } to { transform: translate(-70px, 50px) scale(1.15); } }
+  @keyframes drift2 { from { transform: translate(0, 0) scale(1); } to { transform: translate(80px, -60px) scale(1.2); } }
+  @keyframes drift3 { from { transform: translate(0, 0) scale(1); } to { transform: translate(-50px, -40px) scale(.9); } }
+
+  .grain {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: var(--grain-op);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+
+  /* ============================================================
+     HEADER — frosted glass
+     ============================================================ */
+  .app-header {
+    position: sticky; top: 0; z-index: 60;
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border-bottom: 1px solid var(--border);
+    transition: background .4s ease, border-color .4s ease;
+  }
+  .h-inner { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 8px; padding: 12px 18px; }
+
+  .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
+  .brand .mark {
+    width: 38px; height: 38px; border-radius: 13px;
+    display: grid; place-items: center; color: #fff; flex: none; position: relative; overflow: hidden;
+    box-shadow: 0 6px 16px rgba(15, 27, 58, .35);
+  }
+  .brand .mark img { width: 100%; height: 100%; border-radius: 12px; display: block; }
+  .brand .mark::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .5) 50%, transparent 70%);
+    transform: translateX(-120%); animation: shine 4.5s ease-in-out infinite;
+  }
+  @keyframes shine { 0%, 55% { transform: translateX(-120%); } 75%, 100% { transform: translateX(120%); } }
+  .brand .mark svg { width: 21px; height: 21px; }
+  .brand .nm { font-weight: 800; font-size: 16.5px; letter-spacing: -.03em; white-space: nowrap; }
+  .brand .nm em { font-style: normal; font-weight: 600; color: var(--brand); }
+
+  .icon-btn {
+    width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink-2); cursor: pointer;
+    display: grid; place-items: center; position: relative;
+    transition: transform .15s ease, background .2s ease, color .2s ease;
+  }
+  .icon-btn:hover { background: var(--solid); color: var(--primary); }
+  .icon-btn:active { transform: scale(.92); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn .dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid var(--solid); }
+
+  .icon-btn .i-sun { display: none; }
+  .icon-btn .i-moon { display: block; }
+  :root.dark .icon-btn .i-sun { display: block; }
+  :root.dark .icon-btn .i-moon { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) .icon-btn .i-sun { display: block; }
+    :root:not(.light) .icon-btn .i-moon { display: none; }
+  }
+
+  .user-chip { display: flex; align-items: center; gap: 9px; padding: 4px 6px 4px 4px; border-radius: 14px; cursor: pointer; transition: background .2s ease; }
+  .user-chip:active { background: var(--surface); }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; flex: none; position: relative; padding: 2px; background: var(--grad-navy); }
+  .avatar > span {
+    width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, #ff8a3d, #f26522);
+    color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13.5px;
+  }
+  .avatar::after {
+    content: ""; position: absolute; right: 1px; bottom: 1px; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--ok); border: 2px solid var(--solid);
+  }
+  .user-meta { text-align: right; line-height: 1.25; min-width: 0; }
+  .user-meta .name { font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-meta .co { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 420px) { .user-meta .co { display: none; } }
+
+  /* ============================================================
+     LAYOUT + ENTRANCE ANIMATIONS
+     ============================================================ */
+  .app { max-width: 560px; margin: 0 auto; padding: 0 16px calc(100px + env(safe-area-inset-bottom)); }
+
+  .reveal { opacity: 0; transform: translateY(16px) scale(.99); transition: opacity .55s ease, transform .6s var(--ease); transition-delay: var(--d, 0s); }
+  body.loaded .reveal { opacity: 1; transform: none; }
+
+  .hero { padding: 22px 2px 4px; display: flex; flex-direction: column; gap: 16px; }
+  .hero-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .hero-head h1 { font-size: 23px; font-weight: 800; letter-spacing: -.035em; line-height: 1.2; }
+  .hero-head h1 em { font-style: normal; background: linear-gradient(135deg, var(--ink), var(--brand)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero-head p { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+
+  .live-pill {
+    display: inline-flex; align-items: center; gap: 7px; flex: none; margin-top: 2px;
+    font-size: 11px; font-weight: 700; color: var(--primary);
+    background: var(--surface); border: 1px solid var(--border-strong);
+    padding: 7px 13px; border-radius: 999px; backdrop-filter: blur(8px);
+  }
+  :root.dark .live-pill { color: #ff8a3d; }
+  @media (prefers-color-scheme: dark) { :root:not(.light) .live-pill { color: #ff8a3d; } }
+  .live-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: blip 1.6s ease-in-out infinite; }
+  @keyframes blip { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+
+  /* Stats strip */
+  .stats { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; }
+  .stat {
+    background: var(--glass); border: 1px solid var(--border); border-radius: var(--r-md);
+    padding: 13px 14px; backdrop-filter: blur(14px); box-shadow: var(--shadow);
+    transition: transform .2s var(--ease), box-shadow .2s ease;
+  }
+  .stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .stat .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; margin-bottom: 9px; }
+  .stat .ic svg { width: 15px; height: 15px; }
+  .stat .ic.iv { background: var(--grad-soft); color: var(--primary); }
+  .stat .ic.ig { background: var(--ok-bg); color: var(--ok); }
+  .stat .ic.ia { background: rgba(124, 135, 166, .14); color: var(--muted); }
+  .stat .lbl { font-size: 10.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+  .stat .val { font-size: 14px; font-weight: 800; letter-spacing: -.02em; margin-top: 2px; }
+  .stat .val small { font-size: 10.5px; font-weight: 600; color: var(--muted); }
+
+  /* ============================================================
+     CARDS
+     ============================================================ */
+  .card {
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: var(--r-xl); box-shadow: var(--shadow);
+    padding: 20px; margin-top: 14px; backdrop-filter: blur(18px);
+    transition: background .4s ease, border-color .4s ease;
+  }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card-head h2 { font-size: 15.5px; font-weight: 800; letter-spacing: -.02em; }
+  .card-head .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .pill { font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .pill.ok   { color: var(--ok);   background: var(--ok-bg); }
+  .pill.warn { color: var(--warn); background: var(--warn-bg); }
+  .pill.info { color: var(--ink-2); background: var(--surface); border: 1px solid var(--border); }
+  .pill.pulse i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blip 1.5s ease-in-out infinite; }
+
+  /* ============================================================
+     PAYROLL TRACKER — progress ring + timeline
+     ============================================================ */
+  .stage-hero {
+    margin-top: 18px; display: flex; align-items: center; gap: 18px;
+    background: var(--grad-soft); border: 1px solid rgba(242, 101, 34, .20);
+    border-radius: var(--r-lg); padding: 16px;
+  }
+  .ring-wrap { position: relative; width: 74px; height: 74px; flex: none; }
+  .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: rgba(242, 101, 34, .14); stroke-width: 7; }
+  .ring-fg {
+    fill: none; stroke: url(#ringGrad); stroke-width: 7; stroke-linecap: round;
+    stroke-dasharray: 163.4; stroke-dashoffset: 163.4;
+    transition: stroke-dashoffset .9s var(--ease);
+  }
+  .ring-wrap .pct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 15px; font-weight: 800; }
+  .stage-hero .sh { min-width: 0; }
+  .stage-hero .sh .t { font-weight: 800; font-size: 15.5px; letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .stage-hero .sh .d { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .stage-hero .sh .eta { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11.5px; font-weight: 700; color: var(--primary); background: rgba(255, 255, 255, .55); border: 1px solid rgba(242, 101, 34, .18); padding: 5px 10px; border-radius: 999px; }
+  :root.dark .stage-hero .sh .eta { background: rgba(11, 18, 38, .4); color: #ff8a3d; }
+  @media (prefers-color-scheme: dark) { :root:not(.light) .stage-hero .sh .eta { background: rgba(11, 18, 38, .4); color: #ff8a3d; } }
+  .stage-hero .sh .eta svg { width: 13px; height: 13px; }
+
+  .stepper { margin-top: 18px; }
+  .step { display: flex; gap: 14px; }
+  .step { padding-bottom: 6px; position: relative; }
+  .step:last-child { padding-bottom: 0; }
+
+  .step .rail { display: flex; flex-direction: column; align-items: center; flex: none; width: 44px; }
+  .step .badge {
+    width: 42px; height: 42px; border-radius: 14px; position: relative; z-index: 1;
+    display: grid; place-items: center; flex: none;
+    border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+    transition: transform .25s var(--ease), box-shadow .25s ease, color .25s ease, background .25s ease;
+  }
+  .step .badge svg { width: 19px; height: 19px; }
+  .step .rail::after { content: ""; flex: 1; width: 2px; background: var(--border-strong); margin: 4px 0; }
+  .step:last-child .rail::after { display: none; }
+
+  .step.is-complete .badge { background: var(--grad); border-color: transparent; color: #fff; box-shadow: 0 8px 18px rgba(242, 101, 34, .35); }
+  .step.is-complete .rail::after { background: linear-gradient(#f26522, rgba(242, 101, 34, .25)); }
+
+  .step.is-current .badge { background: var(--grad); border-color: transparent; color: #fff; box-shadow: 0 0 0 6px rgba(242, 101, 34, .14), 0 10px 22px rgba(242, 101, 34, .4); }
+  .step.is-current .badge::before {
+    content: ""; position: absolute; inset: -8px; border-radius: 18px;
+    border: 2px solid rgba(242, 101, 34, .5); animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse { 0% { transform: scale(.8); opacity: 1; } 70%, 100% { transform: scale(1.18); opacity: 0; } }
+  .step.is-current .rail::after { background: linear-gradient(#f26522, rgba(242, 101, 34, .25)); }
+
+  .step .body { flex: 1; padding-top: 3px; padding-bottom: 16px; min-width: 0; }
+  .step:last-child .body { padding-bottom: 0; }
+  .step .t { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .step .d { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .step .meta { font-size: 11px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+  .step .meta svg { width: 11px; height: 11px; }
+
+  .step-tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 99px; letter-spacing: .03em; }
+  .step-tag.done { color: var(--ok);   background: var(--ok-bg); }
+  .step-tag.now { color: var(--primary); background: rgba(242, 101, 34, .12); }
+  .step-tag.wait { color: var(--muted); background: var(--surface); border: 1px solid var(--border); }
+
+  .stage-note {
+    margin-top: 4px; padding: 14px 16px; border-radius: var(--r-md);
+    background: var(--surface); border: 1px dashed var(--border-strong);
+    font-size: 12.5px; color: var(--ink-2); line-height: 1.55;
+    transition: opacity .35s ease, transform .35s var(--ease);
+  }
+  .stage-note.swap { opacity: 0; transform: translateY(6px); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .chip-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 700; padding: 7px 12px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .chip-tag.pos { color: var(--ok); }
+  .chip-tag.neg { color: var(--warn); }
+
+  /* Demo / simulation switcher */
+  .demo { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--border-strong); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .demo .lbl { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .seg { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 3px; gap: 2px; }
+  .seg button {
+    border: 0; background: transparent; width: 34px; height: 32px; border-radius: 9px;
+    font-weight: 800; font-size: 12.5px; color: var(--muted); cursor: pointer;
+    transition: all .2s var(--ease);
+  }
+  .seg button.active { background: var(--grad); color: #fff; box-shadow: 0 4px 12px rgba(242, 101, 34, .4); }
+
+  /* ============================================================
+     AD CAROUSEL — premium promo banner
+     ============================================================ */
+  .ad-wrap { margin-top: 14px; position: relative; overflow: hidden; border-radius: var(--r-xl); box-shadow: var(--shadow); border: 1px solid var(--border); }
+  .ad-track { display: flex; }
+  .ad-slide {
+    min-width: 100%; padding: 20px; display: flex; gap: 15px; align-items: center;
+    color: #fff; min-height: 168px; position: relative; overflow: hidden;
+  }
+  .ad-slide::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+  .ad-slide .txt { flex: 1; min-width: 0; position: relative; z-index: 1; max-width: 64%; }
+  .ad-art { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); height: 160%; max-height: 205px; width: auto; opacity: .98; pointer-events: none; }
+  .ad-slide .tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; background: rgba(242, 101, 34, .22); border: 1px solid rgba(255, 138, 61, .35); color: #ffb27e; padding: 3px 9px; border-radius: 7px; margin-bottom: 7px; }
+  .ad-slide h3 { font-size: 16.5px; font-weight: 800; letter-spacing: -.02em; line-height: 1.25; }
+  .ad-slide p { font-size: 12.5px; opacity: .92; margin-top: 4px; }
+  .ad-slide .cta {
+    margin-top: 11px; background: #fff; color: #141a3a; font-weight: 800; font-size: 12.5px;
+    padding: 9px 16px; border-radius: 11px; border: 0; cursor: pointer; position: relative; overflow: hidden;
+    transition: transform .15s var(--ease), box-shadow .2s ease;
+  }
+  .ad-slide .cta:active { transform: scale(.96); }
+  .ad-slide .cta::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(242, 101, 34, .22) 50%, transparent 65%); transform: translateX(-130%); animation: shine 5s ease-in-out infinite; }
+  .ad-dots { display: flex; gap: 6px; justify-content: center; align-items: center; padding: 12px 0 11px; background: var(--glass); }
+  .ad-dots button { height: 6px; width: 6px; border-radius: 99px; border: 0; background: var(--border-strong); padding: 0; cursor: pointer; transition: all .35s var(--ease); position: relative; overflow: hidden; }
+  .ad-dots button.on { width: 26px; }
+  .ad-dots button.on::after { content: ""; position: absolute; inset: 0; background: var(--grad); transform-origin: left; animation: dotfill 5.5s linear forwards; }
+  @keyframes dotfill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .ad-close {
+    position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%;
+    border: 0; background: rgba(0, 0, 0, .3); color: #fff; font-size: 12px; line-height: 1;
+    cursor: pointer; display: grid; place-items: center; z-index: 3; backdrop-filter: blur(4px);
+    transition: background .2s ease, transform .15s var(--ease);
+  }
+  .ad-close:hover { background: rgba(0, 0, 0, .5); }
+  .ad-close:active { transform: scale(.9); }
+
+  /* ============================================================
+     QUICK ACTIONS
+     ============================================================ */
+  .quick { margin-top: 14px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .quick .qbtn { flex-direction: row; align-items: center; gap: 14px; padding: 15px 16px; }
+  .quick .qbtn .ic { width: 44px; height: 44px; }
+  .quick .qbtn .chev { position: static; margin-left: auto; }
+  .qbtn {
+    background: var(--glass); border: 1px solid var(--border); border-radius: var(--r-lg);
+    box-shadow: var(--shadow); padding: 17px 16px; text-align: left; cursor: pointer;
+    color: inherit; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden;
+    transition: transform .18s var(--ease), box-shadow .25s ease, background .25s ease;
+    backdrop-filter: blur(14px);
+  }
+  .qbtn:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .qbtn:active { transform: scale(.97); }
+  .qbtn .ic { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; transition: transform .25s var(--ease); }
+  .qbtn:hover .ic { transform: scale(1.08) rotate(-4deg); }
+  .qbtn .ic svg { width: 20px; height: 20px; }
+  .qbtn .ic.dl { background: var(--grad); color: #fff; box-shadow: 0 8px 18px rgba(242, 101, 34, .38); }
+  .qbtn .ic.ida { background: var(--grad-navy); color: #fff; box-shadow: 0 8px 18px rgba(15, 27, 58, .35); }
+  .qbtn .lbl { font-weight: 800; font-size: 13.5px; line-height: 1.2; }
+  .qbtn .sub { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+  .qbtn .chev { position: absolute; top: 16px; right: 14px; color: var(--muted); transition: transform .2s var(--ease); }
+  .qbtn .chev svg { width: 15px; height: 15px; }
+  .qbtn:hover .chev { transform: translateX(3px); color: var(--primary); }
+
+  /* ============================================================
+     HISTORY
+     ============================================================ */
+  .hist-item { display: flex; align-items: center; gap: 12px; padding: 14px 2px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .2s ease; border-radius: 12px; }
+  .hist-item:hover { background: var(--surface); }
+  .hist-item:last-child { border-bottom: 0; }
+  .hist-item .m { font-weight: 700; font-size: 13.5px; }
+  .hist-item .st { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .hist-item .amt { font-weight: 800; font-size: 13px; margin-left: auto; white-space: nowrap; }
+  .hist-item .chev { color: var(--muted); margin-left: 4px; transition: transform .2s var(--ease); }
+  .hist-item .chev svg { width: 15px; height: 15px; display: block; }
+  .hist-item:hover .chev { transform: translateX(3px); color: var(--primary); }
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  .app-footer { margin-top: 30px; text-align: center; font-size: 11px; color: var(--muted); line-height: 1.9; }
+  .app-footer .foot-logo { width: 150px; height: auto; opacity: .92; margin-bottom: 10px; filter: drop-shadow(0 4px 14px rgba(15, 27, 58, .12)); }
+  .app-footer a { color: var(--muted); text-decoration: none; font-weight: 700; transition: color .2s ease; }
+  .app-footer a:hover { color: var(--primary); }
+
+  /* ============================================================
+     BOTTOM TAB BAR — floating glass navigation
+     ============================================================ */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 14px; z-index: 70;
+    display: flex; gap: 2px; align-items: center; padding: 8px;
+    width: min(92%, 560px); border-radius: 24px;
+    background: var(--glass-strong);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid var(--border); box-shadow: var(--shadow-lg);
+    opacity: 0; transform: translateX(-50%) translateY(24px);
+    transition: opacity .6s ease, transform .6s var(--ease), background .4s ease;
+  }
+  body.loaded .tabbar { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .tab-btn {
+    flex: 1; height: 50px; border: 0; background: transparent; border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    color: var(--muted); cursor: pointer; position: relative;
+    transition: color .2s ease, background .2s ease, transform .15s var(--ease);
+  }
+  .tab-btn svg { width: 20px; height: 20px; }
+  .tab-btn .lb { font-size: 10px; font-weight: 700; }
+  .tab-btn:active { transform: scale(.92); }
+  .tab-btn.active { color: var(--primary); }
+  .tab-btn.active::before { content: ""; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 22px; height: 4px; border-radius: 99px; background: var(--grad); }
+
+  .tab-fab {
+    width: 54px; height: 54px; border: 0; border-radius: 19px; background: var(--grad-navy);
+    color: #fff; cursor: pointer; display: grid; place-items: center; flex: none;
+    box-shadow: 0 10px 26px rgba(15, 27, 58, .45); position: relative;
+    transform: translateY(-10px);
+    transition: transform .2s var(--ease), box-shadow .25s ease;
+  }
+  .tab-fab::before { content: ""; position: absolute; inset: -6px; border-radius: 24px; border: 2px solid rgba(242, 101, 34, .45); animation: pulse 2.4s ease-out infinite; }
+  .tab-fab svg { width: 22px; height: 22px; }
+  .tab-fab:active { transform: translateY(-10px) scale(.9); }
+  .tab-fab span { position: absolute; bottom: -18px; font-size: 9.5px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%) translateY(20px); bottom: calc(14px + 76px);
+    z-index: 400; display: flex; align-items: center; gap: 9px;
+    background: var(--solid); color: var(--ink); border: 1px solid var(--border-strong);
+    border-radius: 14px; padding: 12px 18px; font-size: 13px; font-weight: 700;
+    box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none;
+    transition: opacity .3s ease, transform .35s var(--ease);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast svg { width: 17px; height: 17px; color: var(--ok); flex: none; }
+
+  /* ============================================================
+     MODALS — bottom sheet on mobile
+     ============================================================ */
+  .backdrop {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(10, 14, 28, .5); backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: fadeIn .25s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } }
+  @media (min-width: 640px) { .backdrop { align-items: center; padding: 24px; } }
+  .modal {
+    background: var(--solid); width: 100%; max-width: 560px; max-height: 90vh;
+    border-radius: 26px 26px 0 0; display: flex; flex-direction: column;
+    animation: sheetUp .38s var(--ease);
+    border: 1px solid var(--border); box-shadow: var(--shadow-lg);
+  }
+  @media (min-width: 640px) { .modal { border-radius: 26px; animation: popUp .3s var(--ease); } }
+  @keyframes sheetUp { from { transform: translateY(60px); opacity: .4; } }
+  @keyframes popUp { from { transform: scale(.94) translateY(10px); opacity: .4; } }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 17px 20px; border-bottom: 1px solid var(--border); }
+  .modal-head h3 { font-size: 15.5px; font-weight: 800; }
+  .x { width: 32px; height: 32px; border: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--muted); display: grid; place-items: center; transition: all .2s ease; }
+  .x:hover { color: var(--ink); background: var(--solid); }
+  .x:active { transform: scale(.9); }
+  .modal-body { padding: 20px; overflow-y: auto; }
+  .modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+
+  /* Payslip */
+  .slip-meta { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--muted); padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .slip-meta b { color: var(--ink); font-weight: 700; }
+  .slip-grid { display: grid; grid-template-columns: 1fr auto; gap: 5px 14px; padding: 16px 0; font-size: 13.5px; }
+  .slip-grid .g { text-align: right; font-weight: 700; }
+  .slip-grid .minus { color: var(--warn); }
+  .slip-total {
+    grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center;
+    border-top: 2px solid var(--ink); margin-top: 10px; padding-top: 13px;
+    font-weight: 800; font-size: 16px; letter-spacing: -.02em;
+  }
+
+  .btn {
+    height: 48px; border-radius: 14px; border: 1px solid var(--border-strong);
+    font-family: inherit; font-weight: 800; font-size: 13.5px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 18px;
+    transition: transform .15s var(--ease), box-shadow .25s ease, background .2s ease;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--grad); color: #fff; flex: 1; border-color: transparent; box-shadow: 0 10px 24px rgba(242, 101, 34, .4); }
+  .btn.primary:hover { box-shadow: 0 14px 32px rgba(242, 101, 34, .5); }
+  .btn.ghost { background: var(--surface); color: var(--ink); }
+  .btn.ghost:hover { background: var(--solid); }
+  .btn svg { width: 17px; height: 17px; }
+
+  /* Profile / help / notifications */
+  .prof-hero { display: flex; align-items: center; gap: 14px; }
+  .prof-hero .avatar { width: 62px; height: 62px; }
+  .prof-hero .avatar > span { font-size: 20px; }
+  .prof-hero .t { font-weight: 800; font-size: 16.5px; }
+  .prof-hero .s { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .prof-rows { margin-top: 18px; display: grid; gap: 4px; }
+  .prof-row { display: flex; align-items: center; gap: 12px; padding: 13px 4px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .prof-row:last-child { border-bottom: 0; }
+  .prof-row .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--grad-soft); color: var(--primary); display: grid; place-items: center; flex: none; }
+  .prof-row .ic svg { width: 16px; height: 16px; }
+  .prof-row .k { color: var(--muted); font-size: 11px; font-weight: 600; }
+  .prof-row .v { font-weight: 700; margin-top: 1px; }
+
+  .help-item { display: flex; align-items: center; gap: 13px; padding: 15px 4px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 12px; transition: background .2s ease; }
+  .help-item:hover { background: var(--surface); }
+  .help-item:last-child { border-bottom: 0; }
+  .help-item .ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .help-item .ic svg { width: 18px; height: 18px; }
+  .help-item .ic.ia { background: var(--grad-navy); color: #fff; }
+  .help-item .ic.ib { background: var(--grad-soft); color: var(--primary); }
+  .help-item .t { font-weight: 700; font-size: 13.5px; }
+  .help-item .s { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .help-item .chev { margin-left: auto; color: var(--muted); }
+  .help-item .chev svg { width: 15px; height: 15px; display: block; }
+  .faq-item { margin-top: 8px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .faq-item summary { cursor: pointer; padding: 12px 14px; font-weight: 700; font-size: 13px; list-style: none; position: relative; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: "+"; position: absolute; right: 14px; color: var(--primary); font-weight: 800; font-size: 15px; }
+  .faq-item[open] summary::after { content: "–"; }
+  .faq-item .faq-body { padding: 0 14px 12px; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+  .notif-item { display: flex; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--border); }
+  .notif-item:last-child { border-bottom: 0; }
+  .notif-item .ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; }
+  .notif-item .ic svg { width: 17px; height: 17px; }
+  .notif-item .ic.ig { background: var(--ok-bg); color: var(--ok); }
+  .notif-item .ic.ia { background: var(--warn-bg); color: var(--warn); }
+  .notif-item .t { font-size: 13px; font-weight: 700; }
+  .notif-item .s { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .notif-item .dot { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); flex: none; margin-top: 5px; }
+
+  /* ============================================================
+     SKELETON LOADER
+     ============================================================ */
+  #skeleton {
+    position: fixed; inset: 0; z-index: 200; background: var(--bg);
+    display: flex; justify-content: center; padding: 18px 16px;
+    transition: opacity .5s ease, visibility .5s ease;
+  }
+  #skeleton.sk-gone { opacity: 0; visibility: hidden; }
+  .sk-inner { width: min(560px, 100%); }
+  .sk-h { height: 46px; border-radius: 14px; background: var(--surface); margin-bottom: 18px; }
+  .sk-line { height: 16px; border-radius: 8px; background: var(--surface); margin-bottom: 12px; }
+  .sk-card { height: 330px; border-radius: 26px; background: var(--surface); position: relative; overflow: hidden; margin-bottom: 14px; }
+  .sk-card::after, .sk-line::after, .sk-h::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .5) 50%, transparent 80%);
+    transform: translateX(-100%); animation: shimmer 1.4s infinite;
+  }
+  .sk-line { position: relative; overflow: hidden; width: 60%; }
+  .sk-h { position: relative; overflow: hidden; }
+  :root.dark .sk-card::after, :root.dark .sk-line::after, :root.dark .sk-h::after { background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .06) 50%, transparent 80%); }
+  @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+  /* ============================================================
+     EWA — EARNED WAGE ACCESS (Advance Gaji)
+     ============================================================ */
+  .ewaa { display: flex; flex-direction: column; gap: 12px; }
+  .ewaa-head { display: flex; align-items: center; gap: 11px; }
+  .ewaa-ic { width: 42px; height: 42px; border-radius: 13px; background: var(--grad); color: #fff; display: grid; place-items: center; flex: none; box-shadow: 0 8px 18px rgba(242, 101, 34, .38); }
+  .ewaa-ic svg { width: 20px; height: 20px; }
+  .ewaa-tt { flex: 1; min-width: 0; }
+  .ewaa-tt b { font-size: 14px; font-weight: 800; display: block; letter-spacing: -.02em; }
+  .ewaa-tt span { font-size: 11px; color: var(--muted); }
+  .ewaa-avail { background: var(--grad-soft); border: 1px solid rgba(242, 101, 34, .22); border-radius: var(--r-md); padding: 13px 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .ewaa-avail .l { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .ewaa-avail .v { font-size: 21px; font-weight: 800; letter-spacing: -.03em; color: var(--brand); }
+  .ewaa-sub { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+
+  .ewah-bal { text-align: center; padding: 6px 0 2px; }
+  .ewah-ic { width: 46px; height: 46px; border-radius: 14px; background: var(--grad); color: #fff; display: grid; place-items: center; margin: 0 auto 10px; box-shadow: 0 10px 22px rgba(242, 101, 34, .4); }
+  .ewah-ic svg { width: 21px; height: 21px; }
+  .ewah-lbl { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .ewah-amt { font-size: 28px; font-weight: 800; letter-spacing: -.03em; margin-top: 2px; color: var(--brand); }
+  .ewah-sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+  .wsteps { display: flex; gap: 4px; margin: 2px 0 20px; }
+  .wstep { flex: 1; text-align: center; font-size: 10px; font-weight: 700; color: var(--muted); position: relative; padding-top: 28px; }
+  .wstep::before { content: attr(data-n); position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 21px; height: 21px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--border-strong); display: grid; place-items: center; font-size: 11px; }
+  .wstep::after { content: ""; position: absolute; top: 10px; left: calc(50% + 14px); width: calc(100% - 28px); height: 2px; background: var(--border-strong); }
+  .wstep:last-child::after { display: none; }
+  .wstep.done { color: var(--ok); }
+  .wstep.done::before { content: "✓"; color: #fff; background: var(--grad); border-color: transparent; font-size: 11px; }
+  .wstep.done::after { background: rgba(242, 101, 34, .4); }
+  .wstep.now { color: var(--brand); }
+  .wstep.now::before { content: attr(data-n); color: #fff; background: var(--grad); border-color: transparent; box-shadow: 0 0 0 4px rgba(242, 101, 34, .15); }
+
+  .wiz-body { min-height: 300px; }
+  .amt-big { font-size: 30px; font-weight: 800; letter-spacing: -.03em; text-align: center; margin: 8px 0 12px; color: var(--brand); }
+  .amt-range { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 99px; background: var(--border-strong); outline: none; cursor: pointer; }
+  .amt-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--grad); border: 3px solid var(--solid); box-shadow: 0 3px 10px rgba(242, 101, 34, .4); cursor: pointer; }
+  .amt-range::-moz-range-thumb { width: 21px; height: 21px; border-radius: 50%; background: var(--grad); border: 3px solid var(--solid); box-shadow: 0 3px 10px rgba(242, 101, 34, .4); cursor: pointer; }
+  .amt-range::-moz-range-progress { background: var(--grad); height: 8px; border-radius: 99px; }
+  .range-hints { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+  .quickchips { display: flex; gap: 8px; margin-top: 12px; }
+  .quickchips button { flex: 1; border: 1px solid var(--border-strong); background: var(--surface); border-radius: 10px; padding: 9px 0; font-size: 11.5px; font-weight: 700; color: var(--ink-2); cursor: pointer; transition: all .2s ease; }
+  .quickchips button:hover { border-color: var(--brand); color: var(--brand); }
+  .plafond-line { margin-top: 10px; font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .plafond-line b { color: var(--primary); font-weight: 800; }
+  .plafond-line svg { width: 12px; height: 12px; }
+  .tenor-line { margin-top: 14px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; }
+  .tenor-line b { color: var(--primary); font-weight: 800; }
+  .tenor-line svg { width: 13px; height: 13px; }
+  .fee-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+  .fee-row b { font-weight: 700; }
+  .fee-row:last-child { border-bottom: 0; }
+
+  .pay-opt { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; margin-top: 10px; transition: all .2s ease; }
+  .pay-opt input { display: none; }
+  .pay-opt .ic { width: 38px; height: 38px; border-radius: 11px; background: var(--grad-soft); color: var(--brand); display: grid; place-items: center; flex: none; }
+  .pay-opt .ic svg { width: 18px; height: 18px; }
+  .pay-opt .tx b { font-size: 13.5px; display: block; }
+  .pay-opt .tx small { font-size: 11.5px; color: var(--muted); }
+  .pay-opt.sel { border-color: var(--brand); background: var(--grad-soft); }
+  .inst-row { display: flex; gap: 8px; margin-top: 10px; }
+  .inst-chip { flex: 1; text-align: center; padding: 11px 8px; border: 1px solid var(--border-strong); border-radius: 12px; font-size: 12.5px; font-weight: 800; color: var(--ink-2); cursor: pointer; background: var(--surface); transition: all .2s ease; }
+  .inst-chip small { display: block; font-weight: 600; color: var(--muted); margin-top: 3px; font-size: 10.5px; }
+  .inst-chip.sel { border-color: var(--brand); background: var(--grad-soft); color: var(--brand); }
+  .inst-chip.sel small { color: var(--brand); }
+
+  .bank-card { display: flex; align-items: center; gap: 12px; padding: 15px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface); }
+  .bank-card .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--grad-navy); color: #fff; display: grid; place-items: center; flex: none; }
+  .bank-card .ic svg { width: 19px; height: 19px; }
+  .bank-card b { font-size: 14px; display: block; }
+  .bank-card small { font-size: 11.5px; color: var(--muted); }
+  .bank-card .ok { margin-left: auto; font-size: 10.5px; font-weight: 800; color: var(--ok); background: var(--ok-bg); padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+
+  .info-note { margin-top: 14px; font-size: 12px; color: var(--muted); background: var(--grad-soft); border: 1px solid rgba(242, 101, 34, .16); border-radius: 12px; padding: 12px 14px; display: flex; gap: 9px; align-items: flex-start; line-height: 1.55; }
+  .info-note svg { width: 15px; height: 15px; flex: none; color: var(--brand); margin-top: 1px; }
+
+  .sum-row { display: flex; justify-content: space-between; font-size: 13px; padding: 9px 0; border-bottom: 1px dashed var(--border); gap: 10px; }
+  .sum-row b { font-weight: 700; text-align: right; }
+  .sum-row .okc { color: var(--ok); }
+  .agree { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 12px; color: var(--ink-2); line-height: 1.55; cursor: pointer; }
+  .agree input { width: 17px; height: 17px; accent-color: var(--brand); flex: none; margin-top: 1px; cursor: pointer; }
+
+  .success { text-align: center; padding: 8px 0 4px; }
+  .ok-ring { width: 74px; height: 74px; border-radius: 50%; background: var(--grad); display: grid; place-items: center; margin: 0 auto 16px; color: #fff; animation: popIn .5s var(--ease); box-shadow: 0 14px 30px rgba(242, 101, 34, .4); }
+  .ok-ring svg { width: 34px; height: 34px; }
+  @keyframes popIn { from { transform: scale(.3); opacity: 0; } }
+
+  .mini-timeline { display: flex; gap: 0; margin-top: 16px; }
+  .mt { flex: 1; text-align: center; font-size: 10.5px; font-weight: 700; color: var(--muted); position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .mt::before { content: ""; width: 13px; height: 13px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border-strong); position: relative; z-index: 1; }
+  .mt::after { content: ""; position: absolute; top: 5px; left: 50%; width: 100%; height: 2px; background: var(--border-strong); }
+  .mt:last-child::after { display: none; }
+  .mt.done { color: var(--ok); }
+  .mt.done::before { background: var(--ok); border-color: transparent; }
+  .mt.now { color: var(--brand); }
+  .mt.now::before { background: var(--grad); border-color: transparent; animation: blip 1.5s ease-in-out infinite; }
+  .mt.now::after { background: rgba(242, 101, 34, .4); }
+
+  .app-card { border: 1px solid rgba(242, 101, 34, .28); background: var(--grad-soft); border-radius: var(--r-md); padding: 14px; margin-top: 14px; }
+  .app-card .h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .app-card .h b { font-size: 12.5px; }
+  .app-card .amt { font-size: 19px; font-weight: 800; letter-spacing: -.02em; margin-top: 8px; }
+  .app-card .amt small { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .app-card .eta { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+  .app-card .eta svg { width: 11px; height: 11px; }
+  .app-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .app-actions .btn { flex: 1; }
+
+  .ewah-row { display: flex; align-items: center; gap: 10px; padding: 11px 2px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .ewah-row:last-child { border-bottom: 0; }
+  .ewah-row .r { flex: 1; min-width: 0; }
+  .ewah-row .r b { font-size: 12.5px; display: block; }
+  .ewah-row .r small { font-size: 11px; color: var(--muted); }
+  .ewah-row .a { font-weight: 800; }
+  .ewah-row .s { font-size: 10.5px; font-weight: 800; color: var(--ok); background: var(--ok-bg); padding: 3px 8px; border-radius: 99px; }
+
+  .btn.small { height: 38px; font-size: 12.5px; padding: 0 13px; border-radius: 11px; }
+  .btn.danger { background: rgba(229, 72, 77, .1); color: var(--danger); border-color: transparent; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+
+  /* ============================================================
+     SLIP GAJI — A4 cetak / PDF (kop surat resmi)
+     ============================================================ */
+  .print-slip { display: none; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body { background: #fff !important; }
+    body > :not(#printSlip) { display: none !important; }
+    #printSlip { display: block !important; }
+  }
+
+  #printSlip { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .ps-wrap {
+    width: 210mm; min-height: 296mm; margin: 0 auto;
+    background: #fff; color: #20263b;
+    padding: 13mm 15mm 10mm;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .ps-kop { display: flex; align-items: flex-start; gap: 12px; position: relative; }
+  .ps-logo { width: 15mm; height: 15mm; object-fit: contain; flex: none; margin-top: 1mm; }
+  .ps-co-name { font-size: 21px; font-weight: 800; color: #0f1b3a; letter-spacing: .01em; line-height: 1.15; }
+  .ps-co-sub { font-size: 9.5px; font-weight: 700; color: #f26522; letter-spacing: .14em; text-transform: uppercase; margin-top: 1px; }
+  .ps-co-addr { font-size: 9.5px; color: #5a6279; line-height: 1.5; margin-top: 3px; }
+  .ps-rule { margin: 7mm 0 5mm; }
+  .ps-rule .r1 { display: block; height: 2.4px; background: #0f1b3a; }
+  .ps-rule .r2 { display: block; height: 1.1px; background: #f26522; margin-top: 1.6px; }
+  .ps-stamp {
+    position: absolute; right: 0; top: 21mm;
+    transform: rotate(-12deg);
+    border: 3px solid; border-radius: 10px;
+    padding: 2.5mm 6mm;
+    font-size: 17px; font-weight: 800; letter-spacing: .22em;
+    text-align: center; opacity: .92;
+  }
+  .ps-stamp.est { border-color: #e8930c; color: #c47c07; }
+  .ps-stamp.paid { border-color: #0ca678; color: #0a8f69; }
+  .ps-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 4mm; padding-right: 44mm; }
+  .ps-title-main { font-size: 19px; font-weight: 800; color: #0f1b3a; letter-spacing: .02em; }
+  .ps-title-main small { font-size: 12px; color: #5a6279; font-weight: 600; margin-left: 4px; letter-spacing: 0; }
+  .ps-ref { font-size: 9.5px; color: #5a6279; white-space: nowrap; }
+  .ps-ref b { color: #20263b; }
+
+  .ps-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .ps-ident { border: 1px solid #e3e6ef; border-radius: 6px; overflow: hidden; margin-bottom: 5mm; }
+  .ps-ident th, .ps-ident td { padding: 2.6mm 4mm; text-align: left; }
+  .ps-ident th { color: #8a91a8; font-weight: 600; font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; width: 20%; background: #f7f8fc; }
+  .ps-ident td { font-weight: 700; color: #20263b; font-size: 11px; }
+  .ps-ident tr + tr th, .ps-ident tr + tr td { border-top: 1px solid #eef0f7; }
+
+  .ps-detail { display: flex; gap: 4mm; margin-bottom: 5mm; }
+  .ps-col { flex: 1; border: 1px solid #e3e6ef; border-radius: 6px; overflow: hidden; }
+  .ps-col-h { background: #0f1b3a; color: #fff; font-size: 9px; font-weight: 800; letter-spacing: .16em; padding: 2.6mm 4mm; }
+  .ps-col-h .o { color: #ffb27e; }
+  .ps-col table td { padding: 2.3mm 4mm; border-top: 1px solid #f0f2f8; font-size: 10.5px; }
+  .ps-col table td:first-child { color: #4a526b; }
+  .ps-col table td.a { text-align: right; font-weight: 700; color: #20263b; white-space: nowrap; }
+  .ps-col table tr.ded td { color: #b0421d; }
+  .ps-col-tot { display: flex; justify-content: space-between; padding: 2.8mm 4mm; border-top: 2px solid #0f1b3a; font-size: 11px; font-weight: 800; background: #f7f8fc; }
+  .ps-col-tot b { color: #0f1b3a; }
+
+  .ps-thp {
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(135deg, #0f1b3a, #24355f);
+    color: #fff; border-radius: 6px; padding: 4.5mm 5mm; margin-bottom: 4.5mm;
+  }
+  .ps-thp .l { font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+  .ps-thp .s { font-size: 8.5px; color: #b9c2e0; margin-top: 1px; }
+  .ps-thp .v { font-size: 19px; font-weight: 800; color: #ff8a3d; letter-spacing: -.01em; white-space: nowrap; }
+
+  .ps-notes { font-size: 8.5px; color: #8a91a8; line-height: 1.55; margin-bottom: 5mm; padding: 0 1mm; }
+
+  .ps-sign { display: flex; gap: 8mm; margin-top: auto; padding: 0 8mm; }
+  .ps-sign-col { flex: 1; text-align: center; font-size: 9.5px; color: #4a526b; }
+  .ps-sign-col .l { font-weight: 700; }
+  .ps-sign-col .l2 { font-size: 8.5px; color: #8a91a8; margin-top: 1px; }
+  .ps-sign-col .line { height: 14mm; }
+  .ps-sign-col .name { border-top: 1px solid #20263b; padding-top: 1.5mm; font-weight: 700; color: #20263b; }
+
+  .ps-foot {
+    margin-top: 5mm; padding-top: 3mm; border-top: 1px solid #e3e6ef;
+    font-size: 8px; color: #9aa1b8; text-align: center;
+  }
+  .ps-foot b { color: #6b7390; }
+
+  /* ─────────────────────────────────────────────────────────────
+     LOGIN PAGE
+     ───────────────────────────────────────────────────────────── */
+  #loginView {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 300;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; overflow-y: auto;
+    background:
+      radial-gradient(900px 480px at 85% -10%, rgba(242, 101, 34, .16), transparent 60%),
+      radial-gradient(700px 420px at -10% 110%, rgba(44, 74, 158, .28), transparent 60%),
+      var(--bg);
+  }
+  #loginView .grain, #loginView .bg-orbs { position: absolute; z-index: -1; }
+  .lg-card {
+    width: 100%; max-width: 372px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 22px; padding: 30px 26px 24px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .45);
+    animation: lgIn .45s cubic-bezier(.2, .7, .3, 1) both;
+  }
+  @keyframes lgIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .lg-brand { display: flex; align-items: center; gap: 12px; }
+  .lg-brand .mark { width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), #ff9a5a); display: grid; place-items: center; }
+  .lg-brand .mark img { width: 30px; height: 30px; }
+  .lg-brand .nm { font-size: 20px; font-weight: 900; letter-spacing: -.02em; color: var(--ink); }
+  .lg-brand .sub { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+  .lg-card h1 { font-size: 21px; font-weight: 900; letter-spacing: -.02em; margin-top: 22px; color: var(--ink); }
+  .lg-card .lead { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.55; }
+  .lg-field { margin-top: 18px; }
+  .lg-field .k { font-size: 11.5px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; }
+  .lg-input-wrap { position: relative; }
+  .lg-input {
+    width: 100%; box-sizing: border-box;
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: 12px; padding: 12px 14px; color: var(--ink);
+    font-size: 14px; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .lg-input::placeholder { color: var(--muted); }
+  .lg-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(242, 101, 34, .18); }
+  .lg-eye {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: none; border: 0; color: var(--muted); cursor: pointer;
+    padding: 8px; display: grid; place-items: center;
+  }
+  .lg-eye:hover { color: var(--ink); }
+  .lg-row { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+  .lg-remember { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .lg-remember input { accent-color: var(--primary); }
+  .lg-forgot { font-size: 12px; font-weight: 600; color: var(--primary); background: none; border: 0; cursor: pointer; padding: 0; }
+  .lg-err {
+    display: none; margin-top: 14px; padding: 9px 11px; border-radius: 10px;
+    background: rgba(229, 72, 77, .12); border: 1px solid rgba(229, 72, 77, .35);
+    color: #ff8b90; font-size: 12px; line-height: 1.45;
+  }
+  .lg-err.show { display: block; }
+  .lg-btn {
+    width: 100%; margin-top: 18px; padding: 13px; border: 0; border-radius: 12px;
+    background: var(--primary); color: #fff; font-size: 14.5px; font-weight: 800;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: filter .15s, transform .05s;
+  }
+  .lg-btn:hover { filter: brightness(1.08); }
+  .lg-btn:active { transform: scale(.99); }
+  .lg-btn:disabled { opacity: .6; cursor: default; }
+  .lg-btn .spinner {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff;
+    animation: spin .7s linear infinite; display: none;
+  }
+  .lg-btn.loading .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .lg-demo {
+    margin-top: 18px; padding: 11px 12px; border-radius: 12px;
+    background: rgba(44, 74, 158, .16); border: 1px dashed rgba(120, 150, 230, .4);
+    font-size: 11.5px; color: var(--muted); line-height: 1.55;
+  }
+  .lg-demo b { color: var(--ink-2); }
+  .lg-demo code { color: #ff8a3d; font-weight: 700; }
+  .lg-demo button {
+    margin-top: 8px; background: rgba(242, 101, 34, .14); color: #ff8a3d;
+    border: 1px solid rgba(242, 101, 34, .4); border-radius: 9px;
+    padding: 7px 11px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+  }
+  .lg-foot { margin-top: 22px; text-align: center; font-size: 10.5px; color: var(--muted); }
+  .lg-foot a { color: var(--muted); text-decoration: underline; cursor: pointer; }
+  .lg-brand + .lg-out { display: none; }
+  .logout-btn {
+    width: 100%; margin-top: 16px; padding: 11px; border-radius: 12px;
+    background: none; border: 1px solid rgba(229, 72, 77, .45); color: #ff8b90;
+    font-size: 13px; font-weight: 700; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; gap: 7px;
+  }
+  .logout-btn:hover { background: rgba(229, 72, 77, .1); }
+</style>
+
+<!-- ================= Premium background layers ================= -->
+<div class="bg-orbs"><span class="o1"></span><span class="o2"></span><span class="o3"></span></div>
+<div class="grain"></div>
+
+<!-- ================= LOGIN PAGE ================= -->
+<div id="loginView" role="dialog" aria-label="Sign in">
+  <div class="lg-card">
+    <div class="lg-brand">
+      <span class="mark"><img src="src/brand/proqpay-icon.png" alt="ProQPay"></span>
+      <div>
+        <div class="nm">ProQPay</div>
+        <div class="sub">Payroll & HR Digital</div>
+      </div>
+    </div>
+
+    <h1>Welcome back</h1>
+    <div class="lead">Masuk ke portal Employee Self-Service untuk melihat slip gaji, status payroll, dan mengajukan Advance Salary.</div>
+
+    <div class="lg-field">
+      <div class="k">Employee ID</div>
+      <div class="lg-input-wrap">
+        <input class="lg-input" id="lgEmpInput" type="text" autocomplete="username" placeholder="cth: EMP-2023-0187" spellcheck="false">
+      </div>
+    </div>
+
+    <div class="lg-field">
+      <div class="k">Password</div>
+      <div class="lg-input-wrap">
+        <input class="lg-input" id="lgPassInput" type="password" autocomplete="current-password" placeholder="••••••••">
+        <button type="button" class="lg-eye" id="lgEyeBtn" title="Show password" aria-label="Show password"></button>
+      </div>
+    </div>
+
+    <div class="lg-row">
+      <label class="lg-remember"><input type="checkbox" id="lgRemember" checked> Ingat saya di perangkat ini</label>
+      <button type="button" class="lg-forgot" id="lgForgotBtn">Forgot password?</button>
+    </div>
+
+    <div class="lg-err" id="lgError"></div>
+
+    <button type="button" class="lg-btn" id="lgBtn"><span class="spinner"></span><span id="lgBtnTxt">Sign In</span></button>
+
+    <div class="lg-demo">
+      <div><b>Mode demo</b> — belum terhubung ke backend. Gunakan kredensial contoh:</div>
+      <div>Employee ID: <code>EMP-2023-0187</code> · Password: <code>proqpay</code></div>
+      <button type="button" id="lgFillBtn">Isi otomatis kredensial demo</button>
+    </div>
+
+    <div class="lg-foot">Lupa kata sandi? Hubungi HR perusahaan Anda. · © 2026 ProQPay</div>
+  </div>
+</div>
+
+<!-- ================= Header ================= -->
+<header class="app-header">
+  <div class="h-inner">
+    <div class="brand">
+      <span class="mark"><img src="src/brand/proqpay-icon.png" alt="ProQPay"></span>
+      <span class="nm">ProQPay</span>
+    </div>
+    <button class="icon-btn" id="bellBtn" title="Notifikasi" aria-label="Notifikasi">
+      <span id="bellIcon"></span>
+      <span class="dot"></span>
+    </button>
+    <div class="user-chip" id="userChip">
+      <div class="avatar"><span id="avatarEl">AP</span></div>
+      <div class="user-meta">
+        <div class="name" id="userName">Andi Pratama</div>
+        <div class="co" id="userCo">PT Maju Jaya Teknologi</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= Promotional Ad Banner (bawah header) ================= -->
+<section class="ad-wrap reveal" style="--d:.04s" id="adWrap" aria-label="Promosi">
+  <button class="ad-close" id="adClose" title="Tutup iklan" aria-label="Tutup iklan">✕</button>
+  <div class="ad-track" id="adTrack"></div>
+</section>
+
+<main class="app" id="appMain">
+
+  <!-- ================= Hero ================= -->
+  <section class="hero reveal" style="--d:.04s">
+    <div class="hero-head">
+      <div>
+        <h1>Hello, <em id="greetName">Andi</em> 👋</h1>
+        <p>Your pay hub — all your payroll info in one place</p>
+      </div>
+      <span class="live-pill"><i></i> <span id="periodChip">August · Live</span></span>
+    </div>
+    <div class="stats">
+      <div class="stat reveal" style="--d:.10s">
+        <div class="ic iv" id="statNetIc"></div>
+        <div class="lbl">Net salary <span id="netTag">(est.)</span></div>
+        <div class="val" id="statNet">—</div>
+      </div>
+      <div class="stat reveal" style="--d:.16s">
+        <div class="ic ig" id="statPayIc"></div>
+        <div class="lbl">Payday</div>
+        <div class="val" id="statPay">—</div>
+      </div>
+      <div class="stat reveal" style="--d:.22s">
+        <div class="ic ia" id="statRefIc"></div>
+        <div class="lbl">Payroll ref.</div>
+        <div class="val" id="statRef">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Payroll Progress Tracker ================= -->
+  <section class="card reveal" style="--d:.16s" aria-label="Payroll status for the current month">
+    <div class="card-head">
+      <div>
+        <h2>Payroll Status — <span id="payPeriodEl">August 2026</span></h2>
+        <div class="sub">Your payroll progress at a glance</div>
+      </div>
+      <span class="pill info pulse" id="stagePill"><i></i>Processing</span>
+    </div>
+
+    <div class="stage-hero">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 74 74">
+          <defs>
+            <linearGradient id="ringGrad" x1="0.5" y1="0" x2="1" y2="0.75">
+              <stop offset="0%" stop-color="#24355f"/>
+              <stop offset="100%" stop-color="#f97316"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="37" cy="37" r="26"></circle>
+          <circle class="ring-fg" id="ringFg" cx="37" cy="37" r="26"></circle>
+        </svg>
+        <span class="pct" id="ringPct">50%</span>
+      </div>
+      <div class="sh">
+        <div class="t" id="shTitle">Processing</div>
+        <div class="d" id="shDesc">Menghitung pajak & potongan</div>
+        <span class="eta" id="shEta">Est. before payday</span>
+      </div>
+    </div>
+
+    <div class="stepper" id="stepperEl"></div>
+
+    <div class="stage-note" id="sdNote">Stage notes.</div>
+    <div class="chips" id="breakdownChips"></div>
+
+    <div class="demo">
+      <span class="lbl">Simulate stage (demo)</span>
+      <div class="seg" id="demoSeg"></div>
+    </div>
+  </section>
+
+  <!-- ================= Quick Actions ================= -->
+  <section class="quick reveal" style="--d:.28s" aria-label="Aksi cepat">
+    <button class="qbtn" id="dlBtn">
+      <span class="ic dl" id="dlIc"></span>
+      <span>
+        <span class="lbl">Download Payslip</span>
+        <span class="sub" id="dlSub">August 2026 slip</span>
+      </span>
+      <span class="chev" id="chevDl"></span>
+    </button>
+  </section>
+
+  <!-- ================= Advance Gaji · EWA ================= -->
+  <section class="card reveal" style="--d:.3s" id="ewaCard" aria-label="Advance Salary EWA">
+    <div class="ewaa">
+      <div class="ewaa-head">
+        <span class="ewaa-ic" id="ewaaIc"></span>
+        <div class="ewaa-tt"><b>Advance Salary</b><span>Cairkan gaji yang sudah Anda kerjakan, tanpa menunggu gajian</span></div>
+        <span class="pill ok" id="ewaaPill">Ready</span>
+      </div>
+      <div class="ewaa-avail">
+        <div><div class="l">Advance Limit</div><div class="v" id="ewaaAvail">—</div></div>
+        <div style="text-align:right;font-size:10.5px;color:var(--muted);line-height:1.5">Up to 30%<br>of this month's pay</div>
+      </div>
+      <div id="ewaaApp"></div>
+      <div class="ewaa-sub">Cairkan gaji yang sudah Anda kerjakan tanpa agunan. Biaya layanan transparan dan dipotong otomatis saat gajian.</div>
+      <button class="btn primary" id="ewaaBtn" style="width:100%">Request Advance</button>
+    </div>
+  </section>
+
+  <!-- ================= Payslip History ================= -->
+  <section class="card reveal" style="--d:.34s" id="histCard">
+    <div class="card-head">
+      <div>
+        <h2>Payslip History</h2>
+        <div class="sub">Tap a period to view the details</div>
+      </div>
+      <span class="pill info" id="histCount">4 months</span>
+    </div>
+    <div id="histList"></div>
+  </section>
+</main>
+
+<footer class="app-footer reveal" style="--d:.4s">
+  <img class="foot-logo" src="src/brand/proqpay-logo.png" alt="ProQPay"><br>
+  © 2026 ProQPay — AI Payroll OS · Multi-tenant<br>
+  <a href="javascript:void(0)" onclick="document.getElementById('helpModal').dataset.open=1;openModalById('helpModal')">Help</a>
+  &nbsp;·&nbsp;
+  <a href="javascript:void(0)" onclick="toast('Seluruh data Anda diproses sesuai ketentuan perlindungan data.')">Privacy</a>
+</footer>
+
+<!-- ================= Bottom Tab Bar ================= -->
+<nav class="tabbar" id="tabbar" aria-label="Navigasi utama"></nav>
+
+<div class="toast" id="toastEl"><span id="toastIc"></span><span id="toastTxt"></span></div>
+
+<!-- ================= Skeleton loader ================= -->
+<div id="skeleton">
+  <div class="sk-inner">
+    <div class="sk-h"></div>
+    <div class="sk-line" style="width:40%"></div>
+    <div class="sk-card"></div>
+    <div class="sk-card" style="height:150px"></div>
+  </div>
+</div>
+
+<!-- ================= Modal: Slip Gaji ================= -->
+<div class="backdrop" id="payslipModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Payslip — <span id="slipPeriod">August 2026</span></h3>
+      <button class="x" data-close aria-label="Tutup">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="slip-meta">
+        <div><b id="slipCo">PT Maju Jaya Teknologi</b><br><span id="slipEmp">Andi Pratama</span></div>
+        <div style="text-align:right"><b id="slipStatus">Estimate</b><br><span id="slipBank">BCA •••• 4821</span></div>
+      </div>
+      <div class="slip-grid" id="slipRows"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="slipPrintBtn" data-icon="print">Print / PDF</button>
+      <button class="btn primary" id="slipDlBtn" data-icon="download">Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Slip Gaji: dokumen A4 cetak/PDF ================= -->
+<div class="print-slip" id="printSlip" aria-hidden="true">
+  <div class="ps-wrap">
+    <div class="ps-kop">
+      <img class="ps-logo" src="src/brand/proqpay-icon.png" alt="" aria-hidden="true">
+      <div>
+        <div class="ps-co-name" id="psCoName">PT MAJU JAYA TEKNOLOGI</div>
+        <div class="ps-co-sub" id="psCoSub">Payroll &amp; HR Digital</div>
+        <div class="ps-co-addr" id="psCoAddr"></div>
+      </div>
+      <div class="ps-stamp est" id="psStamp">ESTIMASI</div>
+    </div>
+    <div class="ps-rule"><span class="r1"></span><span class="r2"></span></div>
+
+    <div class="ps-title">
+      <div class="ps-title-main">PAYSLIP <small>— <span id="psPeriod"></span></small></div>
+      <div class="ps-ref">Ref: <b id="psRef"></b> · Status: <b id="psStatus"></b></div>
+    </div>
+
+    <table class="ps-tbl ps-ident">
+      <tbody id="psIdent"></tbody>
+    </table>
+
+    <div class="ps-detail">
+      <div class="ps-col">
+        <div class="ps-col-h">EARNINGS</div>
+        <table class="ps-tbl"><tbody id="psEarn"></tbody></table>
+        <div class="ps-col-tot"><span>Subtotal</span><b id="psEarnTot"></b></div>
+      </div>
+      <div class="ps-col">
+        <div class="ps-col-h">DEDUCTIONS</div>
+        <table class="ps-tbl"><tbody id="psDed"></tbody></table>
+        <div class="ps-col-tot"><span>Subtotal</span><b id="psDedTot"></b></div>
+      </div>
+    </div>
+
+    <div class="ps-thp">
+      <div>
+        <div class="l">TAKE-HOME PAY (THP)</div>
+        <div class="s" id="psThpNote"></div>
+      </div>
+      <div class="v" id="psThp"></div>
+    </div>
+
+    <div class="ps-notes" id="psNotes"></div>
+
+    <div class="ps-sign">
+      <div class="ps-sign-col">
+        <div class="l">Prepared by,</div>
+        <div class="l2">HR — Payroll</div>
+        <div class="line"></div>
+        <div class="name">Nadia Salsabila</div>
+      </div>
+      <div class="ps-sign-col">
+        <div class="l">Received by,</div>
+        <div class="l2">Employee</div>
+        <div class="line"></div>
+        <div class="name" id="psEmpName"></div>
+      </div>
+    </div>
+
+    <div class="ps-foot" id="psFoot"></div>
+  </div>
+</div>
+
+<!-- ================= Modal: Profil ================= -->
+<div class="backdrop" id="profileModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3>My Profile</h3>
+      <button class="x" data-close aria-label="Tutup">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="prof-hero">
+        <div class="avatar"><span id="profAvatar">AP</span></div>
+        <div>
+          <div class="t" id="profName">Andi Pratama</div>
+          <div class="s" id="profRole">Staff Finance · PT Maju Jaya Teknologi</div>
+        </div>
+      </div>
+      <div class="prof-rows" id="profRows"></div>
+      <button type="button" class="logout-btn" id="logoutBtn"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Modal: Bantuan ================= -->
+<div class="backdrop" id="helpModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Help Center</h3>
+      <button class="x" data-close aria-label="Tutup">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="help-item" id="helpHr">
+        <span class="ic ib" id="helpHrIc"></span>
+        <div><div class="t">Contact HR</div><div class="s">helpdesk@majujaya.co.id · ext. 210</div></div>
+        <span class="chev" id="helpHrChev"></span>
+      </div>
+      <div class="help-item" id="helpFaq">
+        <span class="ic ib" id="helpFaqIc"></span>
+        <div><div class="t">Payroll FAQ</div><div class="s">Tax, BPJS, payday schedule</div></div>
+        <span class="chev" id="helpFaqChev"></span>
+      </div>
+      <div id="faqList" hidden style="margin-top:4px">
+        <details class="faq-item"><summary>When is my salary paid out?</summary><div class="faq-body">Gaji periode berjalan dicairkan setelah proses payroll selesai — diperkirakan sebelum tanggal gajian. Pantau statusnya di kartu Payroll Status.</div></details>
+        <details class="faq-item"><summary>What is PPh 21?</summary><div class="faq-body">PPh 21 adalah pajak penghasilan yang dipotong dari gaji sesuai ketentuan yang berlaku. Rincian lengkapnya selalu tercantum di slip gaji Anda.</div></details>
+        <details class="faq-item"><summary>How much is my BPJS deduction?</summary><div class="faq-body">BPJS Kesehatan 1% dari gaji Anda dan BPJS Ketenagakerjaan 2%. Nilai pastinya tertera di rincian slip gaji.</div></details>
+        <details class="faq-item"><summary>How do I change my salary account?</summary><div class="faq-body">Hubungi HR perusahaan minimal 5 hari kerja sebelum tanggal cut-off agar berlaku pada periode berikutnya.</div></details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Modal: Notifikasi ================= -->
+<div class="backdrop" id="notifyModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Notifications</h3>
+      <button class="x" data-close aria-label="Tutup">✕</button>
+    </div>
+    <div class="modal-body" id="notifList"></div>
+  </div>
+</div>
+
+<!-- ================= Modal: EWA Advance ================= -->
+<div class="backdrop" id="ewaModal" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="ewaTitle">Advance Salary</h3>
+      <button class="x" data-close aria-label="Tutup">✕</button>
+    </div>
+    <div class="modal-body" id="ewaBody"></div>
+    <div class="modal-foot" id="ewaFoot"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ════════════════════════════════════════════════════════════════
+     KONFIGURASI APLIKASI — SELURUHNYA PLACEHOLDER (DATA DEMO)
+     -----------------------------------------------------------------
+     Semua data di bawah masih statis untuk simulasi. Setiap nilai
+     nantinya diisi dari hasil query SQL lewat API backend, dipetakan
+     satu-satu di manifest `SQL_BIND` dan dimuat oleh `loadFromSQL()`.
+     Komentar per-field memakai format  [tabel.kolom].
+     Skema tabel lengkap:  src/docs/02-database-schema.md
+     ════════════════════════════════════════════════════════════════ */
+  var CONFIG = {
+    /* ── PROFIL KARYAWAN ─────────────────────────────────────────────
+       SELECT emp_name, company_name, role_name, email, phone,
+              emp_id, bank_name, bank_acc_no
+       FROM   v_employee WHERE emp_id = :empId        (:: SESSION.empId) */
+    employee: {
+      name: "Andi Pratama",                  // v_employee.emp_name
+      company: "PT Maju Jaya Teknologi",     // v_employee.company_name
+      role: "Staff Finance",                 // v_employee.role_name
+      email: "andi.pratama@majujaya.co.id",  // v_employee.email
+      phone: "+62 812-3456-7890",            // v_employee.phone
+      empId: "EMP-2023-0187",                // v_employee.emp_id  (= SESSION.empId)
+      bank: "BCA •••• 4821"                  // v_employee.bank_name + nomor mask (bank_acc_no)
+    },
+    /* ── PROFIL PERUSAHAAN / TENANT ──────────────────────────────────
+       SELECT company_name, tagline, address, contact, legal_name
+       FROM   m_company WHERE company_id = :companyId  (:: SESSION.companyId) */
+    company: {
+      name: "PT Maju Jaya Teknologi",                                        // m_company.company_name
+      tagline: "Payroll & HR Digital",                                       // m_company.tagline
+      address: "Menara Maju Jaya Lt. 18, Jl. Kemang Raya No. 88, Jakarta Selatan 12730", // m_company.address
+      contact: "Telp (021) 7590-1234 · Email hrd@majujaya.co.id · www.majujaya.co.id",   // m_company.contact
+      legal: "PT Fintek Maju Bersama"                                        // m_company.legal_name
+    },
+    /* ── PERIODE PAYROLL AKTIF ────────────────────────────────────────
+       SELECT pay_period, payroll_ref, stage_id, payday, payday_short
+       FROM   t_payroll_period WHERE period = :payPeriod AND company_id = :companyId */
+    payroll: {
+      period: "Agustus 2026",                // t_payroll_period.pay_period
+      ref: "PYRL-0826-00421",                // t_payroll_period.payroll_ref
+      stage: 2,                              // t_payroll_period.stage_id  (1..4, lihat m_payroll_stage)
+      payday: "Tuesday, 25 Aug 2026",        // t_payroll_period.payday (diformat, bukan string mentah)
+      paydayShort: "25 Aug"                  // t_payroll_period.payday_short
+    },
+    /* ── TAHAPAN PAYROLL (data master, relatif statis) ────────────────
+       SELECT sort_no, title_id, title_en, desc_id, meta, note, eta
+       FROM   m_payroll_stage ORDER BY sort_no */
+    stages: [
+      { title: "Awaiting Payroll Data", desc: "Menunggu data payroll dari perusahaan", meta: "Waiting",
+        note: "Sistem menunggu data payroll periode berjalan dari perusahaan. Status akan diperbarui setelah data diterima.",
+        eta: "Est. before payday" },
+      { title: "Processing", desc: "Menghitung komponen gaji Anda", meta: "In progress",
+        note: "Sistem menghitung komponen gaji, pajak, dan potongan secara otomatis. Anda dapat melihat perkiraannya di slip gaji.",
+        eta: "Est. before payday" },
+      { title: "Awaiting Payout", desc: "Menunggu proses pencairan dana", meta: "Waiting",
+        note: "Hasil perhitungan sedang menunggu proses pencairan. Dana akan ditransfer ke rekening terdaftar Anda.",
+        eta: "Est. before payday" },
+      { title: "Paid", desc: "Gaji telah ditransfer ke rekening Anda", meta: "Completed",
+        note: "Gaji Anda telah ditransfer ke rekening terdaftar. Slip gaji final tersedia di menu Payslip History.",
+        eta: "Done" }
+    ],
+    /* ── RIWAYAT SLIP GAJI ────────────────────────────────────────────
+       SELECT period, status, slip_id
+       FROM   t_payslip WHERE emp_id = :empId ORDER BY period DESC
+       ─ Detail per baris (rows):
+       SELECT label_en, amount
+       FROM   t_payslip_detail WHERE slip_id = :slipId
+       amount > 0 = penghasilan; amount < 0 = potongan */
+    payslips: [
+      { period: "Agustus 2026", status: "processing",
+        rows: [["Basic salary", 7500000], ["Position allowance", 1500000], ["Overtime pay", 600000],
+               ["BPJS Health", -190000], ["BPJS Employment", -210000], ["PPh 21", -420000]] },
+      { period: "Juli 2026", status: "paid",
+        rows: [["Basic salary", 7500000], ["Position allowance", 1500000], ["Overtime pay", 350000],
+               ["BPJS Health", -190000], ["BPJS Employment", -210000], ["PPh 21", -390000]] },
+      { period: "Juni 2026", status: "paid",
+        rows: [["Basic salary", 7500000], ["Position allowance", 1500000], ["Overtime pay", 280000],
+               ["BPJS Health", -190000], ["BPJS Employment", -210000], ["PPh 21", -370000]] },
+      { period: "Mei 2026", status: "paid",
+        rows: [["Basic salary", 7500000], ["Position allowance", 1500000], ["Overtime pay", 150000],
+               ["BPJS Health", -190000], ["BPJS Employment", -210000], ["PPh 21", -340000]] }
+    ],
+    /* ── BANNER PROMOSI ───────────────────────────────────────────────
+       SELECT tag, title, desc, cta, bg
+       FROM   m_promo WHERE company_id = :companyId AND active = 1 LIMIT 1 */
+    ads: [
+      { tag: "Advance Salary", title: "Get Paid Sooner, Worry Less",
+        desc: "Butuh dana di tengah bulan? Cairkan gaji yang sudah Anda kerjakan — proses mudah, tanpa agunan, tanpa bunga tersembunyi.",
+        cta: "Request Advance",
+        bg: "linear-gradient(115deg, #0f1b3a 0%, #1b2a52 55%, #24355f 100%)" }
+    ],
+    /* ── NOTIFIKASI ───────────────────────────────────────────────────
+       SELECT title, body, type, is_read, created_at
+       FROM   t_notification WHERE emp_id = :empId ORDER BY created_at DESC */
+    notifications: [
+      { title: "August 2026 payroll has moved to Processing", s: "Perhitungan pajak dan potongan sedang berjalan.", type: "a", unread: true },
+      { title: "Your July 2026 payslip is ready", s: "Unduh slip gaji Anda sebelum 31 August.", type: "g", unread: false },
+      { title: "Your July 2026 salary has been paid", s: "Rp 8.560.000 telah dikirim ke BCA •••• 4821.", type: "g", unread: false }
+    ]
+  };
+
+  /* ════════════════════════════════════════════════════════════════
+     SESSION — PLACEHOLDER IDENTITAS LOGIN
+     Diisi oleh backend saat login (token/JWT), BUKAN hardcode.
+     Jangan pernah menyimpan kredensial/token asli di kode ini.
+     ════════════════════════════════════════════════════════════════ */
+  var SESSION = {
+    empId: "EMP-2023-0187",    // dari token login → t_session.emp_id
+    companyId: "MAJU01",       // dari token login → t_session.company_id
+    apiBase: (typeof window !== "undefined" && window.PROQPAY_API_BASE) || "", // "" = same-origin Pages Functions
+    authToken: "",             // token akses (dipakai header Authorization) — diisi runtime, jangan hardcode
+    lang: "id",                // bahasa antarmuka: "id" | "en" (cadangan)
+    theme: "dark",             // tema paksa: "dark" (lihat <script> dark di atas)
+    payPeriod: "Agustus 2026"  // periode payroll aktif yang sedang dibuka
+  };
+
+  /* ════════════════════════════════════════════════════════════════
+     SQL_BIND — MANIFEST KONEKSI QUERY (PLACEHOLDER)
+     ----------------------------------------------------------------
+     Daftar query yang akan menggantikan setiap blok CONFIG/EWA saat
+     backend siap. Parametrize dengan placeholder SQL standar (:nama).
+     Skema tabel + contoh hasil: src/docs/02-database-schema.md
+     Cara pakai: lihat src/docs/03-api-integration.md
+     ════════════════════════════════════════════════════════════════ */
+  var SQL_BIND = {
+    login:          "SELECT emp_id, company_id, emp_name, pass_hash, active FROM m_employee WHERE emp_id = :empId AND active = 1",
+    session:        "SELECT emp_id, company_id, lang, theme FROM t_session WHERE emp_id = :empId",
+    employee:       "SELECT emp_name, company_name, role_name, email, phone, emp_id, bank_name, bank_acc_no FROM v_employee WHERE emp_id = :empId",
+    company:        "SELECT company_name, tagline, address, contact, legal_name FROM m_company WHERE company_id = :companyId",
+    payroll:        "SELECT pay_period, payroll_ref, stage_id, payday, payday_short FROM t_payroll_period WHERE company_id = :companyId AND pay_period = :payPeriod",
+    stages:         "SELECT sort_no, title_id, title_en, desc_id, meta, note, eta FROM m_payroll_stage ORDER BY sort_no",
+    payslips:       "SELECT period, status, slip_id FROM t_payslip WHERE emp_id = :empId ORDER BY period DESC",
+    payslipRows:    "SELECT label_en, amount FROM t_payslip_detail WHERE slip_id = :slipId ORDER BY sort_no",
+    ads:            "SELECT tag, title, desc, cta, bg FROM m_promo WHERE company_id = :companyId AND active = 1 LIMIT 1",
+    notifications:  "SELECT title, body, type, is_read FROM t_notification WHERE emp_id = :empId ORDER BY created_at DESC",
+    ewaRules:       "SELECT fee_rate, min_fee, min_fee_amount, max_tenor_months, max_percent, min_days_worked FROM m_ewa_config WHERE company_id = :companyId",
+    ewaEligibility: "SELECT days_worked, tenure_months FROM v_ewa_eligibility WHERE emp_id = :empId AND pay_period = :payPeriod",
+    ewaApp:         "SELECT ref_no, amount, fee, status, requested_at, approved_at FROM t_advance WHERE emp_id = :empId AND status IN ('processing','approved') ORDER BY requested_at DESC LIMIT 1",
+    ewaHistory:     "SELECT ref_no, requested_at, amount, status FROM t_advance WHERE emp_id = :empId ORDER BY requested_at DESC"
+  };
+
+  /* ════════════════════════════════════════════════════════════════
+     loadFromSQL() — ADAPTER BACKEND (PLACEHOLDER)
+     ----------------------------------------------------------------
+     Fungsi inilah yang nantinya mengambil seluruh data dari API
+     backend (yang menjalankan query pada SQL_BIND) lalu menimpa
+     CONFIG + EWA sebelum aplikasi di-render.
+
+     Saat ini masih "no-op" (mengembalikan data demo apa adanya).
+     Cara menghubungkan sungguhan: src/docs/03-api-integration.md
+     Aktifkan dengan:  var SQL_LIVE = true;  (lihat bawah)
+     ════════════════════════════════════════════════════════════════ */
+  function applyPortalPayload(data) {
+    if (data.config) Object.assign(CONFIG, data.config);
+    if (data.ewa) {
+      Object.assign(EWA.rules, data.ewa.rules || {});
+      Object.assign(EWA.emp, data.ewa.emp || {});
+      if (Object.prototype.hasOwnProperty.call(data.ewa, "app")) EWA.app = data.ewa.app;
+      if (data.ewa.history) EWA.history = data.ewa.history;
+    }
+    currentStage = Math.min(4, Math.max(1, CONFIG.payroll.stage || 1));
+    SESSION.payPeriod = CONFIG.payroll.period || SESSION.payPeriod;
+    EWA.PAYDAY = (CONFIG.payroll.payday && CONFIG.payroll.payday.indexOf(",") !== -1)
+      ? CONFIG.payroll.payday.split(",")[1].trim()
+      : CONFIG.payroll.paydayShort || EWA.PAYDAY;
+    return CONFIG;
+  }
+  function loadFromSQL() {
+    var url = SESSION.apiBase + "/api/portal/init";
+    return fetch(url, { headers: { Authorization: "Bearer " + SESSION.authToken } })
+      .then(function (r) { if (!r.ok) throw new Error("init failed: " + r.status); return r.json(); })
+      .then(applyPortalPayload);
+  }
+  /* Live pada Pages Functions. Perchance/file tanpa API → demo. Override: window.PROQPAY_SQL_LIVE / PROQPAY_API_BASE. */
+  var SQL_LIVE = (function () {
+    if (typeof window !== "undefined" && window.PROQPAY_SQL_LIVE === true) return true;
+    if (typeof window !== "undefined" && window.PROQPAY_SQL_LIVE === false) return false;
+    if (typeof location === "undefined") return false;
+    if (location.protocol !== "http:" && location.protocol !== "https:") return false;
+    if (/perchance\.org/.test(location.hostname) && !SESSION.apiBase) return false;
+    return true;
+  })();
+
+  /* ════════════════════════════════════════════════════════════════
+     AUTH — LOGIN (PLACEHOLDER UNTUK KONEKSI SQL)
+     ----------------------------------------------------------------
+     Mode demo (SQL_LIVE = false):
+       Kredensial dicek di sisi klien (hash SHA-256):
+         Employee ID = EMP-2023-0187 · Password = proqpay
+     Mode backend (SQL_LIVE = true):
+       authLogin() memanggil  POST <apiBase>/api/login
+       Server memvalidasi terhadap SQL_BIND.login (m_employee.pass_hash),
+       mencatat t_login_attempt (rate-limit), lalu menerbitkan token
+       sesi (INSERT t_session). Respons mengisi SESSION.
+     Sesi disimpan di localStorage/sessionStorage (kunci: proqpay-auth).
+     ════════════════════════════════════════════════════════════════ */
+  var AUTH = {
+    demoEmpId: "EMP-2023-0187",
+    demoPass: "proqpay",
+    sessionKey: "proqpay-auth"
+  };
+
+  function sha256Hex(text) {
+    if (window.crypto && crypto.subtle) {
+      return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))
+        .then(function (buf) {
+          var a = new Uint8Array(buf), h = "";
+          for (var i = 0; i < a.length; i++) h += a[i].toString(16).padStart(2, "0");
+          return h;
+        });
+    }
+    return Promise.resolve("");
+  }
+
+  /* inti proses login — placeholder; blok SQL_LIVE dipakai saat backend siap */
+  function authLogin(empId, pass) {
+    if (!SQL_LIVE) {
+      return Promise.all([sha256Hex(pass), sha256Hex(AUTH.demoPass)]).then(function (hs) {
+        if (empId.trim() !== AUTH.demoEmpId || hs[0] !== hs[1]) {
+          throw new Error("Employee ID atau password salah. Gunakan kredensial demo yang tertera.");
+        }
+        return { token: "demo-session", emp_id: AUTH.demoEmpId, company_id: "MAJU01" };
+      });
+    }
+    /* ── BACKEND (SQL_LIVE): POST /api/portal/login ke Pages Functions ESS
+       (baca D1 Lite, tanpa mengubah repo Lite). Lihat src/docs/06-d1-mapping.md */
+    return fetch(SESSION.apiBase + "/api/portal/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emp_id: empId, password: pass })
+    }).then(function (r) {
+      if (r.status === 401) throw new Error("Employee ID atau password salah.");
+      if (r.status === 429) throw new Error("Terlalu banyak percobaan. Tunggu beberapa saat lalu coba lagi.");
+      if (!r.ok) throw new Error("Gagal masuk ke server (" + r.status + ").");
+      return r.json();
+    });
+  }
+
+  function authPersist(session, remember) {
+    var s = JSON.stringify(session);
+    (remember ? localStorage : sessionStorage).setItem(AUTH.sessionKey, s);
+  }
+  function authRestore() {
+    var raw = localStorage.getItem(AUTH.sessionKey) || sessionStorage.getItem(AUTH.sessionKey);
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  }
+  function authClear() {
+    localStorage.removeItem(AUTH.sessionKey);
+    sessionStorage.removeItem(AUTH.sessionKey);
+  }
+
+  function openLogin() { $("loginView").hidden = false; }
+  function enterApp() {
+    $("loginView").hidden = true;
+    document.body.classList.add("logged-in");
+  }
+
+  function initAuth() {
+    var emp = $("lgEmpInput"), pass = $("lgPassInput"), err = $("lgError"),
+        btn = $("lgBtn"), eye = $("lgEyeBtn");
+
+    put("lgEyeBtn", "eye", 16);
+    function setEye(show) { pass.type = show ? "text" : "password"; put("lgEyeBtn", show ? "eyeOff" : "eye", 16); }
+    eye.addEventListener("click", function () { setEye(pass.type === "password"); });
+
+    $("lgFillBtn").addEventListener("click", function () {
+      emp.value = AUTH.demoEmpId;
+      pass.value = AUTH.demoPass;
+      err.classList.remove("show");
+      emp.focus();
+    });
+    $("lgForgotBtn").addEventListener("click", function () {
+      toast("Hubungi HR perusahaan Anda untuk mereset kata sandi.");
+    });
+
+    function doLogin() {
+      err.classList.remove("show");
+      btn.classList.add("loading");
+      btn.disabled = true;
+      authLogin(emp.value, pass.value).then(function (session) {
+        SESSION.empId = session.emp_id || SESSION.empId;
+        SESSION.companyId = session.company_id || SESSION.companyId;
+        SESSION.authToken = session.token || "";
+        authPersist({ emp_id: SESSION.empId, company_id: SESSION.companyId, token: SESSION.authToken, t: Date.now() }, $("lgRemember").checked);
+        enterApp();
+        /* backend mode: muat data asli setelah login berhasil */
+        if (SQL_LIVE) {
+          loadFromSQL().then(function () { init(); }).catch(function (err) {
+            err.textContent = "Login berhasil tetapi data D1 gagal dimuat. Coba lagi atau cek /api/health.";
+            err.classList.add("show");
+            btn.classList.remove("loading");
+            btn.disabled = false;
+          });
+        }
+      }).catch(function (e) {
+        err.textContent = e && e.message ? e.message : "Gagal masuk. Coba lagi.";
+        err.classList.add("show");
+        btn.classList.remove("loading");
+        btn.disabled = false;
+        pass.value = "";
+        pass.focus();
+      });
+    }
+    btn.addEventListener("click", doLogin);
+    pass.addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+    emp.addEventListener("keydown", function (e) { if (e.key === "Enter") pass.focus(); });
+  }
+
+  function authLogout() {
+    authClear();
+    toast("Anda telah keluar. Sampai jumpa!");
+    window.location.reload();
+  }
+
+  /* =========================================================
+     STATE & HELPERS
+     ========================================================= */
+  var currentStage = Math.min(4, Math.max(1, CONFIG.payroll.stage));
+  var currentSlip = 0;
+  var RING_C = 163.4;
+
+  function $(id) { return document.getElementById(id); }
+  function fmt(n) { return "Rp " + Math.round(n).toLocaleString("id-ID"); }
+  function totalOf(slip) { return slip.rows.reduce(function (s, r) { return s + r[1]; }, 0); }
+  function initials(name) {
+    return name.split(" ").filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join("").toUpperCase();
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  var ID_MONTHS = { Januari: "01", Februari: "02", Maret: "03", April: "04", Mei: "05", Juni: "06", Juli: "07", Agustus: "08", September: "09", Oktober: "10", November: "11", Desember: "12" };
+  var ID_MONTHS_FULL = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  var EN_MONTHS = { Januari: "January", Februari: "February", Maret: "March", April: "April", Mei: "May", Juni: "June", Juli: "July", Agustus: "August", September: "September", Oktober: "October", November: "November", Desember: "December" };
+  function enPeriod(p) { return String(p).replace(/^\w+/, function (m) { return EN_MONTHS[m] || m; }); }
+  function idPeriod(p) {
+    return String(p).replace(/^\w+/, function (m) {
+      for (var k in EN_MONTHS) { if (EN_MONTHS[k] === m) return k; }
+      return m;
+    });
+  }
+  function sumRows(arr) { return arr.reduce(function (s, r) { return s + r[1]; }, 0); }
+  function slipRef(idx, period) {
+    var p = period.split(" ");
+    var mm = ID_MONTHS[p[0]] || "01";
+    return "PYRL-" + mm + (p[1] || "26").slice(2) + "-" + String(421 + idx).padStart(5, "0");
+  }
+  function loadLibs(urls, ok, fail) {
+    var pending = urls.length, err = false;
+    if (!pending) return ok();
+    urls.forEach(function (u) {
+      var s = document.createElement("script");
+      s.src = u;
+      s.onload = function () { if (!err && --pending === 0) ok(); };
+      s.onerror = function () { if (!err) { err = true; fail(); } };
+      document.head.appendChild(s);
+    });
+  }
+
+  /* =========================================================
+     PREMIUM ICON SET — inline SVG (lucide-style)
+     ========================================================= */
+  var SVG = {
+    wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/><path d="M13 11h8v4h-8a2 2 0 0 1 0-4z"/>',
+    sparkles: '<path d="M9.9 15.3a2 2 0 0 0-1.2-1.2l-6.1-1.6a.5.5 0 0 1 0-1L8.7 9.9a2 2 0 0 0 1.2-1.2l1.6-6.1a.5.5 0 0 1 1 0l1.6 6.1a2 2 0 0 0 1.2 1.2l6.1 1.6a.5.5 0 0 1 0 1l-6.1 1.6a2 2 0 0 0-1.2 1.2l-1.6 6.1a.5.5 0 0 1-1 0z"/><path d="M20 3v4M22 5h-4M4 17v2M5 18H3"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+    send: '<path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>',
+    home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+    file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8"/>',
+    help: '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+    user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>',
+    bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    bank: '<path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3H5z"/><path d="M6 10v8M10 10v8M14 10v8M18 10v8"/>',
+    check: '<path d="M5 13l4 4L19 7"/>',
+    chevR: '<path d="M9 6l6 6-6 6"/>',
+    chevD: '<path d="M6 9l6 6 6-6"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M16 8h-6M16 12h-6"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    print: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>',
+    mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+    build: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01"/>',
+    phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2z"/>',
+    hash: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>'
+  };
+
+  function ic(name, size) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"' +
+      (size ? ' width="' + size + '" height="' + size + '"' : '') + '>' + (SVG[name] || "") + '</svg>';
+  }
+  function put(id, name, size) { var el = $(id); if (el) el.innerHTML = ic(name, size); }
+
+  /* =========================================================
+     THEME — light / dark (auto + toggle)
+     ========================================================= */
+  /* =========================================================
+     HEADER & GREETING
+     ========================================================= */
+  function initHeader() {
+    var name = CONFIG.employee.name;
+    $("userName").textContent = name;
+    $("userCo").textContent = CONFIG.employee.company;
+    $("avatarEl").textContent = initials(name);
+    $("profAvatar").textContent = initials(name);
+    $("greetName").textContent = name.split(" ")[0];
+    $("profName").textContent = name;
+    $("profRole").textContent = CONFIG.employee.role + " · " + CONFIG.employee.company;
+
+    put("bellIcon", "bell");
+    put("statNetIc", "wallet", 15);
+    put("statPayIc", "calendar", 15);
+    put("statRefIc", "hash", 15);
+    put("dlIc", "download", 20);
+    put("chevDl", "chevR", 15);
+    put("helpHrIc", "build", 18);
+    put("helpFaqIc", "help", 18);
+    put("helpHrChev", "chevR", 15);
+    put("helpFaqChev", "chevR", 15);
+    put("toastIc", "check", 17);
+
+    var rows = [
+      ["mail", "Work email", CONFIG.employee.email],
+      ["phone", "Phone", CONFIG.employee.phone],
+      ["hash", "Employee ID", CONFIG.employee.empId],
+      ["wallet", "Salary account", CONFIG.employee.bank]
+    ];
+    $("profRows").innerHTML = rows.map(function (r) {
+      return '<div class="prof-row"><span class="ic">' + ic(r[0], 16) + '</span>' +
+             '<div><div class="k">' + r[1] + '</div><div class="v">' + r[2] + '</div></div></div>';
+    }).join("");
+
+    $("userChip").addEventListener("click", function () { openModal($("profileModal")); });
+
+    var lo = $("logoutBtn");
+    if (lo) {
+      lo.innerHTML = ic("logout", 16) + ' Log Out';
+      lo.addEventListener("click", function () { closeModal($("profileModal")); authLogout(); });
+    }
+  }
+
+  /* =========================================================
+     STATS
+     ========================================================= */
+  function renderStats() {
+    var processing = CONFIG.payslips[0].status !== "paid";
+    $("netTag").textContent = processing ? "(est.)" : "";
+    $("statNet").textContent = fmt(totalOf(CONFIG.payslips[0]));
+    $("statPay").textContent = CONFIG.payroll.paydayShort;
+    $("statRef").textContent = CONFIG.payroll.ref.slice(-6);
+  }
+
+  /* =========================================================
+     PAYROLL TRACKER
+     ========================================================= */
+  function stageTag(i) {
+    if (i < currentStage - 1) return { t: "Done", c: "done" };
+    if (i === currentStage - 1) return { t: "In progress", c: "now" };
+    return { t: "Queued", c: "wait" };
+  }
+  function stageIcon(i) {
+    if (i < currentStage - 1) return ic("check", 19);
+    return ic(["file", "gear", "clock", "check"][i], 19);
+  }
+
+  var SVG_EXTRA = {
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h6"/>',
+    bank: SVG.bank,
+    eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    eyeOff: '<path d="M17.9 17.9A10.7 10.7 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.1-5.9M9.9 4.2A9.5 9.5 0 0 1 12 4c7 0 11 8 11 8a18.6 18.6 0 0 1-2.2 3.2M6.6 6.6 1 1M6.6 6.6A18.4 18.4 0 0 1 12 9M23 23 17.9 17.9"/><path d="M14.1 14.1a3 3 0 0 1-4.2-4.2"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>'
+  };
+  SVG.lock = SVG_EXTRA.lock;
+  SVG.gear = SVG_EXTRA.gear;
+  SVG.clipboard = SVG_EXTRA.clipboard;
+  SVG.eye = SVG_EXTRA.eye;
+  SVG.eyeOff = SVG_EXTRA.eyeOff;
+  SVG.logout = SVG_EXTRA.logout;
+
+  function renderStepper() {
+    $("stepperEl").innerHTML = CONFIG.stages.map(function (s, i) {
+      var cls = i < currentStage - 1 ? " is-complete" : (i === currentStage - 1 ? " is-current" : "");
+      var tag = stageTag(i);
+      return '<div class="step' + cls + '">' +
+               '<div class="rail"><span class="badge">' + stageIcon(i) + '</span></div>' +
+               '<div class="body">' +
+                 '<div class="t">' + s.title + ' <span class="step-tag ' + tag.c + '">' + tag.t + '</span></div>' +
+                 '<div class="d">' + s.desc + '</div>' +
+                 '<div class="meta">' + ic("clock", 11) + ' ' + s.meta + '</div>' +
+               '</div>' +
+             '</div>';
+    }).join("");
+  }
+
+  function setRing(pct) {
+    var fg = $("ringFg");
+    fg.style.strokeDashoffset = RING_C * (1 - pct / 100);
+    $("ringPct").textContent = Math.round(pct) + "%";
+  }
+
+  function renderStageHero() {
+    var s = CONFIG.stages[currentStage - 1];
+    $("shTitle").textContent = s.title;
+    $("shDesc").textContent = s.desc;
+    $("shEta").innerHTML = ic("clock", 13) + ' <span>' + s.eta + '</span>';
+    setRing((currentStage / 4) * 100);
+  }
+
+  function renderBreakdown() {
+    var el = $("breakdownChips");
+    if (currentStage === 2) {
+      var rows = CONFIG.payslips[0].rows;
+      var items = [];
+      rows.forEach(function (r) {
+        var t = r[0];
+        if (t.indexOf("PPh") !== -1) items.push({ lbl: "PPh 21", v: r[1] });
+        if (t.indexOf("BPJS") !== -1) items.push({ lbl: "BPJS", v: r[1] });
+        if (t.indexOf("Overtime") !== -1) items.push({ lbl: "Overtime", v: r[1] });
+      });
+      el.innerHTML = items.map(function (it) {
+        var pos = it.v > 0;
+        return '<span class="chip-tag ' + (pos ? "pos" : "neg") + '">' + (pos ? "+" : "-") + " " + fmt(Math.abs(it.v)) + ' · ' + it.lbl + '</span>';
+      }).join("");
+    } else if (currentStage === 4) {
+      el.innerHTML = '<span class="chip-tag pos">' + ic("check", 13) + ' Salary paid to your account</span>';
+    } else if (currentStage === 3) {
+      el.innerHTML = '<span class="chip-tag neg">' + ic("clock", 13) + ' Awaiting payout</span>';
+    } else {
+      el.innerHTML = '<span class="chip-tag neg">' + ic("clock", 13) + ' Awaiting payroll data from your company</span>';
+    }
+  }
+
+  function renderPill() {
+    var p = $("stagePill");
+    var map = [
+      { t: "Awaiting Data", c: "info" },
+      { t: "Processing", c: "info" },
+      { t: "Awaiting Payout", c: "warn" },
+      { t: "Paid", c: "ok" }
+    ];
+    var active = currentStage < 4;
+    p.className = "pill " + map[currentStage - 1].c + (active ? " pulse" : "");
+    p.innerHTML = (active ? "<i></i>" : "") + map[currentStage - 1].t;
+  }
+
+  function setStage(n) {
+    currentStage = n;
+    renderStepper();
+    renderStageHero();
+    renderBreakdown();
+    renderPill();
+
+    var seg = $("demoSeg");
+    for (var i = 0; i < seg.children.length; i++) {
+      seg.children[i].classList.toggle("active", i === n - 1);
+    }
+
+    var note = $("sdNote");
+    note.classList.add("swap");
+    setTimeout(function () {
+      note.textContent = CONFIG.stages[n - 1].note;
+      note.classList.remove("swap");
+    }, 180);
+  }
+
+  function initTracker() {
+    var seg = $("demoSeg");
+    CONFIG.stages.forEach(function (s, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = i + 1;
+      b.title = "Simulate stage: " + s.title;
+      b.addEventListener("click", function () { setStage(i + 1); });
+      seg.appendChild(b);
+    });
+    var pp = enPeriod(CONFIG.payroll.period);
+    $("payPeriodEl").textContent = pp;
+    $("periodChip").textContent = pp.split(" ")[0] + " · Live";
+    $("dlSub").textContent = pp + " payslip";
+    setStage(currentStage);
+  }
+
+  /* =========================================================
+     PROMO BANNER — EWA (single slide + ilustrasi SVG)
+     ========================================================= */
+  function adArt() {
+    return '<svg class="ad-art" viewBox="0 0 260 260" fill="none" aria-hidden="true">' +
+      '<defs><linearGradient id="artGrad" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#f26522"/>' +
+      '</linearGradient></defs>' +
+      '<circle cx="130" cy="128" r="96" fill="rgba(242,101,34,.22)"/>' +
+      '<circle cx="130" cy="128" r="56" fill="rgba(242,101,34,.13)"/>' +
+      '<g transform="rotate(6 130 130)">' +
+        '<rect x="66" y="26" width="128" height="208" rx="20" fill="#0b1226" stroke="#4a5b92" stroke-width="2.5"/>' +
+        '<rect x="72" y="33" width="116" height="194" rx="14" fill="#1b2a52"/>' +
+        '<rect x="86" y="50" width="60" height="11" rx="5.5" fill="#3d4f85"/>' +
+        '<circle cx="130" cy="112" r="26" fill="url(#artGrad)"/>' +
+        '<path d="M119 112l7 8 15-16" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="88" y="158" width="84" height="15" rx="7.5" fill="#2a3a6b"/>' +
+        '<rect x="88" y="183" width="64" height="15" rx="7.5" fill="#24355f"/>' +
+      '</g>' +
+      '<circle cx="212" cy="48" r="13" fill="#ff8a3d"/>' +
+      '<circle cx="212" cy="48" r="13" stroke="#ffb27e" stroke-width="2"/>' +
+      '<path d="M206 48h12M208.5 45.5v5M215.5 45.5v5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>' +
+      '<path d="M46 96l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#ff8a3d"/>' +
+      '<path d="M222 128l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" fill="#ff8a3d" opacity=".8"/>' +
+      '<circle cx="70" cy="196" r="3.5" fill="#fff" opacity=".35"/>' +
+      '<circle cx="236" cy="208" r="4" fill="#fff" opacity=".4"/>' +
+    '</svg>';
+  }
+
+  function renderAds() {
+    var a = CONFIG.ads[0];
+    $("adTrack").innerHTML =
+      '<div class="ad-slide" style="background:' + a.bg + '">' +
+        adArt() +
+        '<div class="txt">' +
+          '<span class="tag">' + a.tag + '</span>' +
+          '<h3>' + a.title + '</h3>' +
+          '<p>' + a.desc + '</p>' +
+          '<button type="button" class="cta" data-cta="0">' + a.cta + '</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function initAds() {
+    renderAds();
+    var wrap = $("adWrap");
+    $("adClose").addEventListener("click", function () { wrap.hidden = true; });
+    $("adTrack").addEventListener("click", function (e) {
+      if (e.target.closest(".cta")) openEwa();
+    });
+  }
+
+  /* =========================================================
+     PAYSLIP MODAL
+     ========================================================= */
+  function openPayslip(idx) {
+    currentSlip = idx;
+    var slip = CONFIG.payslips[idx];
+    var processing = slip.status !== "paid";
+    var total = totalOf(slip);
+
+    $("slipPeriod").textContent = enPeriod(slip.period);
+    $("slipCo").textContent = CONFIG.employee.company;
+    $("slipEmp").textContent = CONFIG.employee.name;
+    $("slipStatus").textContent = processing ? "Estimate" : "Paid";
+    $("slipBank").textContent = CONFIG.employee.bank;
+
+    $("slipRows").innerHTML =
+      slip.rows.map(function (r) {
+        var sign = r[1] < 0 ? "minus" : "";
+        return '<div>' + r[0] + '</div><div class="g ' + sign + '">' +
+               (r[1] < 0 ? "- " + fmt(-r[1]) : fmt(r[1])) + '</div>';
+      }).join("") +
+      '<div class="slip-total"><span>Take-home pay' + (processing ? " (estimate)" : "") + '</span><b>' + fmt(total) + '</b></div>';
+
+    openModal($("payslipModal"));
+    buildPrintSlip(idx);
+  }
+
+  function buildPrintSlip(idx) {
+    var slip = CONFIG.payslips[idx];
+    var processing = slip.status !== "paid";
+    var emp = CONFIG.employee, comp = CONFIG.company;
+    var earn = slip.rows.filter(function (r) { return r[1] >= 0; });
+    var ded = slip.rows.filter(function (r) { return r[1] < 0; });
+    var earnTot = sumRows(earn), dedTot = sumRows(ded);
+    var thp = earnTot + dedTot;
+    var now = new Date();
+    var todayId = now.getDate() + " " + ID_MONTHS_FULL[now.getMonth()] + " " + now.getFullYear();
+    var pp = enPeriod(slip.period);
+    var ip = idPeriod(pp);
+
+    $("psCoName").textContent = comp.name.toUpperCase();
+    $("psCoSub").textContent = comp.tagline;
+    $("psCoAddr").innerHTML = esc(comp.address) + "<br>" + esc(comp.contact);
+    $("psPeriod").textContent = pp;
+    $("psRef").textContent = slipRef(idx, slip.period);
+    $("psStatus").textContent = processing ? "Estimate" : "Paid";
+    $("psEmpName").textContent = emp.name;
+
+    var st = $("psStamp");
+    st.className = "ps-stamp " + (processing ? "est" : "paid");
+    st.textContent = processing ? "ESTIMATE" : "PAID";
+
+    $("psIdent").innerHTML =
+      "<tr><th>Employee Name</th><td>" + esc(emp.name) + "</td><th>Position</th><td>" + esc(emp.role) + "</td></tr>" +
+      "<tr><th>Employee ID</th><td>" + esc(emp.empId) + "</td><th>Bank</th><td>" + esc(emp.bank) + "</td></tr>" +
+      "<tr><th>Pay Period</th><td>" + esc(pp) + "</td><th>Print Date</th><td>" + todayId + "</td></tr>";
+
+    $("psEarn").innerHTML = earn.map(function (r) {
+      return "<tr><td>" + esc(r[0]) + "</td><td class=\"a\">" + fmt(r[1]) + "</td></tr>";
+    }).join("");
+    $("psDed").innerHTML = ded.map(function (r) {
+      return "<tr class=\"ded\"><td>" + esc(r[0]) + "</td><td class=\"a\">(" + fmt(-r[1]) + ")</td></tr>";
+    }).join("") || "<tr><td>—</td><td class=\"a\">—</td></tr>";
+    $("psEarnTot").textContent = fmt(earnTot);
+    $("psDedTot").textContent = "(" + fmt(-dedTot) + ")";
+    $("psThp").textContent = fmt(thp);
+    $("psThpNote").textContent = processing
+      ? "Estimasi — payroll " + ip + " masih berjalan"
+      : ip + " · dana dikirim ke " + emp.bank;
+    $("psNotes").textContent = processing
+      ? "Catatan: Slip ini merupakan estimasi karena payroll " + ip + " masih berjalan. Nilai final dapat berubah sesuai hasil perhitungan PPh 21, BPJS, dan potongan lainnya. Slip final tersedia setelah gaji dicairkan."
+      : "Catatan: Slip ini diterbitkan otomatis oleh ProQPay. Rincian potongan PPh 21 dan BPJS sesuai ketentuan yang berlaku. Untuk koreksi atau pertanyaan, hubungi HR melalui aplikasi.";
+    $("psFoot").innerHTML = "Dicetak " + todayId + " · Diterbitkan otomatis oleh <b>ProQPay</b> — " + esc(comp.legal) + " · Halaman 1 / 1";
+  }
+
+  function downloadSlip() {
+    var slip = CONFIG.payslips[currentSlip];
+    var pdfName = "payslip-" + enPeriod(slip.period).toLowerCase().replace(" ", "-") + ".pdf";
+    buildPrintSlip(currentSlip);
+    toast("Menyiapkan PDF…");
+
+    var need = [];
+    if (!window.html2canvas) need.push("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js");
+    if (!window.jspdf) need.push("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+
+    loadLibs(need, function () {
+      var el = document.getElementById("printSlip");
+      var st = el.style;
+      st.display = "block";
+      st.position = "fixed";
+      st.left = "-9999px";
+      st.top = "0";
+      st.margin = "0";
+      st.zIndex = "-1";
+      setTimeout(function () {
+        html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true, logging: false }).then(function (canvas) {
+          st.display = "none";
+          var img = canvas.toDataURL("image/jpeg", 0.94);
+          var pdf = new jspdf.jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+          var h = 210 * canvas.height / canvas.width;
+          pdf.addImage(img, "JPEG", 0, 0, 210, h);
+          pdf.save(pdfName);
+          toast("PDF slip gaji berhasil diunduh");
+        }).catch(function () {
+          st.display = "none";
+          toast("Gagal membuat PDF — gunakan Print / PDF");
+        });
+      }, 60);
+    }, function () { toast("Gagal memuat pustaka PDF — coba Print / PDF"); });
+  }
+
+  /* =========================================================
+     TOAST
+     ========================================================= */
+  var toastTimer = null;
+  function toast(msg) {
+    $("toastTxt").textContent = msg;
+    $("toastEl").classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { $("toastEl").classList.remove("show"); }, 2400);
+  }
+
+  /* =========================================================
+     HISTORY
+     ========================================================= */
+  function renderHistory() {
+    $("histCount").textContent = CONFIG.payslips.length + " payslips";
+    $("histList").innerHTML = CONFIG.payslips.map(function (s, i) {
+      var paid = s.status === "paid";
+      var pill = paid ? '<span class="pill ok">Paid</span>' : '<span class="pill info">In progress</span>';
+      var st = paid ? "Paid to your account" : "Estimate for the current period";
+      return '<div class="hist-item" data-i="' + i + '">' +
+               '<div style="flex:1;min-width:0"><div class="m">' + enPeriod(s.period) + '</div><div class="st">' + st + '</div></div>' +
+               '<span class="amt">' + fmt(totalOf(s)) + '</span>' +
+               pill +
+               '<span class="chev">' + ic("chevR", 15) + '</span>' +
+             '</div>';
+    }).join("");
+    $("histList").addEventListener("click", function (e) {
+      var item = e.target.closest(".hist-item");
+      if (item) openPayslip(parseInt(item.getAttribute("data-i"), 10));
+    });
+  }
+
+  /* =========================================================
+     MODALS
+     ========================================================= */
+  function openModal(el) { el.hidden = false; document.body.style.overflow = "hidden"; }
+  function closeModal(el) {
+    el.hidden = true;
+    if (document.querySelector(".backdrop:not([hidden])") === null) { document.body.style.overflow = ""; }
+  }
+
+  function initModals() {
+    document.querySelectorAll(".backdrop").forEach(function (bd) {
+      bd.addEventListener("click", function (e) { if (e.target === bd) closeModal(bd); });
+    });
+    document.querySelectorAll("[data-close]").forEach(function (b) {
+      b.addEventListener("click", function () { closeModal(b.closest(".backdrop")); });
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        var open = document.querySelector(".backdrop:not([hidden])");
+        if (open) closeModal(open);
+      }
+    });
+
+    // button icons inside modals
+    document.querySelectorAll(".btn[data-icon]").forEach(function (b) {
+      var n = b.getAttribute("data-icon");
+      b.insertAdjacentHTML("afterbegin", ic(n, 17));
+    });
+  }
+
+  /* =========================================================
+     NOTIFICATIONS & HELP
+     ========================================================= */
+  function initNotifs() {
+    $("notifList").innerHTML = CONFIG.notifications.map(function (n, i) {
+      return '<div class="notif-item">' +
+               '<span class="ic i' + (n.type === "g" ? "g" : "a") + '">' + ic(n.type === "g" ? "check" : "bell", 17) + '</span>' +
+               '<div style="flex:1;min-width:0"><div class="t">' + n.title + '</div><div class="s">' + n.s + '</div></div>' +
+               (n.unread ? '<span class="dot"></span>' : '') +
+             '</div>';
+    }).join("");
+  }
+
+  function initHelp() {
+    $("helpHr").addEventListener("click", function () {
+      toast("Hubungi HR: helpdesk@majujaya.co.id");
+    });
+    $("helpFaq").addEventListener("click", function () {
+      var fl = $("faqList");
+      fl.hidden = !fl.hidden;
+    });
+  }
+
+  /* =========================================================
+     BOTTOM TAB BAR
+     ========================================================= */
+  function setActiveTab(id) {
+    document.querySelectorAll(".tab-btn").forEach(function (b) {
+      b.classList.toggle("active", b.id === id);
+    });
+  }
+
+  function initTabbar() {
+    $("tabbar").innerHTML =
+      '<button class="tab-btn active" id="tabHome">' + ic("home", 20) + '<span class="lb">Home</span></button>' +
+      '<button class="tab-btn" id="tabSlip">' + ic("file", 20) + '<span class="lb">Payslip</span></button>' +
+      '<button class="tab-btn" id="tabHelp">' + ic("help", 20) + '<span class="lb">Help</span></button>' +
+      '<button class="tab-btn" id="tabProfile">' + ic("user", 20) + '<span class="lb">Profile</span></button>';
+
+    $("tabHome").addEventListener("click", function () {
+      setActiveTab("tabHome");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    $("tabSlip").addEventListener("click", function () {
+      setActiveTab("tabSlip");
+      openPayslip(0);
+    });
+    $("tabHelp").addEventListener("click", function () {
+      setActiveTab("tabHelp");
+      openModal($("helpModal"));
+    });
+    $("tabProfile").addEventListener("click", function () {
+      setActiveTab("tabProfile");
+      openModal($("profileModal"));
+    });
+    $("dlBtn").addEventListener("click", function () { openPayslip(0); });
+  }
+
+  /* =========================================================
+     EWA — EARNED WAGE ACCESS (Advance Gaji)
+     ========================================================= */
+  var EWA = {
+    MIN: 100000,
+    STEP: 10000,
+    app: null,                 // pengajuan aktif → t_advance (SQL_BIND.ewaApp)
+    armed: false,
+    wizard: { step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false },
+    /* ── ATURAN EWA (PLACEHOLDER) ─────────────────────────────────
+       SELECT fee_rate, min_fee, min_fee_amount, max_tenor_months,
+              max_percent, min_days_worked
+       FROM   m_ewa_config WHERE company_id = :companyId   (SQL_BIND.ewaRules) */
+    rules: {
+      feeRate: 0.03,            // m_ewa_config.fee_rate        biaya layanan 3% dari nominal advance
+      minFee: 50000,            // m_ewa_config.min_fee         minimum biaya layanan Rp 50.000
+      minFeeAmount: 1750000,    // m_ewa_config.min_fee_amount  minFee berlaku untuk pengajuan ≤ Rp 1.750.000
+      maxTenorMonths: 1,        // m_ewa_config.max_tenor_months tenor maksimal 1 bulan (pelunasan di periode gaji berjalan)
+      maxPercent: 0.3,          // m_ewa_config.max_percent     maks 30% dari gaji proporsional bulan berjalan
+      minDaysWorked: 10         // m_ewa_config.min_days_worked syarat: masa kerja & absen > 10 hari di periode berjalan
+    },
+    /* ── DATA KELAYAKAN KARYAWAN (PLACEHOLDER) ─────────────────────
+       SELECT days_worked, tenure_months
+       FROM   v_ewa_eligibility WHERE emp_id = :empId AND pay_period = :payPeriod
+       (SQL_BIND.ewaEligibility) */
+    emp: {
+      daysWorked: 0,            // v_ewa_eligibility.days_worked  hari aktif di periode berjalan
+      tenureMonths: 0           // v_ewa_eligibility.tenure_months masa kerja (bulan)
+    },
+    /* ── RIWAYAT ADVANCE (PLACEHOLDER) ─────────────────────────────
+       SELECT ref_no, requested_at, amount, status
+       FROM   t_advance WHERE emp_id = :empId ORDER BY requested_at DESC
+       (SQL_BIND.ewaHistory) */
+    history: [
+      { ref: "EWA-2026-0392", date: "12 Aug 2026", amount: 750000, status: "lunas" },
+      { ref: "EWA-2026-0368", date: "28 Jul 2026", amount: 1200000, status: "lunas" }
+    ]
+  };
+  EWA.PAYDAY = (CONFIG.payroll.payday.indexOf(",") !== -1) ? CONFIG.payroll.payday.split(",")[1].trim() : "25 Agu 2026";
+
+  /* demo placeholder data karyawan — ganti dari server nanti (SQL_BIND.ewaEligibility) */
+  EWA.emp.daysWorked = Math.max(1, new Date().getDate());
+  EWA.emp.tenureMonths = 36;
+
+  function ewaFee(a) {
+    var r = EWA.rules;
+    var pct = Math.round(a * r.feeRate);
+    var min = (a <= r.minFeeAmount) ? r.minFee : 0;
+    return Math.max(pct, min);
+  }
+  function ewaActive() { return EWA.app !== null; }
+  function ewaEligible() {
+    return EWA.emp.daysWorked >= EWA.rules.minDaysWorked && EWA.emp.tenureMonths >= 1;
+  }
+  function ewaPlafond() {
+    var net = totalOf(CONFIG.payslips[0]);
+    var now = new Date();
+    var days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    var elapsed = Math.max(1, now.getDate());
+    var berjalan = net * Math.min(1, elapsed / days);
+    return Math.floor(berjalan * EWA.rules.maxPercent / EWA.STEP) * EWA.STEP;
+  }
+  function todayStr() {
+    var d = new Date();
+    return d.getDate() + " " + (EN_MONTHS[ID_MONTHS_FULL[d.getMonth()]] || ID_MONTHS_FULL[d.getMonth()]) + " " + d.getFullYear();
+  }
+
+  function ewaLoad() {
+    try {
+      var s = localStorage.getItem("proqpay-ewa-app");
+      if (s) { EWA.app = JSON.parse(s); }
+    } catch (e) {}
+  }
+  function ewaSave() {
+    try {
+      if (EWA.app) localStorage.setItem("proqpay-ewa-app", JSON.stringify(EWA.app));
+      else localStorage.removeItem("proqpay-ewa-app");
+    } catch (e) {}
+  }
+
+  function renderEwaCard() {
+    var btn = $("ewaaBtn");
+    if (EWA.app && EWA.app.status === "processing") {
+      var a = EWA.app;
+      $("ewaaPill").className = "pill info pulse";
+      $("ewaaPill").innerHTML = "<i></i>Active Request";
+      $("ewaaAvail").textContent = "Processing";
+      $("ewaaApp").innerHTML =
+        '<div class="app-card">' +
+          '<div class="h"><b>' + a.ref + '</b><span class="pill info pulse"><i></i>Processing</span></div>' +
+          '<div class="amt">' + fmt(a.amount) + ' <small>+ biaya layanan ' + fmt(a.fee) + '</small></div>' +
+          '<div class="mini-timeline">' +
+            '<div class="mt done">✓ Submitted</div>' +
+            '<div class="mt now">Processing</div>' +
+            '<div class="mt wait">Paid Out</div>' +
+          '</div>' +
+          '<div class="eta">' + ic("clock", 11) + ' Plafond aktif setelah disetujui · potong otomatis pada ' + EWA.PAYDAY + '</div>' +
+        '</div>';
+      btn.textContent = "Open Application";
+    } else if (EWA.app && EWA.app.status === "approved") {
+      var b = EWA.app;
+      $("ewaaPill").className = "pill ok";
+      $("ewaaPill").textContent = "Limit Active";
+      $("ewaaAvail").textContent = fmt(b.amount);
+      $("ewaaApp").innerHTML =
+        '<div class="app-card">' +
+          '<div class="h"><b>' + b.ref + '</b><span class="pill ok">Approved</span></div>' +
+          '<div class="amt">' + fmt(b.amount) + ' <small>+ biaya layanan ' + fmt(b.fee) + '</small></div>' +
+          '<div class="eta">' + ic("check", 11) + ' Dana dikirim · potong otomatis pada ' + EWA.PAYDAY + '</div>' +
+        '</div>';
+      btn.textContent = "View Application";
+    } else if (ewaEligible()) {
+      $("ewaaPill").className = "pill info";
+      $("ewaaPill").textContent = "Not Active";
+      $("ewaaAvail").textContent = "Not active";
+      $("ewaaApp").innerHTML = "";
+      btn.textContent = "Request Advance";
+      btn.disabled = false;
+    } else {
+      $("ewaaPill").className = "pill warn";
+      $("ewaaPill").textContent = "Not Eligible";
+      $("ewaaAvail").textContent = "Not active";
+      $("ewaaApp").innerHTML = "";
+      btn.textContent = "View Requirements";
+      btn.disabled = false;
+    }
+    btn.onclick = function () { openEwa(); };
+  }
+
+  function openEwa() { openModal($("ewaModal")); renderEwaHome(); }
+
+  function renderEwaHome() {
+    $("ewaTitle").textContent = "Advance Salary";
+    var a = EWA.app;
+    var b = [];
+
+    if (a && a.status === "approved") {
+      b.push(
+        '<div class="ewah-bal">' +
+          '<div class="ewah-ic">' + ic("wallet", 21) + '</div>' +
+          '<div class="ewah-lbl">Advance Limit Active</div>' +
+          '<div class="ewah-amt">' + fmt(a.amount) + '</div>' +
+          '<div class="ewah-sub">Disetujui ' + (a.approvedDate || "") + ' · dana dikirim ke ' + CONFIG.employee.bank + ' · potong otomatis pada ' + EWA.PAYDAY + '</div>' +
+        '</div>'
+      );
+    } else if (a) {
+      b.push(
+        '<div class="ewah-bal">' +
+          '<div class="ewah-ic">' + ic("clock", 21) + '</div>' +
+          '<div class="ewah-lbl">Requested Amount</div>' +
+          '<div class="ewah-amt">' + fmt(a.amount) + '</div>' +
+          '<div class="ewah-sub">Menunggu persetujuan · plafond aktif setelah disetujui · potong otomatis pada ' + EWA.PAYDAY + '</div>' +
+        '</div>'
+      );
+    } else {
+      b.push(
+        '<div class="ewah-bal">' +
+          '<div class="ewah-ic">' + ic("lock", 21) + '</div>' +
+          '<div class="ewah-lbl">No Limit Yet</div>' +
+          '<div class="ewah-amt">—</div>' +
+          '<div class="ewah-sub">Ajukan pengajuan dulu — plafond aktif setelah disetujui · hingga ' + Math.round(EWA.rules.maxPercent * 100) + '% dari gaji bulan berjalan</div>' +
+        '</div>'
+      );
+      if (!ewaEligible()) {
+        b.push(
+          '<div class="info-note" style="margin-top:14px;background:var(--warn-bg);border-color:transparent">' + ic("lock", 15) +
+            '<span><b style="color:var(--ink)">Syarat belum terpenuhi</b><br>Advance Salary hanya tersedia untuk karyawan dengan masa kerja &amp; absen lebih dari <b style="color:var(--ink)">' + EWA.rules.minDaysWorked + ' hari</b> di periode gaji berjalan. Anda terhitung aktif <b style="color:var(--ink)">' + EWA.emp.daysWorked + ' hari</b> bulan ini.</span></div>'
+        );
+      }
+    }
+
+    if (a && a.status === "processing") {
+      b.push(
+        '<div class="app-card">' +
+          '<div class="h"><b>' + a.ref + '</b><span class="pill info pulse"><i></i>Processing</span></div>' +
+          '<div class="amt">' + fmt(a.amount) + ' <small>+ biaya layanan ' + fmt(a.fee) + '</small></div>' +
+          '<div class="mini-timeline">' +
+            '<div class="mt done">✓ Submitted</div>' +
+            '<div class="mt now">Processing</div>' +
+            '<div class="mt wait">Paid Out</div>' +
+          '</div>' +
+          '<div class="eta">' + ic("clock", 11) + ' Potong otomatis pada ' + EWA.PAYDAY + '</div>' +
+          '<div class="app-actions">' +
+            '<button type="button" class="btn danger small" id="ewaCancelBtn">Cancel</button>' +
+          '</div>' +
+          '<button type="button" class="btn ghost small" id="ewaDemoBtn" style="width:100%;margin-top:8px">Simulate: approve & pay out</button>' +
+        '</div>'
+      );
+    } else if (a && a.status === "approved") {
+      b.push(
+        '<div class="app-card">' +
+          '<div class="h"><b>' + a.ref + '</b><span class="pill ok">Approved</span></div>' +
+          '<div class="amt">' + fmt(a.amount) + ' <small>+ biaya layanan ' + fmt(a.fee) + '</small></div>' +
+          '<div class="mini-timeline">' +
+            '<div class="mt done">✓ Submitted</div>' +
+            '<div class="mt done">✓ Approved</div>' +
+            '<div class="mt done">✓ Paid Out</div>' +
+          '</div>' +
+          '<div class="eta">' + ic("check", 11) + ' Dana dikirim ke ' + CONFIG.employee.bank + ' · potong otomatis pada ' + EWA.PAYDAY + '</div>' +
+          '<button type="button" class="btn ghost small" id="ewaDemoBtn" style="width:100%;margin-top:8px">Simulate: mark as repaid</button>' +
+        '</div>'
+      );
+    } else {
+      b.push(
+        '<button type="button" class="btn primary" id="ewahCta" style="width:100%;margin-top:14px"' + (ewaEligible() ? "" : " disabled") + '>' + (ewaEligible() ? "New Advance Request" : "Not Eligible Yet") + '</button>'
+      );
+    }
+
+    b.push(
+      '<div class="info-note" style="margin-top:16px">' + ic("lock", 15) +
+        '<span><b style="color:var(--ink)">Cara kerja Advance Salary</b><br>Ajukan pengajuan, lalu plafond Anda (hingga ' + Math.round(EWA.rules.maxPercent * 100) + '% dari gaji bulan berjalan) aktif setelah disetujui. Pelunasan maksimal ' + (EWA.rules.maxTenorMonths <= 1 ? "1 bulan" : EWA.rules.maxTenorMonths + " bulan") + ' — dipotong otomatis saat gajian. Biaya layanan ' + (EWA.rules.feeRate * 100) + '% dari nominal (min. ' + fmt(EWA.rules.minFee) + ' untuk pengajuan ≤ ' + fmt(EWA.rules.minFeeAmount) + '), transparan tanpa biaya tersembunyi.</span></div>'
+    );
+
+    b.push('<h4 style="font-size:12px;font-weight:800;margin-top:18px;letter-spacing:.02em">Advance History</h4>');
+    EWA.history.forEach(function (h) {
+      b.push(
+        '<div class="ewah-row"><div class="r"><b>' + h.ref + '</b><small>' + h.date + '</small></div>' +
+        '<span class="a">' + fmt(h.amount) + '</span><span class="s">Paid</span></div>'
+      );
+    });
+
+    $("ewaBody").innerHTML = b.join("");
+    $("ewaFoot").innerHTML = "";
+
+    var c = $("ewahCta");
+    if (c) c.addEventListener("click", startWizard);
+    var cb = $("ewaCancelBtn");
+    if (cb) cb.addEventListener("click", ewaCancel);
+    var db = $("ewaDemoBtn");
+    if (db) db.addEventListener("click", function () {
+      if (EWA.app && EWA.app.status === "processing") ewaDemoApprove();
+      else ewaDemoLunas();
+    });
+  }
+
+  function startWizard() {
+    if (!ewaEligible()) {
+      toast("Syarat Advance Salary belum terpenuhi — butuh masa kerja & absen lebih dari " + EWA.rules.minDaysWorked + " hari di periode berjalan.");
+      return;
+    }
+    EWA.wizard = { step: 1, amount: Math.min(1000000, ewaPlafond()), method: "auto", inst: 1, agreed: false };
+    renderWizard();
+  }
+
+  function renderWizard() {
+    var w = EWA.wizard;
+    $("ewaTitle").textContent = "Request Advance · Step " + w.step + "/4";
+    var labels = ["Amount", "Payment", "Account", "Summary"];
+    var ws = [];
+    labels.forEach(function (s, i) {
+      var cls = i < w.step - 1 ? "done" : (i === w.step - 1 ? "now" : "");
+      ws.push('<div class="wstep ' + cls + '" data-n="' + (i + 1) + '">' + s + '</div>');
+    });
+    var body = '<div class="wsteps">' + ws.join("") + '</div><div class="wiz-body">';
+
+    if (w.step === 1) {
+      var fee = ewaFee(w.amount);
+      var plaf = ewaPlafond();
+      body +=
+        '<label style="font-size:12px;font-weight:700;color:var(--ink-2)">Choose your advance amount</label>' +
+        '<div class="amt-big" id="amtBig">' + fmt(w.amount) + '</div>' +
+        '<input type="range" class="amt-range" id="amtRange" min="' + EWA.MIN + '" max="' + plaf + '" step="' + EWA.STEP + '" value="' + w.amount + '">' +
+        '<div class="range-hints"><span>Min ' + fmt(EWA.MIN) + '</span><span>Max ' + fmt(plaf) + '</span></div>' +
+        '<div class="plafond-line">' + ic("lock", 12) + ' Limit Anda: <b>' + fmt(plaf) + '</b> · hingga ' + Math.round(EWA.rules.maxPercent * 100) + '% dari gaji bulan berjalan</div>' +
+        '<div class="quickchips">' +
+          '<button type="button" data-p="25">25%</button><button type="button" data-p="50">50%</button><button type="button" data-p="100">Max</button>' +
+        '</div>' +
+        '<div style="margin-top:16px;border-top:1px dashed var(--border);padding-top:4px">' +
+          '<div class="fee-row">Advance amount <b>' + fmt(w.amount) + '</b></div>' +
+          '<div class="fee-row">Service fee (' + (EWA.rules.feeRate * 100) + '%) <b style="color:var(--warn)">' + fmt(fee) + '</b></div>' +
+          '<div class="fee-row">Total deduction on payday <b>' + fmt(w.amount + fee) + '</b></div>' +
+        '</div>';
+    } else if (w.step === 2) {
+      var autoSel = w.method === "auto" ? " sel" : "";
+      var manSel = w.method === "manual" ? " sel" : "";
+      var pot = fmt(w.amount + ewaFee(w.amount));
+      body +=
+        '<label style="font-size:12px;font-weight:700;color:var(--ink-2)">Choose payment method</label>' +
+        '<label class="pay-opt' + autoSel + '"><input type="radio" name="ewapay" value="auto" ' + (w.method === "auto" ? "checked" : "") + '>' +
+          '<span class="ic">' + ic("clock", 18) + '</span>' +
+          '<span class="tx"><b>Auto-deduct on payday</b><small>Dipotong dari gaji Anda pada ' + EWA.PAYDAY + ' · ' + pot + '</small></span>' +
+        '</label>' +
+        '<label class="pay-opt' + manSel + '"><input type="radio" name="ewapay" value="manual" ' + (w.method === "manual" ? "checked" : "") + '>' +
+          '<span class="ic">' + ic("bank", 18) + '</span>' +
+          '<span class="tx"><b>Manual transfer</b><small>Bayar via m-banking / ATM sebelum ' + EWA.PAYDAY + '</small></span>' +
+        '</label>' +
+        '<div class="tenor-line">' + ic("calendar", 12) + ' Tenor maksimal <b>' + (EWA.rules.maxTenorMonths <= 1 ? "1 bulan" : EWA.rules.maxTenorMonths + " bulan") + '</b> — dilunasi di periode gaji berjalan (' + EWA.PAYDAY + ')</div>';
+      if (EWA.rules.maxTenorMonths > 1) {
+        var chips = "";
+        var maxInst = Math.min(EWA.rules.maxTenorMonths, 3);
+        for (var k = 1; k <= maxInst; k++) {
+          chips += '<div class="inst-chip' + (w.inst === k ? " sel" : "") + '" data-i="' + k + '">' + k + 'x <small>' + (k === 1 ? "Lunas saat gajian" : pot + " ÷ " + k + " per gajian") + '</small></div>';
+        }
+        body += '<div style="margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--ink-2)">Installment schedule</div>' +
+          '<div class="inst-row">' + chips + '</div></div>';
+      }
+    } else if (w.step === 3) {
+      body +=
+        '<label style="font-size:12px;font-weight:700;color:var(--ink-2)">Confirm destination account</label>' +
+        '<div class="bank-card" style="margin-top:10px">' +
+          '<span class="ic">' + ic("bank", 19) + '</span>' +
+          '<div><b>BCA •••• 4821</b><small>Account holder: ' + CONFIG.employee.name + '</small></div>' +
+          '<span class="ok">Active account</span>' +
+        '</div>' +
+        '<button type="button" class="btn ghost" id="changeBank" style="width:100%;margin-top:12px">Change account</button>' +
+        '<div class="info-note">' + ic("check", 15) +
+          '<span>Dana advance akan dikirim ke rekening Anda setelah disetujui.</span></div>';
+    } else {
+      var fee2 = ewaFee(w.amount);
+      var metLbl = w.method === "auto" ? "Auto-deduct on " + EWA.PAYDAY : "Manual transfer";
+      var instLbl = w.inst === 1 ? "1x on payday" : w.inst + "x installments";
+      body +=
+        '<label style="font-size:12px;font-weight:700;color:var(--ink-2)">Review your request</label>' +
+        '<div style="margin-top:8px">' +
+          '<div class="sum-row">Advance amount <b>' + fmt(w.amount) + '</b></div>' +
+          '<div class="sum-row">Service fee (' + (EWA.rules.feeRate * 100) + '%) <b style="color:var(--warn)">' + fmt(fee2) + '</b></div>' +
+          '<div class="sum-row">Total received <b class="okc">' + fmt(w.amount) + '</b></div>' +
+          '<div class="sum-row">Method <b>' + metLbl + '</b></div>' +
+          '<div class="sum-row">Installment <b>' + instLbl + '</b></div>' +
+          '<div class="sum-row">Destination account <b>BCA •••• 4821</b></div>' +
+        '</div>' +
+        '<label class="agree"><input type="checkbox" id="agreeChk"> Saya menyetujui biaya layanan sebesar ' + fmt(fee2) +
+          ' dan nominal advance dipotong otomatis dari gaji saya sesuai jadwal pada periode gaji berjalan.</label>';
+    }
+    body += '</div>';
+    $("ewaBody").innerHTML = body;
+
+    var foot = "";
+    if (w.step > 1) foot += '<button type="button" class="btn ghost" id="ewabackBtn">Back</button>';
+    if (w.step < 4) foot += '<button type="button" class="btn primary" id="ewanextBtn">Next</button>';
+    else foot += '<button type="button" class="btn primary" id="ewasubBtn" disabled>Submit Request</button>';
+    $("ewaFoot").innerHTML = foot;
+
+    var bk = $("ewabackBtn");
+    if (bk) bk.addEventListener("click", function () { EWA.wizard.step--; renderWizard(); });
+    var nx = $("ewanextBtn");
+    if (nx) nx.addEventListener("click", function () { EWA.wizard.step++; renderWizard(); });
+    var sb = $("ewasubBtn");
+    if (sb) sb.addEventListener("click", ewaSubmit);
+
+    if (w.step === 1) {
+      var rng = $("amtRange");
+      rng.addEventListener("input", function () {
+        EWA.wizard.amount = parseInt(rng.value, 10);
+        renderStep1Amt();
+      });
+      document.querySelectorAll(".quickchips button").forEach(function (q) {
+        q.addEventListener("click", function () {
+          var p = parseInt(q.getAttribute("data-p"), 10);
+          EWA.wizard.amount = Math.round(ewaPlafond() * p / 100 / EWA.STEP) * EWA.STEP;
+          rng.value = EWA.wizard.amount;
+          renderStep1Amt();
+        });
+      });
+    } else if (w.step === 2) {
+      document.querySelectorAll(".pay-opt input").forEach(function (inp) {
+        inp.addEventListener("change", function () {
+          EWA.wizard.method = inp.value;
+          renderWizard();
+        });
+      });
+      document.querySelectorAll(".inst-chip").forEach(function (ch) {
+        ch.addEventListener("click", function () {
+          EWA.wizard.inst = parseInt(ch.getAttribute("data-i"), 10);
+          renderWizard();
+        });
+      });
+    } else if (w.step === 3) {
+      var cb2 = $("changeBank");
+      if (cb2) cb2.addEventListener("click", function () { toast("Hubungi HR perusahaan Anda untuk mengubah rekening."); });
+    } else {
+      var ag = $("agreeChk");
+      ag.addEventListener("change", function () { sb.disabled = !ag.checked; });
+    }
+  }
+
+  function renderStep1Amt() {
+    var w = EWA.wizard;
+    $("amtBig").textContent = fmt(w.amount);
+    var fee = ewaFee(w.amount);
+    var rows = $("ewaBody").querySelectorAll(".fee-row b");
+    if (rows.length === 3) {
+      rows[0].textContent = fmt(w.amount);
+      rows[1].textContent = fmt(fee);
+      rows[2].textContent = fmt(w.amount + fee);
+    }
+  }
+
+  function ewaSubmit() {
+    /* PLACEHOLDER SQL — simpan pengajuan baru:
+       INSERT INTO t_advance (emp_id, ref_no, amount, fee, method, installments, status, requested_at)
+       VALUES (:empId, :refNo, :amount, :fee, :method, :inst, 'processing', NOW()) */
+    var w = EWA.wizard;
+    if (!w.agreed) { var ag2 = $("agreeChk"); if (ag2) w.agreed = ag2.checked; }
+    if (!w.agreed) return;
+    var fee = ewaFee(w.amount);
+    EWA.app = {
+      ref: "EWA-2026-" + String(Math.floor(1000 + Math.random() * 9000)),
+      amount: w.amount,
+      fee: fee,
+      method: w.method,
+      inst: w.inst,
+      date: todayStr(),
+      status: "processing"
+    };
+    ewaSave();
+    renderEwaCard();
+    ewaSuccess();
+  }
+
+  function ewaSuccess() {
+    var a = EWA.app;
+    $("ewaTitle").textContent = "Request Submitted";
+    $("ewaBody").innerHTML =
+      '<div class="success">' +
+        '<div class="ok-ring">' + ic("check", 34) + '</div>' +
+        '<h3 style="font-size:17px;font-weight:800">Advance ' + fmt(a.amount) + ' Requested!</h3>' +
+        '<p style="font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.6">Ref: <b style="color:var(--ink)">' + a.ref + '</b><br>' +
+          'Dana dijadwalkan masuk ke <b style="color:var(--ink)">BCA •••• 4821</b> setelah pengajuan disetujui.</p>' +
+        '<div class="mini-timeline" style="max-width:280px;margin:16px auto 0">' +
+          '<div class="mt done">✓ Submitted</div>' +
+          '<div class="mt now">Processing</div>' +
+          '<div class="mt wait">Paid Out</div>' +
+        '</div>' +
+      '</div>';
+    $("ewaFoot").innerHTML =
+      '<button type="button" class="btn ghost" id="ewadoneBtn">Done</button>' +
+      '<button type="button" class="btn primary" id="ewastatusBtn">View Status</button>';
+    $("ewadoneBtn").addEventListener("click", function () { closeModal($("ewaModal")); });
+    $("ewastatusBtn").addEventListener("click", renderEwaHome);
+  }
+
+  function ewaCancel() {
+    /* PLACEHOLDER SQL — batalkan pengajuan (jika belum diproses):
+       UPDATE t_advance SET status = 'cancelled' WHERE ref_no = :refNo AND status = 'processing' */
+    if (!EWA.app) return;
+    if (!EWA.armed) {
+      EWA.armed = true;
+      var b = $("ewaCancelBtn");
+      if (b) { b.textContent = "Confirm cancel?"; b.style.background = "rgba(229, 72, 77, .28)"; }
+      setTimeout(function () {
+        EWA.armed = false;
+        var b2 = $("ewaCancelBtn");
+        if (b2) { b2.textContent = "Cancel"; b2.style.background = ""; }
+      }, 3500);
+      return;
+    }
+    EWA.armed = false;
+    EWA.app = null;
+    ewaSave();
+    renderEwaCard();
+    renderEwaHome();
+    toast("Pengajuan dibatalkan");
+  }
+
+  function ewaDemoApprove() {
+    if (!EWA.app) return;
+    EWA.app.status = "approved";
+    EWA.app.approvedDate = todayStr();
+    ewaSave();
+    renderEwaCard();
+    renderEwaHome();
+    toast("Disetujui — " + fmt(EWA.app.amount) + " dikirim ke " + CONFIG.employee.bank);
+  }
+
+  function ewaDemoLunas() {
+    if (!EWA.app) return;
+    EWA.history.unshift({ ref: EWA.app.ref, date: EWA.app.date, amount: EWA.app.amount, status: "lunas" });
+    toast("Pengajuan ditandai lunas");
+    EWA.app = null;
+    ewaSave();
+    renderEwaCard();
+    renderEwaHome();
+  }
+
+  function initEwa() {
+    ewaLoad();
+    put("ewaaIc", "wallet", 20);
+    renderEwaCard();
+  }
+
+  /* =========================================================
+     BOOT
+     ========================================================= */
+  function init() {
+    initHeader();
+    renderStats();
+    initTracker();
+    initAds();
+    renderHistory();
+    initModals();
+    initNotifs();
+    initHelp();
+    initTabbar();
+    initEwa();
+
+    $("slipDlBtn").addEventListener("click", downloadSlip);
+    $("slipPrintBtn").addEventListener("click", function () { window.print(); });
+    $("bellBtn").addEventListener("click", function () { openModal($("notifyModal")); });
+
+    setTimeout(function () {
+      document.body.classList.add("loaded");
+      var sk = $("skeleton");
+      sk.classList.add("sk-gone");
+      setTimeout(function () { if (sk.parentNode) sk.parentNode.removeChild(sk); }, 600);
+    }, 1000);
+  }
+
+  /* expose helpers used by inline HTML handlers */
+  window.toast = toast;
+  window.openModalById = function (id) { openModal($(id)); };
+
+  /* ── BOOT ──────────────────────────────────────────────────────────
+     Urutan:
+       1) initAuth()  — wire form login.
+       2) Ada sesi tersimpan? → langsung masuk (enterApp), lalu muat data
+          (SQL_LIVE ? loadFromSQL→init : init demo).
+       3) Tidak ada sesi? → tampilkan login. Pada mode demo, aplikasi
+          tetap di-render di balik layar agar langsung tampil setelah
+          login. Pada mode SQL_LIVE, render menunggu login berhasil.
+     ────────────────────────────────────────────────────────────────── */
+  function boot() {
+    initAuth();
+    var saved = authRestore();
+    if (saved) {
+      SESSION.empId = saved.emp_id || SESSION.empId;
+      SESSION.companyId = saved.company_id || SESSION.companyId;
+      SESSION.authToken = saved.token || "";
+      enterApp();
+      if (SQL_LIVE) {
+        loadFromSQL().then(init).catch(function () { init(); });
+      } else {
+        init();
+      }
+    } else {
+      openLogin();
+      if (!SQL_LIVE) init();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+
+

@@ -1,0 +1,48 @@
+export type Payslip = { period: string; status: "processing" | "paid"; rows: [string, number][] };
+export type Stage = { title: string; desc: string; meta: string; note: string; eta: string };
+export type Ad = { tag: string; title: string; desc: string; cta: string; bg: string };
+export type Notif = { title: string; s: string; type: "a" | "g"; unread: boolean };
+export type EwaApp = {
+  ref: string;
+  amount: number;
+  fee: number;
+  method: string;
+  inst: number;
+  date: string;
+  status: string;
+} | null;
+export type EwaHistory = { ref: string; date: string; amount: number; status: string };
+
+export type PortalConfig = {
+  employee: {
+    name: string;
+    company: string;
+    role: string;
+    email: string;
+    phone: string;
+    empId: string;
+    bank: string;
+  };
+  company: { name: string; tagline: string; address: string; contact: string; legal: string };
+  payroll: { period: string; ref: string; stage: number; payday: string; paydayShort: string };
+  stages: Stage[];
+  payslips: Payslip[];
+  ads: Ad[];
+  notifications: Notif[];
+};
+
+export type EwaState = {
+  rules: {
+    feeRate: number;
+    minFee: number;
+    minFeeAmount: number;
+    maxTenorMonths: number;
+    maxPercent: number;
+    minDaysWorked: number;
+  };
+  emp: { daysWorked: number; tenureMonths: number };
+  app: EwaApp;
+  history: EwaHistory[];
+};
+
+export type PortalPayload = { config: PortalConfig; ewa: EwaState };
