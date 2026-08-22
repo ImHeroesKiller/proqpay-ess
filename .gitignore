@@ -1,8 +1,2 @@
-node_modules/
-.next/
-.open-next/
-.wrangler/
-.dev.vars
-.DS_Store
-*.tsbuildinfo
-next-env.d.ts
+# Security audit reports
+docs/security-audit-report.md
