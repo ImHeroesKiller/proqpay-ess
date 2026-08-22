@@ -1,6 +1,34 @@
-(docs/security-pentest-intermediate.md) is a markdown file, which belongs to the category of source code or configuration files (.md). According to rule 6, only when the change list contains only source or configuration files and no other types of files, the .gitignore should remain empty.
+# dependencies
+/node_modules
+/.pnpm-store
 
-Since the added file is only the documentation file in the source format, no content needs to be added to .gitignore.
+# next.js
+/.next/
+/out/
 
-Output:
-(Empty)
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.dev.vars
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# open-next
+.open-next
