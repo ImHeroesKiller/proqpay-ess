@@ -3,6 +3,13 @@
 Format: perubahan terbaru di atas. Repo: [ImHeroesKiller/proqpay-ess](https://github.com/ImHeroesKiller/proqpay-ess).  
 **Tidak mengubah kode proqpay-lite.**
 
+## 2026-08-22 — Slip gaji Indonesia + urutan proper
+
+- Istilah baris: Gaji pokok, tunjangan, iuran BPJS/JHT/JP, PPh 21.
+- Urutan: penghasilan dulu, lalu potongan.
+- Iuran perusahaan (BPJS pemberi kerja) tidak dipotong dari gaji bersih.
+- Modal dan cetak memakai bagian Penghasilan / Potongan / Gaji bersih.
+
 ## 2026-08-22 — Label slip (Workers AI)
 
 - Baris slip dari `payroll_components` (camelCase) diubah jadi judul resmi.

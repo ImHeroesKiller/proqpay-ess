@@ -3,42 +3,96 @@ import type { AppEnv } from "@/lib/env";
 const FALLBACK_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 
 const CANONICAL: Record<string, string> = {
-  basicsalary: "Basic salary",
-  gajipokok: "Basic salary",
-  shift: "Shift allowance",
-  bpjstk: "BPJS Employment (company)",
-  jamsostek: "BPJS Employment",
-  medical: "Medical allowance",
-  overtime: "Overtime pay",
-  overtimepay: "Overtime pay",
-  lembur: "Overtime pay",
-  incentive: "Incentive",
-  bpjshealth: "BPJS Health (company)",
-  bpjskes: "BPJS Health (company)",
-  bonusorleave: "Bonus / leave conversion",
-  jhtdeduction: "JHT employee share",
-  taxallowance: "Tax allowance",
+  basicsalary: "Gaji pokok",
+  gajipokok: "Gaji pokok",
+  penghasilanbruto: "Penghasilan bruto",
+  shift: "Tunjangan shift",
+  medical: "Tunjangan kesehatan",
+  overtime: "Upah lembur",
+  overtimepay: "Upah lembur",
+  lembur: "Upah lembur",
+  incentive: "Insentif",
+  insentif: "Insentif",
+  bonusorleave: "Bonus / uang cuti",
+  taxallowance: "Tunjangan pajak",
+  tunjanganpajak: "Tunjangan pajak",
+  mealallowance: "Tunjangan makan",
+  uangmakan: "Tunjangan makan",
+  salaryarrears: "Tunggakan gaji",
+  otherallowance: "Tunjangan lain",
+  phoneallowance: "Tunjangan pulsa",
+  allowancearrears: "Tunggakan tunjangan",
+  positionallowance: "Tunjangan jabatan",
+  tunjanganjabatan: "Tunjangan jabatan",
+  transportallowance: "Tunjangan transport",
+  attendanceallowance: "Tunjangan kehadiran",
+  bpjstk: "Iuran BPJS Ketenagakerjaan (perusahaan)",
+  jamsostek: "Iuran BPJS Ketenagakerjaan (perusahaan)",
+  bpjshealth: "Iuran BPJS Kesehatan (perusahaan)",
+  bpjskes: "Iuran BPJS Kesehatan (perusahaan)",
+  jhtdeduction: "Iuran JHT karyawan",
   taxdeduction: "PPh 21",
   pph21: "PPh 21",
-  mealallowance: "Meal allowance",
-  uangmakan: "Meal allowance",
-  salaryarrears: "Salary arrears",
-  otherallowance: "Other allowance",
-  otherdeduction: "Other deduction",
-  phoneallowance: "Phone allowance",
-  allowancearrears: "Allowance arrears",
-  pensiondeduction: "Pension (JP) employee share",
-  positionallowance: "Position allowance",
-  tunjanganjabatan: "Position allowance",
-  transportallowance: "Transport allowance",
-  attendanceallowance: "Attendance allowance",
-  attendancededuction: "Attendance deduction",
-  bpjshealthdeduction: "BPJS Health",
-  cooperativededuction: "Cooperative deduction",
-  grosspay: "Gross pay",
-  deductions: "Deductions",
-  netpay: "Net pay",
+  pensiondeduction: "Iuran JP karyawan",
+  attendancededuction: "Potongan kehadiran",
+  bpjshealthdeduction: "Iuran BPJS Kesehatan karyawan",
+  cooperativededuction: "Potongan koperasi",
+  otherdeduction: "Potongan lain",
+  potonganlain: "Potongan lain",
+  grosspay: "Penghasilan bruto",
+  deductions: "Potongan",
+  netpay: "Gaji bersih",
 };
+
+const EARNING_ORDER = [
+  "gajipokok",
+  "basicsalary",
+  "tunjanganjabatan",
+  "positionallowance",
+  "tunjangantransport",
+  "transportallowance",
+  "tunjanganmakan",
+  "mealallowance",
+  "uangmakan",
+  "tunjanganpulsa",
+  "phoneallowance",
+  "tunjanganshift",
+  "shift",
+  "upahlembur",
+  "overtime",
+  "overtimepay",
+  "lembur",
+  "insentif",
+  "incentive",
+  "tunjangankehadiran",
+  "attendanceallowance",
+  "tunjangankesehatan",
+  "medical",
+  "bonusorleave",
+  "tunjanganpajak",
+  "taxallowance",
+  "tunggakangaji",
+  "salaryarrears",
+  "tunggakantunjangan",
+  "allowancearrears",
+  "tunjanganlain",
+  "otherallowance",
+  "penghasilanbruto",
+  "grosspay",
+];
+
+const DEDUCTION_ORDER = [
+  "bpjshealthdeduction",
+  "jhtdeduction",
+  "pensiondeduction",
+  "taxdeduction",
+  "pph21",
+  "attendancededuction",
+  "cooperativededuction",
+  "otherdeduction",
+  "potonganlain",
+  "deductions",
+];
 
 function normalizeKey(raw: string) {
   return String(raw || "")
@@ -53,8 +107,10 @@ function titleFromKey(raw: string) {
   const spaced = String(raw || "")
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]+/g, " ")
+    .replace(/deduction/i, "potongan")
+    .replace(/allowance/i, "tunjangan")
     .trim();
-  if (!spaced) return "Payroll item";
+  if (!spaced) return "Komponen gaji";
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
@@ -90,16 +146,19 @@ type AiBinding = {
 
 async function idaRewriteLabels(ai: AiBinding, model: string, keys: string[]) {
   const prompt =
-    "You write Indonesian payroll payslip line titles in concise English (2–5 words), like official payslips (ADP/Workday).\n" +
-    "Return ONLY a JSON object mapping each input key to a label.\n" +
-    "Do not add keys. Do not include amounts, currency, or explanations.\n" +
-    "Use terms: Basic salary, Overtime pay, Meal allowance, Transport allowance, Phone allowance, Position allowance, BPJS Health, BPJS Employment, JHT employee share, PPh 21.\n" +
-    "Keys:\n" +
+    "Ubah kode komponen payroll menjadi judul baris slip gaji dalam Bahasa Indonesia yang resmi dan singkat (2–6 kata).\n" +
+    "Kembalikan HANYA objek JSON { kode: judul }.\n" +
+    "Jangan menambah kunci, jangan tulis nominal.\n" +
+    "Contoh istilah: Gaji pokok, Tunjangan jabatan, Tunjangan makan, Tunjangan transport, Tunjangan pulsa, Upah lembur, Iuran BPJS Kesehatan karyawan, Iuran JHT karyawan, Iuran JP karyawan, PPh 21, Potongan kehadiran.\n" +
+    "Kunci:\n" +
     JSON.stringify(keys);
 
   const result = await ai.run(model, {
     messages: [
-      { role: "system", content: "You are IDA, a payroll copy editor. You never calculate money. You only rename line titles." },
+      {
+        role: "system",
+        content: "Anda IDA, editor redaksi slip gaji Indonesia. Anda tidak menghitung uang. Anda hanya menamai baris.",
+      },
       { role: "user", content: prompt },
     ],
     max_tokens: 400,
@@ -109,10 +168,29 @@ async function idaRewriteLabels(ai: AiBinding, model: string, keys: string[]) {
   return parseJsonObject(text);
 }
 
+function sortIndex(key: string, amount: number) {
+  const k = normalizeKey(key);
+  if (amount >= 0) {
+    const i = EARNING_ORDER.indexOf(k);
+    return i === -1 ? 100 + EARNING_ORDER.length : i;
+  }
+  const i = DEDUCTION_ORDER.indexOf(k);
+  return 1000 + (i === -1 ? 100 + DEDUCTION_ORDER.length : i);
+}
+
+export function arrangePayslipRows(rows: [string, number][]): [string, number][] {
+  return [...rows].sort((a, b) => {
+    const oa = sortIndex(a[0], a[1]);
+    const ob = sortIndex(b[0], b[1]);
+    if (oa !== ob) return oa - ob;
+    return a[0].localeCompare(b[0], "id");
+  });
+}
+
 export async function polishPayslipRows(rows: [string, number][], env?: AppEnv): Promise<[string, number][]> {
   if (!rows.length) return rows;
   const keys = [...new Set(rows.map((r) => r[0]))];
-  let map = fallbackMap(keys);
+  const map = fallbackMap(keys);
   const unknown = keys.filter((k) => !dictionaryLabel(k));
   const ai = env?.AI;
   const model = env?.WORKERS_AI_MODEL || FALLBACK_MODEL;
@@ -126,9 +204,10 @@ export async function polishPayslipRows(rows: [string, number][], env?: AppEnv):
         }
       }
     } catch {
-      /* keep dictionary / title-case */
+      /* kamus / title-case */
     }
   }
 
-  return rows.map(([label, amount]) => [map[label] || titleFromKey(label), amount]);
+  const ordered = arrangePayslipRows(rows);
+  return ordered.map(([label, amount]) => [map[label] || titleFromKey(label), amount]);
 }

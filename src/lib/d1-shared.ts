@@ -95,7 +95,30 @@ export function slipStatus(stage) {
   return stage >= 4 ? "paid" : "processing";
 }
 
-const DEDUCT_RE = /bpjs|pph|potong|deduct|tax|iuran|loan|advance|denda/i;
+function componentKey(name) {
+  return String(name || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+}
+
+export function isCompanyContribution(name) {
+  const k = componentKey(name);
+  return k === "bpjstk" || k === "bpjshealth" || k === "bpjskes" || k === "jamsostek";
+}
+
+export function isDeductionKey(name) {
+  const k = componentKey(name);
+  if (/allowance|tunjangan|gaji|salary|overtime|lembur|bonus|incentive|insentif|shift|medical|arrears|tunggakan/.test(k) && !/deduct|potong/.test(k)) {
+    return false;
+  }
+  if (k === "taxallowance" || k === "tunjanganpajak") return false;
+  if (/deduct|potong|pph|jht|koperasi|cooperative|loan|denda/.test(k)) return true;
+  if ((/pension|jp/.test(k)) && !/allowance|tunjangan/.test(k)) return true;
+  return false;
+}
 
 export function rowsFromCompensation(comp) {
   if (!comp) return [];
@@ -110,7 +133,8 @@ export function rowsFromCompensation(comp) {
     const n = Number(amount);
     if (!Number.isFinite(n) || n === 0) return;
     const name = String(label || "Item");
-    const signed = n < 0 || DEDUCT_RE.test(name) ? -Math.abs(n) : n;
+    if (isCompanyContribution(name)) return;
+    const signed = n < 0 || isDeductionKey(name) ? -Math.abs(n) : Math.abs(n);
     rows.push([name, signed]);
   }
   if (Array.isArray(parsed)) {
@@ -128,11 +152,11 @@ export function rowsFromCompensation(comp) {
     }
   }
   if (!rows.length) {
-    if (Number(comp.basic_salary)) push("Basic salary", comp.basic_salary);
+    if (Number(comp.basic_salary)) push("gajiPokok", comp.basic_salary);
     if (Number(comp.imported_gross) && Number(comp.imported_gross) !== Number(comp.basic_salary)) {
-      push("Gross pay", comp.imported_gross);
+      push("penghasilanBruto", comp.imported_gross);
     }
-    if (Number(comp.imported_deduction)) push("Deductions", -Math.abs(Number(comp.imported_deduction)));
+    if (Number(comp.imported_deduction)) push("potonganLain", -Math.abs(Number(comp.imported_deduction)));
   }
   return rows;
 }

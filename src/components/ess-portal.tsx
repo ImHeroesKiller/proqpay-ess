@@ -125,9 +125,9 @@ export function EssPortal() {
   const chips = useMemo(() => {
     if (stage === 2) {
       return (config.payslips[0]?.rows || [])
-        .filter((r) => /PPh|BPJS|Overtime/.test(r[0]))
+        .filter((r) => /PPh|BPJS|Lembur|Overtime/i.test(r[0]))
         .map((r) => ({
-          lbl: r[0].includes("PPh") ? "PPh 21" : r[0].includes("BPJS") ? "BPJS" : "Overtime",
+          lbl: /PPh|Pajak/i.test(r[0]) ? "PPh 21" : /BPJS/i.test(r[0]) ? "BPJS" : "Lembur",
           v: r[1],
         }));
     }
@@ -582,11 +582,16 @@ export function EssPortal() {
             </div>
           </div>
           <div className="slip-grid">
-            {slip.rows.map((r) => (
+            {slip.rows.filter((r) => r[1] > 0).length ? <div className="slip-sec">Penghasilan</div> : null}
+            {slip.rows.filter((r) => r[1] > 0).map((r) => (
+              <FragmentRow key={r[0]} label={r[0]} amount={r[1]} />
+            ))}
+            {slip.rows.filter((r) => r[1] < 0).length ? <div className="slip-sec">Potongan</div> : null}
+            {slip.rows.filter((r) => r[1] < 0).map((r) => (
               <FragmentRow key={r[0]} label={r[0]} amount={r[1]} />
             ))}
             <div className="slip-total">
-              <span>Take-home pay</span>
+              <span>Gaji bersih</span>
               <span>{fmt(totalOf(slip.rows))}</span>
             </div>
           </div>
@@ -923,9 +928,9 @@ function PrintSlip({ config, slip, idx }: { config: PortalConfig; slip?: Payslip
         <table className="ps-tbl ps-ident">
           <tbody>
             <tr>
-              <th>Employee</th>
+              <th>Nama</th>
               <td>{config.employee.name}</td>
-              <th>Role</th>
+              <th>Jabatan</th>
               <td>{config.employee.role}</td>
             </tr>
             <tr>
@@ -938,7 +943,7 @@ function PrintSlip({ config, slip, idx }: { config: PortalConfig; slip?: Payslip
         </table>
         <div className="ps-detail">
           <div className="ps-col">
-            <div className="ps-col-h">EARNINGS</div>
+            <div className="ps-col-h">PENGHASILAN</div>
             <table className="ps-tbl">
               <tbody>
                 {earn.map((r) => (
@@ -955,7 +960,7 @@ function PrintSlip({ config, slip, idx }: { config: PortalConfig; slip?: Payslip
             </div>
           </div>
           <div className="ps-col">
-            <div className="ps-col-h">DEDUCTIONS</div>
+            <div className="ps-col-h">POTONGAN</div>
             <table className="ps-tbl">
               <tbody>
                 {ded.map((r) => (
@@ -974,7 +979,7 @@ function PrintSlip({ config, slip, idx }: { config: PortalConfig; slip?: Payslip
         </div>
         <div className="ps-thp">
           <div>
-            <div className="l">TAKE-HOME PAY (THP)</div>
+            <div className="l">GAJI BERSIH (THP)</div>
             <div className="s">{paid ? "Final" : "Estimasi — dana diteruskan ke rekening terdaftar"}</div>
           </div>
           <div className="v">{fmt(thp)}</div>
