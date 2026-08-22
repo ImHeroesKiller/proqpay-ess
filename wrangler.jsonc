@@ -12,7 +12,7 @@
     {
       "binding": "DB",
       "database_name": "proqpay-lite-production",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "ac3f8b48-bd87-44bd-9286-f0e0bab6e39f"
     }
   ],
   "vars": {

@@ -35,7 +35,7 @@ Di dashboard: **Workers & Pages → Create → Connect to Git** dengan tipe **Wo
 
 Atau dari laptop: `npm run deploy`.
 
-1. Isi `database_id` D1 Lite di `wrangler.jsonc`.
+1. `wrangler.jsonc` sudah mengikat D1 `proqpay-lite-production` (`ac3f8b48-bd87-44bd-9286-f0e0bab6e39f`).
 2. `npx wrangler secret put PORTAL_BOOTSTRAP_PIN`
 3. `npx wrangler secret put PORTAL_JWT_SECRET`
 4. Deploy ulang.
