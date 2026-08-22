@@ -142,3 +142,5 @@ Bentuk JSON `PortalPayload` (jangan dipecah tanpa versi): lihat `src/lib/types.t
 | `DEFAULT_ORG_ID` | vars | `ORG-OTSINDO` |
 
 Cookie: `proqpay_ess`. Rotasi `PORTAL_JWT_SECRET` memaksa login ulang semua karyawan.
+
+PWA ESS tidak menyimpan slip di Cache Storage / IndexedDB. Integrasi Lite nanti jangan mengandalkan offline payroll di klien.

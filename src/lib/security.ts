@@ -21,6 +21,8 @@ export function securityHeaders(): Record<string, string> {
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data:",
       "connect-src 'self'",
+      "worker-src 'self'",
+      "manifest-src 'self'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

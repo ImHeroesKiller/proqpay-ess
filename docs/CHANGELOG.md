@@ -3,6 +3,13 @@
 Format: perubahan terbaru di atas. Repo: [ImHeroesKiller/proqpay-ess](https://github.com/ImHeroesKiller/proqpay-ess).  
 **Tidak mengubah kode proqpay-lite.**
 
+## 2026-08-22 — PWA
+
+- Manifest, ikon 192/512, Apple touch icon, `theme-color`.
+- Service worker: cache aset statis saja; `/api/*` dan HTML aplikasi tidak di-cache.
+- Halaman offline generik (tanpa data gaji).
+- CSP `worker-src` / `manifest-src`; `sw.js` `no-cache`.
+
 ## 2026-08-22 — Rapikan produksi
 
 - Hapus kredensial/data dummy Andi Pratama dari UI production.

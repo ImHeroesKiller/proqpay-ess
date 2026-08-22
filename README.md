@@ -32,4 +32,6 @@ npm run preview
 Secret: `PORTAL_BOOTSTRAP_PIN`, `PORTAL_JWT_SECRET`.  
 Jangan menjalankan migrasi D1 dari repo ini.
 
+PWA: dipasang ke layar utama; data gaji tidak di-cache. Lihat `docs/PWA.md`.
+
 Dokumentasi: `docs/README.md` · Integrasi Lite: `docs/LITE-INTEGRATION.md`

@@ -5,6 +5,7 @@ Portal karyawan. System of record: **proqpay-lite** (D1). ESS hanya membaca.
 | Dokumen | Isi |
 |---|---|
 | [CHANGELOG.md](CHANGELOG.md) | Riwayat rilis ESS |
+| [PWA.md](PWA.md) | Service worker, manifest, aturan cache |
 | [LITE-INTEGRATION.md](LITE-INTEGRATION.md) | **Baca ini sebelum mengubah Lite** |
 | [06-d1-mapping.md](06-d1-mapping.md) | Mapping tabel D1 → UI |
 | [01-architecture.md](01-architecture.md) | Arsitektur (sebagian legacy Perchance) |
