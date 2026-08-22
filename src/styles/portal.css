@@ -9,8 +9,8 @@
     --glass-strong: rgba(255, 255, 255, .9);
     --surface: rgba(255, 255, 255, .62);
     --solid: #ffffff;
-    --card: #ffffff;
-    --card: #ffffff;
+    --card: var(--glass);
+    --card: var(--glass);
     --border: rgba(15, 23, 42, .08);
     --border-strong: rgba(15, 23, 42, .14);
     --ink: #0f1b3a;
@@ -48,7 +48,6 @@
       --glass-strong: rgba(18, 25, 51, .92);
       --surface: rgba(255, 255, 255, .05);
       --solid: #111a33;
-      --card: #111a33;
       --border: rgba(255, 255, 255, .08);
       --border-strong: rgba(255, 255, 255, .16);
       --ink: #f0f2ff;
@@ -66,6 +65,7 @@
   }
   :root.dark {
     --bg: #0b1226;
+    --card: var(--glass);
     --glass: rgba(18, 25, 51, .66);
     --glass-strong: rgba(18, 25, 51, .92);
     --surface: rgba(255, 255, 255, .05);

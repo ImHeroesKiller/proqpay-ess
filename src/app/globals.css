@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
 @import "../styles/portal.css";
 
 @theme {
@@ -6,8 +7,4 @@
   --color-navy: #0f1b3a;
   --color-brand: #f26522;
   --color-brand-2: #ff8a3d;
-}
-
-html {
-  @apply font-sans;
 }

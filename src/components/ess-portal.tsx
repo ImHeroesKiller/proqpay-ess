@@ -254,6 +254,7 @@ export function EssPortal() {
         </div>
       )}
 
+      {loggedIn ? (
       <div className={loaded ? "loaded-root" : ""} data-loaded={loaded}>
         <style>{`body.portal-loaded .reveal, .loaded-root .reveal { opacity: 1; transform: none; }
         .loaded-root .tabbar { opacity: 1; transform: translateX(-50%) translateY(0); }`}</style>
@@ -289,6 +290,7 @@ export function EssPortal() {
             </button>
             <div className="ad-track">
               <div className="ad-slide" style={{ background: config.ads[0].bg }}>
+                <AdArt />
                 <div className="txt">
                   <span className="tag">{config.ads[0].tag}</span>
                   <h3>{config.ads[0].title}</h3>
@@ -597,6 +599,7 @@ export function EssPortal() {
           ))}
         </nav>
       </div>
+      ) : null}
 
       {toast ? (
         <div className="toast show">
@@ -605,7 +608,7 @@ export function EssPortal() {
         </div>
       ) : null}
 
-      {!loaded ? (
+      {loggedIn && !loaded ? (
         <div id="skeleton">
           <div className="sk-inner">
             <div className="sk-h" />
@@ -883,6 +886,37 @@ export function EssPortal() {
 
       <PrintSlip config={config} slip={slip} idx={slipIdx} />
     </>
+  );
+}
+
+function AdArt() {
+  return (
+    <svg className="ad-art" viewBox="0 0 260 260" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id="artGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ff8a3d" />
+          <stop offset="1" stopColor="#f26522" />
+        </linearGradient>
+      </defs>
+      <circle cx="130" cy="128" r="96" fill="rgba(242,101,34,.22)" />
+      <circle cx="130" cy="128" r="56" fill="rgba(242,101,34,.13)" />
+      <g transform="rotate(6 130 130)">
+        <rect x="66" y="26" width="128" height="208" rx="20" fill="#0b1226" stroke="#4a5b92" strokeWidth="2.5" />
+        <rect x="72" y="33" width="116" height="194" rx="14" fill="#1b2a52" />
+        <rect x="86" y="50" width="60" height="11" rx="5.5" fill="#3d4f85" />
+        <circle cx="130" cy="112" r="26" fill="url(#artGrad)" />
+        <path d="M119 112l7 8 15-16" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="88" y="158" width="84" height="15" rx="7.5" fill="#2a3a6b" />
+        <rect x="88" y="183" width="64" height="15" rx="7.5" fill="#24355f" />
+      </g>
+      <circle cx="212" cy="48" r="13" fill="#ff8a3d" />
+      <circle cx="212" cy="48" r="13" stroke="#ffb27e" strokeWidth="2" />
+      <path d="M206 48h12M208.5 45.5v5M215.5 45.5v5" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      <path d="M46 96l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#ff8a3d" />
+      <path d="M222 128l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5z" fill="#ff8a3d" opacity=".8" />
+      <circle cx="70" cy="196" r="3.5" fill="#fff" opacity=".35" />
+      <circle cx="236" cy="208" r="4" fill="#fff" opacity=".4" />
+    </svg>
   );
 }
 
