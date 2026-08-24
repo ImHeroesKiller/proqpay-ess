@@ -1,12 +1,5 @@
-/** Worker bindings (D1 + secrets). */
+/** Worker bindings and secrets. ESS consumes ProQPay Lite APIs and does not bind payroll D1 directly. */
 export type AppEnv = {
-  DB?: {
-    prepare: (query: string) => {
-      bind: (...values: unknown[]) => D1Stmt;
-      first: <T = Record<string, unknown>>() => Promise<T | null>;
-      all: <T = Record<string, unknown>>() => Promise<{ results: T[] }>;
-    };
-  };
   PORTAL_JWT_SECRET?: string;
   LITE_API_BASE?: string;
   EMPLOYEE_PORTAL_KEY?: string;
@@ -15,10 +8,4 @@ export type AppEnv = {
   AI?: {
     run: (model: string, input: Record<string, unknown>) => Promise<{ response?: string }>;
   };
-};
-
-type D1Stmt = {
-  bind: (...values: unknown[]) => D1Stmt;
-  first: <T = Record<string, unknown>>() => Promise<T | null>;
-  all: <T = Record<string, unknown>>() => Promise<{ results: T[] }>;
 };
