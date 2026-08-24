@@ -8,13 +8,6 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "proqpay-lite-production",
-      "database_id": "ac3f8b48-bd87-44bd-9286-f0e0bab6e39f"
-    }
-  ],
   "ai": { "binding": "AI" },
   "vars": {
     "DEFAULT_ORG_ID": "ORG-OTSINDO",
