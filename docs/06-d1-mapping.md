@@ -13,7 +13,8 @@ Sumber skema: `migrations/0001_cloudflare_native.sql` di Lite.
 
 Login ESS memakai `employees.id` (NRK) **atau** `employees.employee_code` (mis. `EMP-…`).
 
-Di D1 **tidak ada** `pass_hash` karyawan (`app_users` hanya untuk ops). Fase 0 memakai secret `PORTAL_BOOTSTRAP_PIN` di worker ESS (bukan di Lite). Password per-karyawan menunggu perubahan Lite nanti.
+Password per karyawan ada di Lite (`employee_credentials`). ESS mem-proxy login ke
+`POST {LITE_API_BASE}/api/employee/login`. PIN bersama **tidak dipakai**.
 
 ## Mapping CONFIG
 
@@ -28,29 +29,33 @@ Di D1 **tidak ada** `pass_hash` karyawan (`app_users` hanya untuk ops). Fase 0 m
 | `company.*` | `clients` + `organizations` |
 | `payroll.period` | `payroll_submissions.period` (`YYYY-MM` → `Agustus 2026`) |
 | `payroll.ref` | `payment_instructions.document_no` atau `submissions.id` |
-| `payroll.stage` 1..4 | lihat tabel stage |
+| `payroll.stage` 1..5 | lihat tabel stage (mengikuti Lite) |
 | `payroll.payday` | `payment_instructions.execution_date` |
 | `payslips[].rows` | `employee_compensation.payroll_components` JSON; fallback gross/deduction/net; periode lain dari `payment_instruction_lines.amount` |
 | `notifications` | diturunkan dari submission terbaru (bukan tabel notifikasi) |
-| `ewa.*` | **belum ada tabel**; worker mengirim rules default, `app=null`, `history=[]` |
+| `ewa.*` | `ewa_policies` / `ewa_requests` (Lite migrasi 0005) |
 
 ## Stage tracker
 
+Mengikuti 5 tahap bisnis Lite (`src/lib/d1-shared.ts`):
+
 | `payroll_submissions.state` | Stage ESS |
 |---|---|
-| `DRAFT`, `AI_VALIDATING`, `EXCEPTION_REVIEW` | 1 Awaiting data |
-| `PROCESSOR_REVIEW`, `CONTROLLER_REVIEW`, `PAYMENT_INSTRUCTION_READY` | 2 Processing |
-| `PAYMENT_APPROVAL_PENDING`, `APPROVED_FOR_PAYMENT`, `DISBURSEMENT_PROCESSING` | 3 Awaiting payout |
-| `PROOF_UPLOADED`, `RECONCILIATION`, `COMPLETED` | 4 Paid |
+| `DRAFT`, `EXCEPTION_*`, `CLIENT_ACTION_REQUIRED`, `REVISION_REQUIRED` | 1 Data Readiness |
+| `AI_VALIDATING`, `PROCESSOR_REVIEW`, `VALIDATED` | 2 Payroll Preparation |
+| `CONTROLLER_REVIEW`, `DATA_APPROVED`, `PAYROLL_FINALIZED` | 3 Review & Approval |
+| `PAYMENT_INSTRUCTION_READY` … `PROOF_UPLOADED` | 4 Payment |
+| `RECONCILIATION`, `COMPLETED` | 5 Reconciliation & Close |
 
-Ditambah: rekonsiliasi match / PI completed → stage 4.
+PI PAID / rekon MATCH → stage 5.
 
 ## Endpoint ESS (bukan API ops Lite)
 
 | Method | Path | Fungsi |
 |---|---|---|
-| `POST` | `/api/portal/login` | Cari karyawan di D1 + PIN bootstrap → JWT |
+| `POST` | `/api/portal/login` | Proxy ke Lite `/api/employee/login` → JWT |
 | `GET` | `/api/portal/init` | Susun `config` + `ewa` dari D1 (hanya `sub` token) |
+| `POST` | `/api/portal/ewa` | Proxy ke Lite `/api/employee/ewa` |
 | `GET` | `/api/health` | Cek binding D1 |
 
 Worker **hanya SELECT**. Tidak ada migrasi, INSERT, atau UPDATE ke D1.
@@ -59,7 +64,7 @@ Worker **hanya SELECT**. Tidak ada migrasi, INSERT, atau UPDATE ke D1.
 
 1. Salin `database_id` D1 Lite ke `wrangler.toml` (ganti `REPLACE_WITH_D1_DATABASE_ID`).
 2. Dashboard Pages project `proqpay-ess` → Settings → Bindings → D1 `DB` = `proqpay-lite-production`.
-3. Secrets: `PORTAL_BOOTSTRAP_PIN`, `PORTAL_JWT_SECRET`.
+3. Secrets: `PORTAL_JWT_SECRET`, opsional `EMPLOYEE_PORTAL_KEY`.
 4. Lokal: salin `.dev.vars.example` → `.dev.vars`, lalu `npx wrangler pages dev .`
 
 Jangan jalankan `d1 migrations apply` dari repo ESS.
