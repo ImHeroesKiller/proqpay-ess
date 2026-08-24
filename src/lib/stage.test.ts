@@ -14,3 +14,9 @@ test("ESS payroll tracker follows Lite five business stages", () => {
   assert.equal(slipStatus(4), "processing");
   assert.equal(slipStatus(5), "paid");
 });
+
+test("ESS never presents unmatched reconciliation or payment exception as paid", () => {
+  assert.equal(stageFromState("RECONCILIATION", "", "UNMATCHED"), 4);
+  assert.equal(stageFromState("PAYMENT_EXCEPTION", "UNPAID", ""), 4);
+  assert.equal(slipStatus(stageFromState("RECONCILIATION", "", "UNMATCHED")), "processing");
+});
