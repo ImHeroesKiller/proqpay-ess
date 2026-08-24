@@ -53,8 +53,11 @@ export function EssPortal() {
 
   const config = payload.config;
   const ewa = { ...payload.ewa, app: ewaApp };
-  const plafond = ewaPlafond(config, ewa);
-  const eligible = ewa.emp.daysWorked >= ewa.rules.minDaysWorked && ewa.emp.tenureMonths >= 1;
+  const stageCount = Math.max(1, config.stages.length || 5);
+  const plafond = typeof ewa.plafond === "number" ? ewa.plafond : ewaPlafond(config, ewa);
+  const eligible = typeof ewa.eligible === "boolean"
+    ? ewa.eligible
+    : ewa.emp.daysWorked >= ewa.rules.minDaysWorked && ewa.emp.tenureMonths >= 1;
   const processing = config.payslips[0]?.status !== "paid";
   const firstName = config.employee.name.split(" ")[0];
 
@@ -142,6 +145,35 @@ export function EssPortal() {
       setChangeErr(e instanceof Error ? e.message : "Gagal mengganti password.");
     } finally {
       setChangeBusy(false);
+    }
+  }
+
+  async function submitEwa() {
+    if (!wiz.agreed) return;
+    try {
+      const r = await fetch("/api/portal/ewa", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: wiz.amount, method: wiz.method === "auto" ? "SALARY_ACCOUNT" : wiz.method, agreed: true }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || "Gagal mengajukan advance.");
+      const created = data.request || {};
+      setEwaApp({
+        ref: created.id || "EWA",
+        amount: Number(created.amount || wiz.amount),
+        fee: Number(created.fee || ewaFee(wiz.amount, ewa.rules)),
+        method: String(created.method || "SALARY_ACCOUNT"),
+        inst: 1,
+        date: new Date().toISOString().slice(0, 10),
+        status: created.status || "SUBMITTED",
+      });
+      setModal(null);
+      setWiz({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
+      showToast("Pengajuan advance terkirim. Menunggu persetujuan payroll.");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Gagal mengajukan advance.");
     }
   }
 
@@ -375,7 +407,7 @@ export function EssPortal() {
                 <h2>Payroll Status — {enPeriod(config.payroll.period)}</h2>
                 <div className="sub">Your payroll progress at a glance</div>
               </div>
-              <span className={"pill " + (stage >= 4 ? "ok" : "info pulse")}>
+              <span className={"pill " + (stage >= stageCount ? "ok" : "info pulse")}>
                 <i />
                 {config.stages[stage - 1]?.title || "Processing"}
               </span>
@@ -395,10 +427,10 @@ export function EssPortal() {
                     cx="37"
                     cy="37"
                     r="26"
-                    style={{ strokeDashoffset: RING_C * (1 - stage / 4) }}
+                    style={{ strokeDashoffset: RING_C * (1 - stage / stageCount) }}
                   />
                 </svg>
-                <span className="pct">{Math.round((stage / 4) * 100)}%</span>
+                <span className="pct">{Math.round((stage / stageCount) * 100)}%</span>
               </div>
               <div className="sh">
                 <div className="t">{config.stages[stage - 1]?.title}</div>
@@ -412,7 +444,7 @@ export function EssPortal() {
               {config.stages.map((s, i) => {
                 const cls = i < stage - 1 ? " is-complete" : i === stage - 1 ? " is-current" : "";
                 const tag = i < stage - 1 ? { t: "Done", c: "done" } : i === stage - 1 ? { t: "In progress", c: "now" } : { t: "Queued", c: "wait" };
-                const icon = i < stage - 1 ? "check" : (["file", "gear", "clock", "check"][i] as string);
+                const icon = i < stage - 1 ? "check" : (["file", "gear", "clock", "wallet", "check"][i] as string);
                 return (
                   <div className={"step" + cls} key={s.title}>
                     <div className="rail">
@@ -441,14 +473,19 @@ export function EssPortal() {
                     {(it.v > 0 ? "+" : "-") + " " + fmt(Math.abs(it.v)) + " · " + it.lbl}
                   </span>
                 ))}
-              {stage === 4 && (
+              {stage === 5 && (
                 <span className="chip-tag pos">
                   <Icon name="check" size={13} /> Salary paid to your account
                 </span>
               )}
-              {stage === 3 && (
+              {stage === 4 && (
                 <span className="chip-tag neg">
                   <Icon name="clock" size={13} /> Awaiting payout
+                </span>
+              )}
+              {stage === 3 && (
+                <span className="chip-tag neg">
+                  <Icon name="clock" size={13} /> In review & approval
                 </span>
               )}
               {stage === 1 && (
@@ -513,8 +550,8 @@ export function EssPortal() {
                 Cairkan gaji yang sudah Anda kerjakan tanpa agunan. Biaya layanan transparan dan dipotong otomatis saat
                 gajian.
               </div>
-              <button className="btn primary" style={{ width: "100%" }} onClick={() => setModal("ewa")} disabled={!eligible}>
-                Request Advance
+              <button className="btn primary" style={{ width: "100%" }} onClick={() => setModal("ewa")} disabled={!eligible || Boolean(ewaApp)}>
+                {ewaApp ? "Pengajuan diproses" : "Request Advance"}
               </button>
             </div>
           </section>
@@ -892,11 +929,7 @@ export function EssPortal() {
                 className="btn primary"
                 style={{ width: "100%", marginTop: 8 }}
                 disabled={!wiz.agreed}
-                onClick={() => {
-                  setModal(null);
-                  setWiz({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
-                  showToast("Pengajuan advance akan diproses oleh HR. Hubungi HR bila butuh bantuan.");
-                }}
+                onClick={() => void submitEwa()}
               >
                 Submit request
               </button>
