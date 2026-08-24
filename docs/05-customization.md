@@ -81,6 +81,9 @@ lalu pakai `ic("bintang", 16)` di markup/render.
 
 ## 5. Aturan Bisnis EWA
 
+Di produksi, aturan, banner, dan teks portal **diatur dari Lite → Portal Settings**,
+bukan dari file ini. Tabel di bawah hanya untuk data demo lokal.
+
 | Parameter | Lokasi | Dampak |
 |---|---|---|
 | `feeRate` | `EWA.rules.feeRate` | persentase biaya layanan |

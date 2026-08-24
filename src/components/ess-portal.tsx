@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "./icon";
 import { emptyPayload } from "@/lib/empty-portal";
 import { enPeriod, fmt, initials, slipRef, totalOf } from "@/lib/format";
-import type { EwaApp, EwaState, Payslip, PortalConfig, PortalPayload } from "@/lib/types";
+import type { Ad, EwaApp, EwaState, Payslip, PortalConfig, PortalPayload } from "@/lib/types";
 
 const RING_C = 163.4;
 
@@ -23,6 +23,45 @@ function ewaPlafond(config: PortalConfig, ewa: EwaState) {
   const dim = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
   const raw = net * Math.min(1, days / dim) * ewa.rules.maxPercent;
   return Math.floor(raw / 10000) * 10000;
+}
+
+function portalCopy(config: PortalConfig) {
+  return {
+    heroSubtitle: config.copy?.heroSubtitle || "Your pay hub — all your payroll info in one place",
+    ewaTitle: config.copy?.ewaTitle || "Advance Salary",
+    ewaSubtitle: config.copy?.ewaSubtitle || "Cairkan gaji yang sudah Anda kerjakan, tanpa menunggu gajian",
+    ewaBody: config.copy?.ewaBody || "Cairkan gaji yang sudah Anda kerjakan tanpa agunan. Biaya layanan transparan dan dipotong otomatis saat gajian.",
+    ewaCta: config.copy?.ewaCta || "Request Advance",
+    ewaLimitCaption: config.copy?.ewaLimitCaption || "Up to {percent}% of this month's pay",
+  };
+}
+
+function limitCaption(ewa: EwaState, caption: string) {
+  const percent = Math.round(Number(ewa.rules.maxPercent || 0.3) * 100);
+  return caption.replace("{percent}", String(percent));
+}
+
+function safeHttp(url?: string) {
+  const value = String(url || "").trim();
+  if (!/^https?:\/\//i.test(value)) return "";
+  if (/javascript:|data:|vbscript:/i.test(value)) return "";
+  return value;
+}
+
+function trackingPixels(config: PortalConfig) {
+  const urls: string[] = [];
+  const first = safeHttp(config.ads[0]?.impressionUrl);
+  if (first) urls.push(first);
+  const platform = config.adsPlatform || {};
+  if (platform.provider === "GOOGLE_ADS" && platform.accountId && /^[A-Za-z0-9._-]+$/.test(platform.accountId)) {
+    urls.push(`https://www.googleadservices.com/pagead/conversion/${encodeURIComponent(platform.accountId)}/?label=${encodeURIComponent(platform.conversionLabel || "")}&guid=ON&script=0`);
+  }
+  if (platform.provider === "META" && platform.pixelId && /^[0-9]+$/.test(platform.pixelId)) {
+    urls.push(`https://www.facebook.com/tr?id=${encodeURIComponent(platform.pixelId)}&ev=PageView&noscript=1`);
+  }
+  const generic = safeHttp(platform.impressionUrl);
+  if (platform.provider === "GENERIC" && generic) urls.push(generic);
+  return [...new Set(urls)];
 }
 
 export function EssPortal() {
@@ -52,14 +91,34 @@ export function EssPortal() {
   const [wiz, setWiz] = useState({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
 
   const config = payload.config;
+  const copy = portalCopy(config);
   const ewa = { ...payload.ewa, app: ewaApp };
   const stageCount = Math.max(1, config.stages.length || 5);
   const plafond = typeof ewa.plafond === "number" ? ewa.plafond : ewaPlafond(config, ewa);
+  const ewaOn = ewa.rules.enabled !== false;
   const eligible = typeof ewa.eligible === "boolean"
     ? ewa.eligible
-    : ewa.emp.daysWorked >= ewa.rules.minDaysWorked && ewa.emp.tenureMonths >= 1;
+    : ewa.emp.daysWorked >= ewa.rules.minDaysWorked && ewa.emp.tenureMonths >= (ewa.rules.minTenureMonths ?? 1);
   const processing = config.payslips[0]?.status !== "paid";
   const firstName = config.employee.name.split(" ")[0];
+  const visibleAds = (config.features?.adsEnabled === false ? [] : config.ads)
+    .filter((ad) => !ad.placement || ad.placement === "HOME");
+  const pixels = trackingPixels(config);
+
+  function onAdCta(ad: Ad) {
+    const click = safeHttp(ad.clickUrl);
+    if (click) {
+      const img = new Image();
+      img.src = click;
+    }
+    const action = ad.action || (safeHttp(ad.href) ? "EXTERNAL" : "EWA");
+    if (action === "EWA") setModal("ewa");
+    else if (action === "PAYSLIP") { setTab("slip"); setModal(null); }
+    else if (action === "EXTERNAL") {
+      const href = safeHttp(ad.href);
+      if (href) window.open(href, "_blank", "noopener,noreferrer");
+    }
+  }
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -341,21 +400,25 @@ export function EssPortal() {
             </div>
           </div>
         </header>
+        {pixels.map((url) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={url} src={url} alt="" width={1} height={1} style={{ position: "absolute", opacity: 0, pointerEvents: "none" }} />
+        ))}
 
-        {!adHidden && config.ads[0] ? (
+        {!adHidden && visibleAds[0] ? (
           <section className="ad-wrap reveal" style={{ ["--d" as string]: ".04s" }} aria-label="Promosi">
             <button className="ad-close" onClick={() => setAdHidden(true)} aria-label="Tutup iklan">
               ✕
             </button>
             <div className="ad-track">
-              <div className="ad-slide" style={{ background: config.ads[0].bg }}>
-                <AdArt />
+              <div className="ad-slide" style={{ background: visibleAds[0].bg }}>
+                <AdArt src={visibleAds[0].imageUrl} />
                 <div className="txt">
-                  <span className="tag">{config.ads[0].tag}</span>
-                  <h3>{config.ads[0].title}</h3>
-                  <p>{config.ads[0].desc}</p>
-                  <button className="cta" onClick={() => setModal("ewa")}>
-                    {config.ads[0].cta}
+                  <span className="tag">{visibleAds[0].tag}</span>
+                  <h3>{visibleAds[0].title}</h3>
+                  <p>{visibleAds[0].desc}</p>
+                  <button className="cta" onClick={() => onAdCta(visibleAds[0])}>
+                    {visibleAds[0].cta}
                   </button>
                 </div>
               </div>
@@ -370,7 +433,7 @@ export function EssPortal() {
                 <h1>
                   Hello, <em>{firstName}</em> 👋
                 </h1>
-                <p>Your pay hub — all your payroll info in one place</p>
+                <p>{copy.heroSubtitle}</p>
               </div>
               <span className="live-pill">
                 <i /> {enPeriod(config.payroll.period).split(" ")[0]} · Live
@@ -512,6 +575,7 @@ export function EssPortal() {
             </button>
           </section>
 
+          {ewaOn ? (
           <section className="card reveal" aria-label="Advance Salary EWA">
             <div className="ewaa">
               <div className="ewaa-head">
@@ -519,8 +583,8 @@ export function EssPortal() {
                   <Icon name="wallet" size={20} />
                 </span>
                 <div className="ewaa-tt">
-                  <b>Advance Salary</b>
-                  <span>Cairkan gaji yang sudah Anda kerjakan, tanpa menunggu gajian</span>
+                  <b>{copy.ewaTitle}</b>
+                  <span>{copy.ewaSubtitle}</span>
                 </div>
                 <span className={"pill " + (eligible ? "ok" : "warn")}>{eligible ? "Ready" : "Locked"}</span>
               </div>
@@ -530,9 +594,7 @@ export function EssPortal() {
                   <div className="v">{fmt(plafond)}</div>
                 </div>
                 <div style={{ textAlign: "right", fontSize: 10.5, color: "var(--muted)", lineHeight: 1.5 }}>
-                  Up to 30%
-                  <br />
-                  of this month&apos;s pay
+                  {limitCaption(ewa, copy.ewaLimitCaption)}
                 </div>
               </div>
               {ewaApp ? (
@@ -547,14 +609,14 @@ export function EssPortal() {
                 </div>
               ) : null}
               <div className="ewaa-sub">
-                Cairkan gaji yang sudah Anda kerjakan tanpa agunan. Biaya layanan transparan dan dipotong otomatis saat
-                gajian.
+                {copy.ewaBody}
               </div>
               <button className="btn primary" style={{ width: "100%" }} onClick={() => setModal("ewa")} disabled={!eligible || Boolean(ewaApp)}>
-                {ewaApp ? "Pengajuan diproses" : "Request Advance"}
+                {ewaApp ? "Pengajuan diproses" : copy.ewaCta}
               </button>
             </div>
           </section>
+          ) : null}
 
           <section className="card reveal">
             <div className="card-head">
@@ -631,7 +693,9 @@ export function EssPortal() {
           ))}
           <button
             className="tab-fab"
+            disabled={!ewaOn}
             onClick={() => {
+              if (!ewaOn) return;
               setTab("ewa");
               setModal("ewa");
             }}
@@ -842,7 +906,7 @@ export function EssPortal() {
       ) : null}
 
       {modal === "ewa" ? (
-        <Sheet title="Advance Salary" onClose={() => setModal(null)}>
+        <Sheet title={copy.ewaTitle} onClose={() => setModal(null)}>
           <div className="wsteps">
             {[1, 2, 3].map((n) => (
               <div key={n} className={"wstep" + (wiz.step > n ? " done" : wiz.step === n ? " now" : "")} data-n={n}>
@@ -943,7 +1007,14 @@ export function EssPortal() {
   );
 }
 
-function AdArt() {
+function AdArt({ src }: { src?: string }) {
+  const href = safeHttp(src);
+  if (href) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img className="ad-art" src={href} alt="" />
+    );
+  }
   return (
     <svg className="ad-art" viewBox="0 0 260 260" fill="none" aria-hidden>
       <defs>
