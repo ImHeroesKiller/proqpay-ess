@@ -1,6 +1,19 @@
 export type Payslip = { period: string; status: "processing" | "paid"; rows: [string, number][] };
 export type Stage = { title: string; desc: string; meta: string; note: string; eta: string };
-export type Ad = { tag: string; title: string; desc: string; cta: string; bg: string };
+export type Ad = {
+  tag: string;
+  title: string;
+  desc: string;
+  cta: string;
+  bg: string;
+  href?: string;
+  action?: "NONE" | "EWA" | "PAYSLIP" | "EXTERNAL" | string;
+  imageUrl?: string;
+  impressionUrl?: string;
+  clickUrl?: string;
+  provider?: string;
+  placement?: "HOME" | "EWA" | "PAYSLIP" | string;
+};
 export type Notif = { title: string; s: string; type: "a" | "g"; unread: boolean };
 export type EwaApp = {
   ref: string;
@@ -12,6 +25,24 @@ export type EwaApp = {
   status: string;
 } | null;
 export type EwaHistory = { ref: string; date: string; amount: number; status: string };
+
+export type PortalCopy = {
+  companyTagline?: string;
+  heroSubtitle?: string;
+  ewaTitle?: string;
+  ewaSubtitle?: string;
+  ewaBody?: string;
+  ewaCta?: string;
+  ewaLimitCaption?: string;
+};
+
+export type AdsPlatform = {
+  provider?: string;
+  accountId?: string;
+  pixelId?: string;
+  conversionLabel?: string;
+  impressionUrl?: string;
+};
 
 export type PortalConfig = {
   employee: {
@@ -29,6 +60,9 @@ export type PortalConfig = {
   payslips: Payslip[];
   ads: Ad[];
   notifications: Notif[];
+  copy?: PortalCopy;
+  features?: { adsEnabled?: boolean };
+  adsPlatform?: AdsPlatform;
 };
 
 export type EwaState = {
@@ -39,6 +73,8 @@ export type EwaState = {
     maxTenorMonths: number;
     maxPercent: number;
     minDaysWorked: number;
+    minTenureMonths?: number;
+    enabled?: boolean;
   };
   emp: { daysWorked: number; tenureMonths: number; daysInMonth?: number; net?: number };
   plafond?: number;

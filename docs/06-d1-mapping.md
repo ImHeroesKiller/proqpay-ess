@@ -33,7 +33,8 @@ Password per karyawan ada di Lite (`employee_credentials`). ESS mem-proxy login 
 | `payroll.payday` | `payment_instructions.execution_date` |
 | `payslips[].rows` | `payroll_run_lines.components` JSON (bukan `employee_compensation` yang tertimpa import) |
 | `notifications` | diturunkan dari submission terbaru (bukan tabel notifikasi) |
-| `ewa.*` | `ewa_policies` / `ewa_requests` (Lite migrasi 0005) |
+| `ewa.rules` | `ewa_policies` (diatur dari Lite Portal Settings) |
+| `ads` / `copy` / `adsPlatform` | `portal_ads` + `portal_settings` (Lite migrasi 0007) |
 
 ## Stage tracker
 

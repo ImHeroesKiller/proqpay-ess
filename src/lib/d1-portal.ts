@@ -151,6 +151,7 @@ export async function buildPortalPayload(db, employee, env) {
   const ewa = await loadEwaState(db, employee, {
     tenureMonths, net, daysWorked, daysInMonth, paid: stage >= STAGE_COUNT,
   });
+  const presentation = await loadPortalPresentation(db, employee.org_id, employee.client_id);
 
   return {
     config: {
@@ -165,7 +166,7 @@ export async function buildPortalPayload(db, employee, env) {
       },
       company: {
         name: companyName,
-        tagline: "Payroll & HR Digital",
+        tagline: presentation.copy.companyTagline || "Payroll & HR Digital",
         address: employee.billing_address || "",
         contact: contactParts.join(" · "),
         legal: employee.org_name || "ProQPay",
@@ -179,15 +180,10 @@ export async function buildPortalPayload(db, employee, env) {
       },
       stages: STAGES,
       payslips,
-      ads: [
-        {
-          tag: "Advance Salary",
-          title: "Get Paid Sooner, Worry Less",
-          desc: "Cairkan gaji yang sudah Anda kerjakan. Pengajuan diproses sesuai kebijakan perusahaan.",
-          cta: "Request Advance",
-          bg: "linear-gradient(115deg, #0f1b3a 0%, #1b2a52 55%, #24355f 100%)",
-        },
-      ],
+      ads: presentation.ads,
+      copy: presentation.copy,
+      features: presentation.features,
+      adsPlatform: presentation.adsPlatform,
       notifications,
     },
     ewa,
@@ -196,7 +192,7 @@ export async function buildPortalPayload(db, employee, env) {
 
 async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysInMonth, paid }) {
   const fallbackRules = {
-    feeRate: 0.03, minFee: 50000, minFeeAmount: 1750000, maxTenorMonths: 1, maxPercent: 0.3, minDaysWorked: 10,
+    feeRate: 0.03, minFee: 50000, minFeeAmount: 1750000, maxTenorMonths: 1, maxPercent: 0.3, minDaysWorked: 10, minTenureMonths: 1, enabled: true,
   };
   const fallback = {
     rules: fallbackRules,
@@ -221,6 +217,8 @@ async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysI
       maxTenorMonths: Number(policy.max_tenor_months),
       maxPercent: Number(policy.max_percent),
       minDaysWorked: Number(policy.min_days_worked),
+      minTenureMonths: Number(policy.min_tenure_months),
+      enabled: Boolean(Number(policy.enabled)),
     } : fallbackRules;
     const plafond = Math.max(0, Math.floor((net * (daysWorked / daysInMonth) * rules.maxPercent) / 10000) * 10000);
     const open = await d1First(
@@ -268,3 +266,72 @@ async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysI
     return fallback;
   }
 }
+
+const DEFAULT_COPY = {
+  companyTagline: "Payroll & HR Digital",
+  heroSubtitle: "Your pay hub — all your payroll info in one place",
+  ewaTitle: "Advance Salary",
+  ewaSubtitle: "Cairkan gaji yang sudah Anda kerjakan, tanpa menunggu gajian",
+  ewaBody: "Cairkan gaji yang sudah Anda kerjakan tanpa agunan. Biaya layanan transparan dan dipotong otomatis saat gajian.",
+  ewaCta: "Request Advance",
+  ewaLimitCaption: "Up to {percent}% of this month's pay",
+};
+
+const DEFAULT_AD = {
+  tag: "Advance Salary",
+  title: "Get Paid Sooner, Worry Less",
+  desc: "Cairkan gaji yang sudah Anda kerjakan. Pengajuan diproses sesuai kebijakan perusahaan.",
+  cta: "Request Advance",
+  bg: "linear-gradient(115deg, #0f1b3a 0%, #1b2a52 55%, #24355f 100%)",
+  href: "",
+  action: "EWA",
+  placement: "HOME",
+};
+
+async function loadPortalPresentation(db, orgId, clientId) {
+  const fallback = {
+    copy: DEFAULT_COPY,
+    features: { adsEnabled: true },
+    adsPlatform: { provider: "NONE" },
+    ads: [DEFAULT_AD],
+  };
+  try {
+    const settings = (clientId
+      ? await d1First(db, "SELECT * FROM portal_settings WHERE org_id=? AND client_id=? LIMIT 1", [orgId, clientId])
+      : null)
+      || await d1First(db, "SELECT * FROM portal_settings WHERE org_id=? AND client_id IS NULL LIMIT 1", [orgId]);
+    const clientAds = clientId
+      ? await d1All(db, `SELECT * FROM portal_ads WHERE org_id=? AND client_id=? AND enabled=1 ORDER BY sort_order ASC LIMIT 8`, [orgId, clientId])
+      : [];
+    const orgAds = await d1All(db, `SELECT * FROM portal_ads WHERE org_id=? AND client_id IS NULL AND enabled=1 ORDER BY sort_order ASC LIMIT 8`, [orgId]);
+    const rows = clientAds.length ? clientAds : orgAds;
+    let copy = DEFAULT_COPY;
+    let features = { adsEnabled: true };
+    let adsPlatform = { provider: "NONE" };
+    if (settings) {
+      try { copy = { ...DEFAULT_COPY, ...JSON.parse(settings.copy_json || "{}") }; } catch { /* default */ }
+      try { features = { adsEnabled: JSON.parse(settings.features_json || "{}").adsEnabled !== false }; } catch { /* default */ }
+      try { adsPlatform = { provider: "NONE", ...JSON.parse(settings.ads_platform_json || "{}") }; } catch { /* default */ }
+    }
+    const ads = features.adsEnabled
+      ? (rows.length ? rows.map((row) => ({
+        tag: row.tag,
+        title: row.title,
+        desc: row.description,
+        cta: row.cta,
+        bg: row.bg,
+        href: row.href || "",
+        action: row.action || "EWA",
+        placement: row.placement || "HOME",
+        imageUrl: row.image_url || "",
+        impressionUrl: row.impression_url || "",
+        clickUrl: row.click_url || "",
+        provider: row.provider || "INTERNAL",
+      })) : [DEFAULT_AD])
+      : [];
+    return { copy, features, adsPlatform, ads };
+  } catch {
+    return fallback;
+  }
+}
+

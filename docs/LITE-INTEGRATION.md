@@ -90,8 +90,8 @@ Jika Lite menambah state, **update mapping di ESS** (`src/lib/d1-shared.ts` `STA
 | Fitur UI | Status | Integrasi Lite |
 |---|---|---|
 | Notifikasi | Diturunkan dari submission terakhir | Tabel notifikasi per `employee_id` |
-| Banner iklan | Hardcode | Opsional `m_promo` / config klien |
-| EWA / Advance | Persist di Lite `ewa_requests` | Ops menyetujui di Lite → Advance Salary |
+| Banner iklan | `portal_ads` + `portal_settings` di Lite | Ops: menu Portal Settings |
+| EWA / Advance | Persist di Lite `ewa_requests` | Aturan di `ewa_policies` (Portal Settings) |
 | Password reset | Toast “hubungi HR” | Reset di Lite Data Karyawan |
 
 Jangan buat tabel EWA dari migrasi ESS.
@@ -122,6 +122,7 @@ Rekomendasi: **B** setelah Lite punya `EMPLOYEE` auth.
 - [x] Mask rekening di server.
 - [x] Access Cloudflare: portal di luar Access ops.
 - [x] EWA: hitung plafond di server; approve/lunas di dashboard Lite (bukan LLM). Potongan menempel ke `payroll_run_lines` saat `FINALIZE_PAY_RUN_INPUT` / import `UPLOAD_FINAL`.
+- [x] Aturan ESS (plafond, fee, masa kerja, banner, teks, pixel iklan) diatur di Lite `Portal Settings`.
 - [x] Audit login/advance tanpa memblokir payroll.
 - [x] ESS hapus PIN bersama (kode + secret).
 
