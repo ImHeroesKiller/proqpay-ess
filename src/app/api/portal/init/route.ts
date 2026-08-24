@@ -46,31 +46,54 @@ export async function GET(request: NextRequest) {
     ewa?: Record<string, unknown>;
     mustChangePassword?: boolean;
   };
-  if (Array.isArray(body.config?.payslips)) {
+  const base = liteApiBase(env);
+  const sharedHeaders = {
+    ...liteHeaders(env, origin),
+    Authorization: `Bearer ${liteToken}`,
+  };
+
+  // Canonical payslip history is keyed by submission, not merely period. This
+  // preserves Regular + Adjustment + Off-cycle slips in the same month.
+  let canonicalPayslips: Payslip[] | undefined;
+  try {
+    const response = await fetch(`${base}/api/employee/payslips`, {
+      method: "GET",
+      headers: sharedHeaders,
+      signal: AbortSignal.timeout(10000),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return NextResponse.json(
+        { error: "Sesi tidak valid atau kedaluwarsa. Silakan login ulang." },
+        { status: 401, headers },
+      );
+    }
+    if (response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; payslips?: Payslip[] };
+      if (data.ok && Array.isArray(data.payslips)) canonicalPayslips = data.payslips;
+    }
+  } catch {
+    // Fall back to final-only subset from portal init; never promote estimates to final.
+  }
+
+  if (body.config) {
+    const source = canonicalPayslips || (Array.isArray(body.config.payslips) ? body.config.payslips : []);
     const finalPayslips: Payslip[] = [];
     const estimatedPayslips: Payslip[] = [];
-    for (const slip of body.config.payslips) {
+    for (const slip of source) {
       slip.rows = await polishPayslipRows(slip.rows || [], env);
       if (slip.status === "paid") finalPayslips.push(slip);
       else estimatedPayslips.push(slip);
     }
-    // Payslip History is a final document register. Processing values remain
-    // explicitly separated so an estimate can never be mistaken for a final slip.
     body.config.payslips = finalPayslips;
-    body.config.estimatedPayslips = estimatedPayslips;
+    body.config.estimatedPayslips = canonicalPayslips ? [] : estimatedPayslips;
   }
 
   // EWA eligibility/plafond must come from the same canonical endpoint used for submit.
-  // This prevents the dashboard from showing a different amount than the transaction endpoint.
-  const base = liteApiBase(env);
   let canonicalEwa: Record<string, unknown> | undefined;
   try {
     const response = await fetch(`${base}/api/employee/ewa`, {
       method: "GET",
-      headers: {
-        ...liteHeaders(env, origin),
-        Authorization: `Bearer ${liteToken}`,
-      },
+      headers: sharedHeaders,
       signal: AbortSignal.timeout(10000),
     });
     if (response.status === 401 || response.status === 403) {
