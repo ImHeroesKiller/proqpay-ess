@@ -1,5 +1,7 @@
 # ProQPay ESS Portal — Skema Database & Pemetaan Query
 
+> **Deprecated.** Skema `m_employee` / `t_advance` di dokumen ini **fiktif** (prototype). Sumber data produksi adalah D1 Lite. Lihat [LITE-INTEGRATION.md](./LITE-INTEGRATION.md) dan [06-d1-mapping.md](./06-d1-mapping.md). Jangan menjalankan migrasi dari repo ESS.
+
 Dokumen ini mendefinisikan skema tabel SQL yang akan menjadi sumber data
 aplikasi. Nama tabel/kolom dipakai konsisten oleh manifest `SQL_BIND` di
 `index.html` dan komentar `[tabel.kolom]` pada objek `CONFIG`.

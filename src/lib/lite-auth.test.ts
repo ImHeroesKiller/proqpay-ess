@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  liteApiBase, loginOnLite, validateNewPassword,
+  initOnLite, liteApiBase, loginOnLite, validateNewPassword,
 } from "./lite-auth.ts";
 
 test("Lite API base strips trailing slash", () => {
@@ -65,3 +65,29 @@ test("loginOnLite treats network failure as unreachable", async () => {
   assert.equal(result.ok, false);
   if (!result.ok) assert.equal(result.unreachable, true);
 });
+
+test("initOnLite returns Lite PortalPayload and falls back on network failure", async () => {
+  const fetchImpl = (async () =>
+    new Response(JSON.stringify({
+      config: { employee: { name: "Ani", empId: "A" }, payroll: { stage: 3 }, payslips: [], stages: [{}, {}, {}, {}, {}] },
+      ewa: { app: null, history: [] },
+      mustChangePassword: false,
+    }), { status: 200 })) as typeof fetch;
+  const result = await initOnLite(
+    { LITE_API_BASE: "https://proqpay-lite.pages.dev", EMPLOYEE_PORTAL_KEY: "secret" },
+    { liteToken: "lite-session-token", origin: "https://proqpay-ess.arywibowo.workers.dev" },
+    fetchImpl,
+  );
+  assert.equal(result.ok, true);
+  if (result.ok) {
+    assert.equal((result.payload.config as { employee: { name: string } }).employee.name, "Ani");
+  }
+  const failed = await initOnLite(
+    { LITE_API_BASE: "https://proqpay-lite.pages.dev" },
+    { liteToken: "lite-session-token", origin: "https://ess.example" },
+    (async () => { throw new Error("network"); }) as typeof fetch,
+  );
+  assert.equal(failed.ok, false);
+  if (!failed.ok) assert.equal(failed.unreachable, true);
+});
+

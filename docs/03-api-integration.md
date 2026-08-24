@@ -1,5 +1,7 @@
 # ProQPay ESS Portal — Panduan Integrasi API Backend
 
+> **Deprecated.** Kontrak `m_employee` / `SQL_BIND` di dokumen ini **fiktif**. Produksi: Worker ESS mem-proxy ke Lite (`POST /api/portal/login` → `/api/employee/login`, `GET /api/portal/init` → `/api/employee/init`). Lihat [LITE-INTEGRATION.md](./LITE-INTEGRATION.md).
+
 Panduan ini menjelaskan cara menghubungkan aplikasi ke **query SQL** melalui
 API backend. Saat ini frontend berjalan dengan data demo (`SQL_LIVE = false`).
 

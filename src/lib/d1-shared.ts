@@ -137,7 +137,7 @@ export function isDeductionKey(name) {
     return false;
   }
   if (k === "taxallowance" || k === "tunjanganpajak") return false;
-  if (/deduct|potong|pph|jht|koperasi|cooperative|loan|denda/.test(k)) return true;
+  if (/deduct|potong|pph|jht|koperasi|cooperative|loan|denda|ewa/.test(k)) return true;
   if ((/pension|jp/.test(k)) && !/allowance|tunjangan/.test(k)) return true;
   return false;
 }
