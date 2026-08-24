@@ -2,14 +2,14 @@
   "name": "proqpay-ess",
   "version": "0.2.0",
   "private": true,
-  "description": "ProQPay Employee Self-Service portal — Next.js on Cloudflare Workers, reads Lite D1",
+  "description": "ProQPay Employee Self-Service portal — Next.js on Cloudflare Workers, consumes ProQPay Lite APIs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "build:worker": "opennextjs-cloudflare build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test src/lib/lite-auth.test.ts src/lib/stage.test.ts",
+    "test": "node --experimental-strip-types --test src/lib/lite-auth.test.ts src/lib/stage.test.ts src/lib/architecture.test.ts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
