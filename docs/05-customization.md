@@ -90,7 +90,8 @@ bukan dari file ini. Tabel di bawah hanya untuk data demo lokal.
 | `minFee` / `minFeeAmount` | `EWA.rules` | fee minimum & batas pengajuannya |
 | `maxPercent` | `EWA.rules.maxPercent` | plafond maks (% gaji berjalan) |
 | `maxTenorMonths` | `EWA.rules.maxTenorMonths` | tenor maksimum (1 = lunas saat gajian) |
-| `minDaysWorked` | `EWA.rules.minDaysWorked` | syarat kelayakan (hari) |
+| `minDaysWorked` | `EWA.rules.minDaysWorked` | tanggal minimal di bulan gaji (prorata), **bukan** masa kerja |
+| `minTenureMonths` / `minTenureDays` | `EWA.rules` | lama bekerja sejak `join_date` kontrak |
 | `EWA.MIN` / `EWA.STEP` | blok `EWA` | nominal minimum & kelipatan slider |
 
 ## 6. Slip Cetak (A4)

@@ -74,9 +74,10 @@ export type EwaState = {
     maxPercent: number;
     minDaysWorked: number;
     minTenureMonths?: number;
+    minTenureDays?: number;
     enabled?: boolean;
   };
-  emp: { daysWorked: number; tenureMonths: number; daysInMonth?: number; net?: number };
+  emp: { daysWorked: number; tenureMonths: number; tenureDays?: number; joinDate?: string; daysInMonth?: number; net?: number };
   plafond?: number;
   eligible?: boolean;
   reason?: string;

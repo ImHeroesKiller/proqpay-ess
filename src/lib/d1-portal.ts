@@ -122,15 +122,10 @@ export async function buildPortalPayload(db, employee, env) {
   if (employee.contact_email) contactParts.push("Email " + employee.contact_email);
   if (employee.website) contactParts.push(employee.website);
 
-  const join = contract?.join_date || contract?.accepted_date;
-  let tenureMonths = 0;
-  if (join) {
-    const d = new Date(join);
-    if (!Number.isNaN(d.getTime())) {
-      const now = new Date();
-      tenureMonths = Math.max(0, (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()));
-    }
-  }
+  const join = contract?.join_date || contract?.accepted_date || "";
+  const tenure = tenureFromJoin(join);
+  const tenureMonths = tenure.months;
+  const tenureDays = tenure.days;
 
   const notifications = [];
   if (latest) {
@@ -149,7 +144,7 @@ export async function buildPortalPayload(db, employee, env) {
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysWorked = Math.min(Math.max(now.getDate(), 1), daysInMonth);
   const ewa = await loadEwaState(db, employee, {
-    tenureMonths, net, daysWorked, daysInMonth, paid: stage >= STAGE_COUNT,
+    tenureMonths, tenureDays, joinDate: join, net, daysWorked, daysInMonth, paid: stage >= STAGE_COUNT,
   });
   const presentation = await loadPortalPresentation(db, employee.org_id, employee.client_id);
 
@@ -190,13 +185,14 @@ export async function buildPortalPayload(db, employee, env) {
   };
 }
 
-async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysInMonth, paid }) {
+async function loadEwaState(db, employee, { tenureMonths, tenureDays, joinDate, net, daysWorked, daysInMonth, paid }) {
   const fallbackRules = {
-    feeRate: 0.03, minFee: 50000, minFeeAmount: 1750000, maxTenorMonths: 1, maxPercent: 0.3, minDaysWorked: 10, minTenureMonths: 1, enabled: true,
+    feeRate: 0.03, minFee: 50000, minFeeAmount: 1750000, maxTenorMonths: 1, maxPercent: 0.3,
+    minDaysWorked: 10, minTenureMonths: 1, minTenureDays: 0, enabled: true,
   };
   const fallback = {
     rules: fallbackRules,
-    emp: { daysWorked, tenureMonths, daysInMonth, net },
+    emp: { daysWorked, tenureMonths, tenureDays, joinDate, daysInMonth, net },
     plafond: Math.max(0, Math.floor((net * (daysWorked / daysInMonth) * 0.3) / 10000) * 10000),
     eligible: tenureMonths >= 1 && daysWorked >= 10 && !paid,
     reason: paid ? "Payroll periode ini sudah dibayar" : "",
@@ -218,6 +214,7 @@ async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysI
       maxPercent: Number(policy.max_percent),
       minDaysWorked: Number(policy.min_days_worked),
       minTenureMonths: Number(policy.min_tenure_months),
+      minTenureDays: Number(policy.min_tenure_days || 0),
       enabled: Boolean(Number(policy.enabled)),
     } : fallbackRules;
     const plafond = Math.max(0, Math.floor((net * (daysWorked / daysInMonth) * rules.maxPercent) / 10000) * 10000);
@@ -234,18 +231,31 @@ async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysI
        WHERE employee_id=? ORDER BY created_at DESC LIMIT 8`,
       [employee.id],
     );
+    const needDays = rules.minTenureDays || 0;
+    const needMonths = rules.minTenureMonths || 0;
+    const tenureOk = (needDays <= 0 || tenureDays >= needDays) && (needMonths <= 0 || tenureMonths >= needMonths);
     const eligible = Boolean(policy ? policy.enabled : 1)
-      && tenureMonths >= (policy ? Number(policy.min_tenure_months) : 1)
+      && tenureOk
       && daysWorked >= rules.minDaysWorked
       && !open
       && !paid
       && plafond >= 100000;
+    let reason = "";
+    if (!eligible) {
+      if (open) reason = "Masih ada pengajuan yang berjalan";
+      else if (paid) reason = "Payroll periode ini sudah dibayar";
+      else if (needDays > 0 && tenureDays < needDays) {
+        reason = `Masa kerja ${tenureDays} hari${joinDate ? ` (bergabung ${String(joinDate).slice(0, 10)})` : ""}. Minimal ${needDays} hari`;
+      } else if (needMonths > 0 && tenureMonths < needMonths) {
+        reason = `Masa kerja ${tenureDays} hari${joinDate ? ` (bergabung ${String(joinDate).slice(0, 10)})` : ""}. Minimal ${needMonths} bulan`;
+      }
+    }
     return {
       rules,
-      emp: { daysWorked, tenureMonths, daysInMonth, net },
+      emp: { daysWorked, tenureMonths, tenureDays, joinDate, daysInMonth, net },
       plafond,
       eligible,
-      reason: !eligible ? (open ? "Masih ada pengajuan yang berjalan" : paid ? "Payroll periode ini sudah dibayar" : "") : "",
+      reason,
       app: open ? {
         ref: open.id,
         amount: Number(open.amount),
@@ -265,6 +275,20 @@ async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysI
   } catch {
     return fallback;
   }
+}
+
+function tenureFromJoin(join, now = new Date()) {
+  const match = String(join || "").slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return { months: 0, days: 0 };
+  const y = Number(match[1]);
+  const m = Number(match[2]) - 1;
+  const d = Number(match[3]);
+  const from = Date.UTC(y, m, d);
+  const to = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const days = Math.max(0, Math.round((to - from) / 86400000));
+  let months = (now.getUTCFullYear() - y) * 12 + (now.getUTCMonth() - m);
+  if (now.getUTCDate() < d) months -= 1;
+  return { months: Math.max(0, months), days };
 }
 
 const DEFAULT_COPY = {
