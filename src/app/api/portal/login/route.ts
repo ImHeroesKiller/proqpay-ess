@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cf";
-import { findEmployee } from "@/lib/d1-portal";
-import { isActiveEmployee, signToken } from "@/lib/d1-shared";
+import { signToken } from "@/lib/d1-shared";
 import { loginOnLite } from "@/lib/lite-auth";
 import { clientIp, rateBump, ratePeek, securityHeaders, sessionCookieValue } from "@/lib/security";
 
 export async function POST(request: NextRequest) {
   const headers = securityHeaders();
   const env = await getEnv();
-  if (!env.DB) return NextResponse.json({ error: "Service unavailable." }, { status: 503, headers });
   const secret = env.PORTAL_JWT_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "Service unavailable." }, { status: 503, headers });
@@ -44,24 +42,21 @@ export async function POST(request: NextRequest) {
   if (!lite.ok) {
     if (lite.unreachable) return NextResponse.json({ error: lite.error }, { status: 503, headers });
     if (lite.status === 429) return NextResponse.json({ error: lite.error }, { status: 429, headers });
-    return fail(lite.status === 401 ? 401 : lite.status, lite.status === 401 ? "Employee ID atau password salah." : lite.error);
+    return fail(
+      lite.status === 401 ? 401 : lite.status,
+      lite.status === 401 ? "Employee ID atau password salah." : lite.error,
+    );
   }
-
-  const employee = await findEmployee(env.DB, lite.emp_code || lite.emp_id);
-  if (!employee) {
-    return NextResponse.json({ error: "Karyawan tidak ditemukan." }, { status: 404, headers });
-  }
-  if (!isActiveEmployee(employee)) return fail();
 
   const now = Math.floor(Date.now() / 1000);
   const token = await signToken(
     {
-      sub: employee.id,
-      emp_code: employee.employee_code || employee.id,
-      client_id: employee.client_id,
-      org_id: employee.org_id,
+      sub: lite.emp_id,
+      emp_code: lite.emp_code || lite.emp_id,
+      client_id: lite.client_id,
+      org_id: lite.org_id,
       role: "EMPLOYEE",
-      lite: lite.token || undefined,
+      lite: lite.token,
       must_change: lite.mustChangePassword ? 1 : 0,
       iat: now,
       exp: now + 60 * 60 * 12,
@@ -70,9 +65,9 @@ export async function POST(request: NextRequest) {
   );
 
   const res = NextResponse.json({
-    emp_id: employee.employee_code || employee.id,
-    company_id: employee.client_id || employee.org_id,
-    emp_name: employee.name,
+    emp_id: lite.emp_code || lite.emp_id,
+    company_id: lite.client_id || lite.org_id,
+    emp_name: lite.emp_name,
     lang: "id",
     theme: "dark",
     mustChangePassword: lite.mustChangePassword,
