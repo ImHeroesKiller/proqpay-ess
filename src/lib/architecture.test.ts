@@ -23,3 +23,11 @@ test("ESS health checks Lite instead of shared D1", () => {
   assert.match(health, /\/api\/health/);
   assert.doesNotMatch(health, /env\.DB/);
 });
+
+test("Payslip History consumes canonical final submission register", () => {
+  const init = read("src/app/api/portal/init/route.ts");
+  assert.match(init, /\/api\/employee\/payslips/);
+  assert.match(init, /slip\.status === "paid"/);
+  assert.match(init, /estimatedPayslips/);
+  assert.match(init, /Regular \+ Adjustment \+ Off-cycle/);
+});
