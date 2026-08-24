@@ -9,46 +9,68 @@ const EN_DOW = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"
 
 const STAGE_MAP = {
   DRAFT: 1,
-  AI_VALIDATING: 1,
+  EXCEPTION_FOUND: 1,
   EXCEPTION_REVIEW: 1,
+  CLIENT_ACTION_REQUIRED: 1,
+  REVISION_REQUIRED: 1,
+  REJECTED: 1,
+  CANCELLED: 1,
+  SUBMITTED: 2,
+  INGESTING: 2,
+  AI_VALIDATING: 2,
+  CLIENT_RESUBMITTED: 2,
+  VALIDATED: 2,
+  STANDARDIZED: 2,
   PROCESSOR_REVIEW: 2,
-  CONTROLLER_REVIEW: 2,
-  PAYMENT_INSTRUCTION_READY: 2,
-  PAYMENT_APPROVAL_PENDING: 3,
-  APPROVED_FOR_PAYMENT: 3,
-  DISBURSEMENT_PROCESSING: 3,
+  CONTROLLER_REVIEW: 3,
+  DATA_APPROVED: 3,
+  PAYROLL_FINALIZED: 3,
+  PAYMENT_INSTRUCTION_READY: 4,
+  PAYMENT_APPROVAL_PENDING: 4,
+  APPROVED_FOR_PAYMENT: 4,
+  DISBURSEMENT_PROCESSING: 4,
   PROOF_UPLOADED: 4,
-  RECONCILIATION: 4,
-  COMPLETED: 4,
+  RECONCILIATION: 5,
+  PAYMENT_EXCEPTION: 5,
+  COMPLETED: 5,
 };
+
+export const STAGE_COUNT = 5;
 
 export const STAGES = [
   {
-    title: "Awaiting Payroll Data",
+    title: "Data Readiness",
     desc: "Menunggu data payroll dari perusahaan",
     meta: "Waiting",
     note: "Sistem menunggu data payroll periode berjalan dari perusahaan. Status akan diperbarui setelah data diterima.",
     eta: "Est. before payday",
   },
   {
-    title: "Processing",
+    title: "Payroll Preparation",
     desc: "Menghitung komponen gaji Anda",
     meta: "In progress",
-    note: "Sistem menghitung komponen gaji, pajak, dan potongan secara otomatis. Anda dapat melihat perkiraannya di slip gaji.",
+    note: "Sistem menghitung komponen gaji, pajak, dan potongan. Perkiraan tampil di slip gaji.",
     eta: "Est. before payday",
   },
   {
-    title: "Awaiting Payout",
+    title: "Review & Approval",
+    desc: "Payroll sedang ditinjau dan disetujui",
+    meta: "In review",
+    note: "Processor dan Controller meninjau hasil perhitungan sebelum instruksi pembayaran dibuat.",
+    eta: "Est. before payday",
+  },
+  {
+    title: "Payment",
     desc: "Menunggu proses pencairan dana",
     meta: "Waiting",
-    note: "Hasil perhitungan sedang menunggu proses pencairan. Dana akan ditransfer ke rekening terdaftar Anda.",
-    eta: "Est. before payday",
+    note: "Instruksi pembayaran sedang diproses. Dana akan ditransfer ke rekening terdaftar Anda.",
+    eta: "Est. payday",
   },
   {
-    title: "Paid",
+    title: "Reconciliation & Close",
     desc: "Gaji telah ditransfer ke rekening Anda",
     meta: "Completed",
-    note: "Gaji Anda telah ditransfer ke rekening terdaftar. Slip gaji final tersedia di menu Payslip History.",
+    note: "Gaji Anda telah ditransfer. Slip gaji final tersedia di menu Payslip History.",
     eta: "Done",
   },
 ];
@@ -86,13 +108,13 @@ export function maskAccount(bank, acc) {
 }
 
 export function stageFromState(state, piStatus, recStatus) {
-  if (recStatus && /MATCH|COMPLETE/i.test(recStatus)) return 4;
-  if (piStatus && /PAID|COMPLETED|RECONCILED/i.test(piStatus)) return 4;
+  if (recStatus && /MATCH|COMPLETE/i.test(recStatus)) return STAGE_COUNT;
+  if (piStatus && /PAID|COMPLETED|RECONCILED/i.test(piStatus)) return STAGE_COUNT;
   return STAGE_MAP[String(state || "").toUpperCase()] || 1;
 }
 
 export function slipStatus(stage) {
-  return stage >= 4 ? "paid" : "processing";
+  return stage >= STAGE_COUNT ? "paid" : "processing";
 }
 
 function componentKey(name) {
@@ -159,6 +181,17 @@ export function rowsFromCompensation(comp) {
     if (Number(comp.imported_deduction)) push("potonganLain", -Math.abs(Number(comp.imported_deduction)));
   }
   return rows;
+}
+
+export function rowsFromRunLine(line) {
+  if (!line) return [];
+  return rowsFromCompensation({
+    payroll_components: line.components,
+    basic_salary: 0,
+    imported_gross: line.gross_amount,
+    imported_deduction: line.deduction_amount,
+    imported_net: line.net_amount,
+  });
 }
 
 export function isActiveEmployee(row) {

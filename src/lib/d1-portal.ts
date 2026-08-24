@@ -1,12 +1,14 @@
 // @ts-nocheck
 import {
   STAGES,
+  STAGE_COUNT,
   d1All,
   d1First,
   formatPayday,
   maskAccount,
   periodToLabel,
   rowsFromCompensation,
+  rowsFromRunLine,
   slipStatus,
   stageFromState,
 } from "./d1-shared";
@@ -61,10 +63,17 @@ export async function buildPortalPayload(db, employee, env) {
      LEFT JOIN payment_instructions pi ON pi.submission_id = s.id
      LEFT JOIN reconciliations r ON r.payment_instruction_id = pi.id
      WHERE s.client_id = ?
-       AND (s.project_id IS NULL OR s.project_id = ? OR ? IS NULL)
+       AND (
+         EXISTS (SELECT 1 FROM payroll_run_lines l WHERE l.submission_id=s.id AND l.employee_id=? AND l.included=1)
+         OR EXISTS (
+           SELECT 1 FROM payment_instruction_lines pil
+           JOIN payment_instructions p2 ON p2.id=pil.payment_instruction_id
+           WHERE p2.submission_id=s.id AND pil.employee_id=?
+         )
+       )
      ORDER BY s.period DESC, s.created_at DESC
      LIMIT 12`,
-    [employee.client_id, employee.project_id, employee.project_id],
+    [employee.client_id, empId, empId],
   );
 
   const latest = submissions[0] || null;
@@ -72,6 +81,20 @@ export async function buildPortalPayload(db, employee, env) {
   const periodRaw = latest?.period || compensation?.payroll_source_period || new Date().toISOString().slice(0, 7);
   const paydaySrc = latest?.execution_date || latest?.payment_period || null;
   const payday = formatPayday(paydaySrc);
+
+  const runLines = await d1All(
+    db,
+    `SELECT l.net_amount, l.gross_amount, l.deduction_amount, l.components, s.period, s.state,
+            pi.document_no, pi.status AS pi_status, pi.execution_date, r.status AS rec_status
+     FROM payroll_run_lines l
+     JOIN payroll_submissions s ON s.id = l.submission_id
+     LEFT JOIN payment_instructions pi ON pi.submission_id = s.id
+     LEFT JOIN reconciliations r ON r.payment_instruction_id = pi.id
+     WHERE l.employee_id = ? AND l.included = 1
+     ORDER BY s.period DESC
+     LIMIT 12`,
+    [empId],
+  );
 
   const piLines = await d1All(
     db,
@@ -87,8 +110,20 @@ export async function buildPortalPayload(db, employee, env) {
 
   const payslips = [];
   const seen = new Set();
+  for (const line of runLines) {
+    const key = line.period;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const st = stageFromState(line.state, line.pi_status, line.rec_status);
+    const rows = rowsFromRunLine(line);
+    payslips.push({
+      period: periodToLabel(key),
+      status: slipStatus(st),
+      rows: rows.length ? rows : [["Net pay", Number(line.net_amount) || 0]],
+    });
+  }
   const compPeriod = compensation?.payroll_source_period;
-  if (compensation && (compPeriod || compensation.basic_salary)) {
+  if (compensation && (compPeriod || compensation.basic_salary) && !seen.has(compPeriod || periodRaw)) {
     const p = periodToLabel(compPeriod || periodRaw);
     seen.add(compPeriod || periodRaw);
     const st = latest && (latest.period === compPeriod || !compPeriod) ? stage : 2;
@@ -138,9 +173,19 @@ export async function buildPortalPayload(db, employee, env) {
       title: periodToLabel(latest.period) + " payroll is " + (latest.state || "in progress"),
       s: "Status payroll periode berjalan.",
       type: "g",
-      unread: stage < 4,
+      unread: stage < STAGE_COUNT,
     });
   }
+
+  const net = Number(
+    runLines[0]?.net_amount || compensation?.imported_net || compensation?.basic_salary || 0,
+  );
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysWorked = Math.min(Math.max(now.getDate(), 1), daysInMonth);
+  const ewa = await loadEwaState(db, employee, {
+    tenureMonths, net, daysWorked, daysInMonth, paid: stage >= STAGE_COUNT,
+  });
 
   return {
     config: {
@@ -180,21 +225,81 @@ export async function buildPortalPayload(db, employee, env) {
       ],
       notifications,
     },
-    ewa: {
-      rules: {
-        feeRate: 0.03,
-        minFee: 50000,
-        minFeeAmount: 1750000,
-        maxTenorMonths: 1,
-        maxPercent: 0.3,
-        minDaysWorked: 10,
-      },
-      emp: {
-        daysWorked: Math.max(1, new Date().getDate()),
-        tenureMonths,
-      },
-      app: null,
-      history: [],
-    },
+    ewa,
   };
+}
+
+async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysInMonth, paid }) {
+  const fallbackRules = {
+    feeRate: 0.03, minFee: 50000, minFeeAmount: 1750000, maxTenorMonths: 1, maxPercent: 0.3, minDaysWorked: 10,
+  };
+  const fallback = {
+    rules: fallbackRules,
+    emp: { daysWorked, tenureMonths, daysInMonth, net },
+    plafond: Math.max(0, Math.floor((net * (daysWorked / daysInMonth) * 0.3) / 10000) * 10000),
+    eligible: tenureMonths >= 1 && daysWorked >= 10 && !paid,
+    reason: paid ? "Payroll periode ini sudah dibayar" : "",
+    app: null,
+    history: [],
+  };
+  try {
+    const policy = await d1First(
+      db,
+      `SELECT * FROM ewa_policies WHERE org_id=? AND (client_id=? OR client_id IS NULL)
+       ORDER BY client_id IS NULL LIMIT 1`,
+      [employee.org_id, employee.client_id],
+    );
+    const rules = policy ? {
+      feeRate: Number(policy.fee_rate),
+      minFee: Number(policy.min_fee),
+      minFeeAmount: Number(policy.min_fee_amount),
+      maxTenorMonths: Number(policy.max_tenor_months),
+      maxPercent: Number(policy.max_percent),
+      minDaysWorked: Number(policy.min_days_worked),
+    } : fallbackRules;
+    const plafond = Math.max(0, Math.floor((net * (daysWorked / daysInMonth) * rules.maxPercent) / 10000) * 10000);
+    const open = await d1First(
+      db,
+      `SELECT id, amount, fee, method, status, created_at FROM ewa_requests
+       WHERE employee_id=? AND status IN ('SUBMITTED','APPROVED','DISBURSED')
+       ORDER BY created_at DESC LIMIT 1`,
+      [employee.id],
+    );
+    const history = await d1All(
+      db,
+      `SELECT id AS ref, created_at AS date, amount, status FROM ewa_requests
+       WHERE employee_id=? ORDER BY created_at DESC LIMIT 8`,
+      [employee.id],
+    );
+    const eligible = Boolean(policy ? policy.enabled : 1)
+      && tenureMonths >= (policy ? Number(policy.min_tenure_months) : 1)
+      && daysWorked >= rules.minDaysWorked
+      && !open
+      && !paid
+      && plafond >= 100000;
+    return {
+      rules,
+      emp: { daysWorked, tenureMonths, daysInMonth, net },
+      plafond,
+      eligible,
+      reason: !eligible ? (open ? "Masih ada pengajuan yang berjalan" : paid ? "Payroll periode ini sudah dibayar" : "") : "",
+      app: open ? {
+        ref: open.id,
+        amount: Number(open.amount),
+        fee: Number(open.fee),
+        method: open.method,
+        inst: 1,
+        date: String(open.created_at || "").slice(0, 10),
+        status: open.status,
+      } : null,
+      history: history.map((row) => ({
+        ref: row.ref,
+        date: String(row.date || "").slice(0, 10),
+        amount: Number(row.amount),
+        status: row.status,
+      })),
+    };
+  } catch {
+    return fallback;
+  }
 }

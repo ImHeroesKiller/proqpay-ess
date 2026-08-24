@@ -70,14 +70,15 @@ Saat pindah ke Lite: terbitkan token/cookie dari Lite; ESS hanya menyimpan cooki
 | Ref / payday | `payment_instructions.document_no`, `execution_date` |
 | Slip periode lain | `payment_instruction_lines.amount` |
 
-Mapping stage (ESS):
+Mapping stage (ESS, mengikuti 5 tahap bisnis Lite):
 
 | `payroll_submissions.state` | Stage |
 |---|---|
-| `DRAFT`, `AI_VALIDATING`, `EXCEPTION_REVIEW` | 1 |
-| `PROCESSOR_REVIEW`, `CONTROLLER_REVIEW`, `PAYMENT_INSTRUCTION_READY` | 2 |
-| `PAYMENT_APPROVAL_PENDING`, `APPROVED_FOR_PAYMENT`, `DISBURSEMENT_PROCESSING` | 3 |
-| `PROOF_UPLOADED`, `RECONCILIATION`, `COMPLETED` | 4 |
+| `DRAFT`, `EXCEPTION_*`, `CLIENT_ACTION_REQUIRED`, `REVISION_REQUIRED` | 1 Data Readiness |
+| `AI_VALIDATING`, `PROCESSOR_REVIEW`, `VALIDATED` | 2 Payroll Preparation |
+| `CONTROLLER_REVIEW`, `DATA_APPROVED`, `PAYROLL_FINALIZED` | 3 Review & Approval |
+| `PAYMENT_INSTRUCTION_READY` … `PROOF_UPLOADED` | 4 Payment |
+| `RECONCILIATION`, `COMPLETED` | 5 Reconciliation & Close |
 
 Jika Lite menambah state, **update mapping di ESS** (`src/lib/d1-shared.ts` `STAGE_MAP`) atau pindahkan mapping ke API Lite agar ESS tidak perlu di-deploy setiap perubahan workflow.
 
@@ -91,9 +92,8 @@ Jika Lite menambah state, **update mapping di ESS** (`src/lib/d1-shared.ts` `STA
 |---|---|---|
 | Notifikasi | Diturunkan dari submission terakhir | Tabel notifikasi per `employee_id` |
 | Banner iklan | Hardcode | Opsional `m_promo` / config klien |
-| EWA / Advance | Wizard lokal, **tidak** persist | Tabel pengajuan + rules + plafond server + approve di ops/IDA |
-| Profil lengkap (KTP, NPWP) | Tidak dikirim ke klien | Jangan expose ke portal kecuali perlu |
-| Password reset | Toast “hubungi HR” | Token reset di Lite + email |
+| EWA / Advance | Persist di Lite `ewa_requests` | Ops menyetujui di Lite → Advance Salary |
+| Password reset | Toast “hubungi HR” | Reset di Lite Data Karyawan |
 
 Jangan buat tabel EWA dari migrasi ESS.
 
@@ -119,10 +119,10 @@ Rekomendasi: **B** setelah Lite punya `EMPLOYEE` auth.
 - [x] Kredensial per karyawan (hash, invite, reset) — di Lite.
 - [x] Jangan reuse `app_users` / `app_sessions` untuk portal.
 - [x] Endpoint employee login (ESS mem-proxy). Init JSON tetap di ESS.
-- [ ] Filter data **hanya** `employee_id` dari sesi, abaikan `emp_id` di query string.
-- [ ] Mask rekening di server.
+- [x] Filter data **hanya** `employee_id` dari sesi, abaikan `emp_id` di query string.
+- [x] Mask rekening di server.
 - [ ] Access Cloudflare: portal di luar Access ops.
-- [ ] EWA: hitung plafond di server; approve/lunas di dashboard Lite/IDA (LLM tidak menghitung uang).
+- [x] EWA: hitung plafond di server; approve/lunas di dashboard Lite (bukan LLM).
 - [ ] Audit login/advance tanpa memblokir payroll.
 - [x] ESS hapus PIN bersama sebagai default setelah cutover (`PORTAL_PIN_FALLBACK=0`).
 

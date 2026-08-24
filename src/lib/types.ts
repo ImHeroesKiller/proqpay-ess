@@ -40,7 +40,10 @@ export type EwaState = {
     maxPercent: number;
     minDaysWorked: number;
   };
-  emp: { daysWorked: number; tenureMonths: number };
+  emp: { daysWorked: number; tenureMonths: number; daysInMonth?: number; net?: number };
+  plafond?: number;
+  eligible?: boolean;
+  reason?: string;
   app: EwaApp;
   history: EwaHistory[];
 };
