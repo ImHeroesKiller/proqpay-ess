@@ -1,9 +1,13 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig, globalIgnores } from 'eslint/config';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-});
-
-export default [...compat.extends("next/core-web-vitals", "next/typescript")];
+export default defineConfig([
+  ...nextVitals,
+  ...nextTypescript,
+  {
+    files: ['src/lib/d1-shared.ts'],
+    rules: { '@typescript-eslint/ban-ts-comment': 'off' },
+  },
+  globalIgnores(['.next/**', '.open-next/**']),
+]);

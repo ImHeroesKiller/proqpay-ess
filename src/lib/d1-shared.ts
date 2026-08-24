@@ -30,8 +30,8 @@ const STAGE_MAP = {
   APPROVED_FOR_PAYMENT: 4,
   DISBURSEMENT_PROCESSING: 4,
   PROOF_UPLOADED: 4,
-  RECONCILIATION: 5,
-  PAYMENT_EXCEPTION: 5,
+  RECONCILIATION: 4,
+  PAYMENT_EXCEPTION: 4,
   COMPLETED: 5,
 };
 
@@ -108,8 +108,8 @@ export function maskAccount(bank, acc) {
 }
 
 export function stageFromState(state, piStatus, recStatus) {
-  if (recStatus && /MATCH|COMPLETE/i.test(recStatus)) return STAGE_COUNT;
-  if (piStatus && /PAID|COMPLETED|RECONCILED/i.test(piStatus)) return STAGE_COUNT;
+  if (["MATCHED", "COMPLETED"].includes(String(recStatus || "").toUpperCase())) return STAGE_COUNT;
+  if (["PAID", "COMPLETED", "RECONCILED"].includes(String(piStatus || "").toUpperCase())) return STAGE_COUNT;
   return STAGE_MAP[String(state || "").toUpperCase()] || 1;
 }
 
