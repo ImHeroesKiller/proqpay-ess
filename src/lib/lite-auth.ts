@@ -18,25 +18,8 @@ export type LiteLoginFail = {
 
 export type LiteLoginResult = LiteLoginOk | LiteLoginFail;
 
-const encoder = new TextEncoder();
-
 export function liteApiBase(env: { LITE_API_BASE?: string }) {
   return String(env.LITE_API_BASE || "").replace(/\/+$/, "");
-}
-
-export function pinFallbackEnabled(env: { PORTAL_PIN_FALLBACK?: string }) {
-  return String(env.PORTAL_PIN_FALLBACK || "") === "1";
-}
-
-export function constantTimeEqual(left: string, right: string) {
-  const a = encoder.encode(String(left || ""));
-  const b = encoder.encode(String(right || ""));
-  const length = Math.max(a.length, b.length);
-  let mismatch = a.length ^ b.length;
-  for (let index = 0; index < length; index += 1) {
-    mismatch |= (a[index] || 0) ^ (b[index] || 0);
-  }
-  return mismatch === 0;
 }
 
 export function validateNewPassword(password: string) {

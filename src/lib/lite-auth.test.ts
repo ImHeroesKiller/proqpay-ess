@@ -1,28 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  constantTimeEqual, liteApiBase, loginOnLite, pinFallbackEnabled, validateNewPassword,
+  liteApiBase, loginOnLite, validateNewPassword,
 } from "./lite-auth.ts";
 
 test("Lite API base strips trailing slash", () => {
   assert.equal(liteApiBase({ LITE_API_BASE: "https://proqpay-lite.pages.dev/" }), "https://proqpay-lite.pages.dev");
 });
 
-test("PIN fallback is off unless explicitly enabled", () => {
-  assert.equal(pinFallbackEnabled({}), false);
-  assert.equal(pinFallbackEnabled({ PORTAL_PIN_FALLBACK: "0" }), false);
-  assert.equal(pinFallbackEnabled({ PORTAL_PIN_FALLBACK: "1" }), true);
-});
-
 test("new password policy matches Lite", () => {
   assert.match(validateNewPassword("short") || "", /minimal 12/);
   assert.match(validateNewPassword("longpasswordonly") || "", /huruf besar/);
   assert.equal(validateNewPassword("PortalBaru!2026Aa"), null);
-});
-
-test("constant-time compare rejects mismatched PIN", () => {
-  assert.equal(constantTimeEqual("proqpay", "proqpay"), true);
-  assert.equal(constantTimeEqual("proqpay", "wrong"), false);
 });
 
 test("loginOnLite maps a successful Lite session", async () => {

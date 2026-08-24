@@ -16,7 +16,7 @@ Lite SoR: D1 `proqpay-lite-production` (`ac3f8b48-bd87-44bd-9286-f0e0bab6e39f`).
 | Role portal | JWT `role: EMPLOYEE` (bukan `app_users`) | Role/tabel karyawan terpisah dari ops |
 | Session ops Lite | Cookie `app_sessions` | Jangan dipakai portal karyawan |
 | Session ESS | Cookie `proqpay_ess` | Boleh diganti `t_employee_session` di Lite |
-| Cloudflare Access | Jangan sama dengan ops | Access ops ≠ portal karyawan |
+| Cloudflare Access | Jangan sama dengan ops | Access ops ≠ portal karyawan (ESS tanpa Access; `/api/employee*` bypass) |
 
 Karyawan **bukan** baris `app_users` (SUPER_ADMIN / PAYROLL_* / CLIENT_USER).
 
@@ -24,14 +24,13 @@ Karyawan **bukan** baris `app_users` (SUPER_ADMIN / PAYROLL_* / CLIENT_USER).
 
 ## 2. Auth — Lite adalah verifier (Fase 1)
 
-ESS **tidak** lagi membandingkan password ke `PORTAL_BOOTSTRAP_PIN` (default). Worker ESS memanggil Lite:
+ESS **tidak** membandingkan password ke PIN bersama. Worker ESS memanggil Lite:
 
 `POST {LITE_API_BASE}/api/employee/login` dengan header `Origin` + opsional `X-Portal-Key`.
 
 - Cookie portal tetap `proqpay_ess` (HMAC JWT). Klaim tambahan: `lite` (token sesi Lite) dan `must_change`.
 - Ganti password: `POST /api/portal/password` → Lite `/api/employee/password`.
-- PIN bersama hanya jika `PORTAL_PIN_FALLBACK=1` **dan** baris `employee_credentials` belum ada.
-- Setelah seed password di Lite, biarkan `PORTAL_PIN_FALLBACK=0` dan hapus secret PIN.
+- PIN bersama **dihapus**. Login hanya lewat kredensial Lite.
 
 JWT ESS klaim:
 
@@ -66,7 +65,7 @@ Saat pindah ke Lite: terbitkan token/cookie dari Lite; ESS hanya menyimpan cooki
 | Masa kerja | `employee_contracts.join_date` / `accepted_date` |
 | Komponen slip | `employee_compensation.payroll_components` JSON + gross/deduction/net |
 | Periode | `payroll_submissions.period` (`YYYY-MM`) |
-| Stage 1–4 | `payroll_submissions.state` + PI + `reconciliations` |
+| Stage 1–5 | `payroll_submissions.state` + PI + `reconciliations` |
 | Ref / payday | `payment_instructions.document_no`, `execution_date` |
 | Slip periode lain | `payment_instruction_lines.amount` |
 
@@ -121,10 +120,10 @@ Rekomendasi: **B** setelah Lite punya `EMPLOYEE` auth.
 - [x] Endpoint employee login (ESS mem-proxy). Init JSON tetap di ESS.
 - [x] Filter data **hanya** `employee_id` dari sesi, abaikan `emp_id` di query string.
 - [x] Mask rekening di server.
-- [ ] Access Cloudflare: portal di luar Access ops.
+- [x] Access Cloudflare: portal di luar Access ops.
 - [x] EWA: hitung plafond di server; approve/lunas di dashboard Lite (bukan LLM).
-- [ ] Audit login/advance tanpa memblokir payroll.
-- [x] ESS hapus PIN bersama sebagai default setelah cutover (`PORTAL_PIN_FALLBACK=0`).
+- [x] Audit login/advance tanpa memblokir payroll.
+- [x] ESS hapus PIN bersama (kode + secret).
 
 Bentuk JSON `PortalPayload` (jangan dipecah tanpa versi): lihat `src/lib/types.ts` dan `docs/03-api-integration.md`.
 
@@ -137,8 +136,6 @@ Bentuk JSON `PortalPayload` (jangan dipecah tanpa versi): lihat `src/lib/types.t
 | `DB` | wrangler D1 | Baca `proqpay-lite-production` |
 | `LITE_API_BASE` | vars | `https://proqpay-lite.pages.dev` |
 | `EMPLOYEE_PORTAL_KEY` | wrangler secret | Header `X-Portal-Key` ke Lite |
-| `PORTAL_PIN_FALLBACK` | vars | `0` production; `1` hanya cutover |
-| `PORTAL_BOOTSTRAP_PIN` | wrangler secret | **Deprecated.** Hanya jika fallback=1 |
 | `PORTAL_JWT_SECRET` | wrangler secret | HMAC cookie sesi |
 | `DEFAULT_ORG_ID` | vars | `ORG-OTSINDO` |
 
