@@ -20,6 +20,7 @@ export const emptyPayload: PortalPayload = {
       maxPercent: 0.3,
       minDaysWorked: 10,
       minTenureMonths: 1,
+      minTenureDays: 0,
     },
     emp: { daysWorked: 0, tenureMonths: 0 },
     app: null,

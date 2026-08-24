@@ -611,6 +611,9 @@ export function EssPortal() {
               <div className="ewaa-sub">
                 {copy.ewaBody}
               </div>
+              {!eligible && ewa.reason ? (
+                <div className="ewaa-sub" style={{ color: "var(--warn)" }}>{ewa.reason}</div>
+              ) : null}
               <button className="btn primary" style={{ width: "100%" }} onClick={() => setModal("ewa")} disabled={!eligible || Boolean(ewaApp)}>
                 {ewaApp ? "Pengajuan diproses" : copy.ewaCta}
               </button>
@@ -693,9 +696,9 @@ export function EssPortal() {
           ))}
           <button
             className="tab-fab"
-            disabled={!ewaOn}
+            disabled={!ewaOn || !eligible}
             onClick={() => {
-              if (!ewaOn) return;
+              if (!ewaOn || !eligible) return;
               setTab("ewa");
               setModal("ewa");
             }}
@@ -916,6 +919,9 @@ export function EssPortal() {
           </div>
           {wiz.step === 1 && (
             <div className="wiz-body">
+              {!eligible && ewa.reason ? (
+                <p style={{ color: "var(--warn)", fontSize: 13, marginTop: 0 }}>{ewa.reason}</p>
+              ) : null}
               <div className="amt-big">{fmt(wiz.amount)}</div>
               <input
                 className="amt-range"
@@ -941,7 +947,7 @@ export function EssPortal() {
                 <span>You receive</span>
                 <b>{fmt(wiz.amount)}</b>
               </div>
-              <button className="btn primary" style={{ width: "100%", marginTop: 16 }} onClick={() => setWiz({ ...wiz, step: 2 })}>
+              <button className="btn primary" style={{ width: "100%", marginTop: 16 }} onClick={() => setWiz({ ...wiz, step: 2 })} disabled={!eligible}>
                 Continue
               </button>
             </div>
@@ -992,7 +998,7 @@ export function EssPortal() {
               <button
                 className="btn primary"
                 style={{ width: "100%", marginTop: 8 }}
-                disabled={!wiz.agreed}
+                disabled={!wiz.agreed || !eligible}
                 onClick={() => void submitEwa()}
               >
                 Submit request
