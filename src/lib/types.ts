@@ -45,4 +45,4 @@ export type EwaState = {
   history: EwaHistory[];
 };
 
-export type PortalPayload = { config: PortalConfig; ewa: EwaState };
+export type PortalPayload = { config: PortalConfig; ewa: EwaState; mustChangePassword?: boolean };

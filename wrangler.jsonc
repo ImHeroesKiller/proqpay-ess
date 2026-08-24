@@ -18,6 +18,8 @@
   "ai": { "binding": "AI" },
   "vars": {
     "DEFAULT_ORG_ID": "ORG-OTSINDO",
-    "WORKERS_AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast"
+    "WORKERS_AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
+    "LITE_API_BASE": "https://proqpay-lite.pages.dev",
+    "PORTAL_PIN_FALLBACK": "0"
   }
 }

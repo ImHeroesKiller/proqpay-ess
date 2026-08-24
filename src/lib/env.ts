@@ -9,6 +9,9 @@ export type AppEnv = {
   };
   PORTAL_BOOTSTRAP_PIN?: string;
   PORTAL_JWT_SECRET?: string;
+  PORTAL_PIN_FALLBACK?: string;
+  LITE_API_BASE?: string;
+  EMPLOYEE_PORTAL_KEY?: string;
   DEFAULT_ORG_ID?: string;
   WORKERS_AI_MODEL?: string;
   AI?: {

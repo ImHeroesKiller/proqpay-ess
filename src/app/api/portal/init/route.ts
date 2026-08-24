@@ -19,5 +19,5 @@ export async function GET(request: NextRequest) {
   if (!employee) return NextResponse.json({ error: "Karyawan tidak ditemukan." }, { status: 404, headers });
 
   const data = await buildPortalPayload(env.DB, employee, env);
-  return NextResponse.json(data, { headers });
+  return NextResponse.json({ ...data, mustChangePassword: Boolean(payload.must_change) }, { headers });
 }

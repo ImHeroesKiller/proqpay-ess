@@ -29,8 +29,8 @@ npm run preview
 | Build command | `npx opennextjs-cloudflare build` |
 | Deploy command | `npx wrangler deploy` |
 
-Secret: `PORTAL_BOOTSTRAP_PIN`, `PORTAL_JWT_SECRET`.  
-Jangan menjalankan migrasi D1 dari repo ini.
+Secret: `PORTAL_JWT_SECRET`, `EMPLOYEE_PORTAL_KEY`. Variable: `LITE_API_BASE`.  
+Login karyawan diverifikasi oleh Lite (`POST /api/employee/login`). Jangan menjalankan migrasi D1 dari repo ini.
 
 PWA: dipasang ke layar utama; data gaji tidak di-cache. Lihat `docs/PWA.md`.
 

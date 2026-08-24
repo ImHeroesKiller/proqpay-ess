@@ -819,7 +819,7 @@
   /* ─────────────────────────────────────────────────────────────
      LOGIN PAGE
      ───────────────────────────────────────────────────────────── */
-  #loginView {
+  #loginView, #changePassView {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 300;
     display: flex; align-items: center; justify-content: center;
     padding: 24px; overflow-y: auto;
@@ -828,7 +828,7 @@
       radial-gradient(700px 420px at -10% 110%, rgba(44, 74, 158, .28), transparent 60%),
       var(--bg);
   }
-  #loginView .grain, #loginView .bg-orbs { position: absolute; z-index: -1; }
+  #changePassView { z-index: 310; }
   .lg-card {
     width: 100%; max-width: 372px;
     background: var(--card); border: 1px solid var(--border);
