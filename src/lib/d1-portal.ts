@@ -7,7 +7,6 @@ import {
   formatPayday,
   maskAccount,
   periodToLabel,
-  rowsFromCompensation,
   rowsFromRunLine,
   slipStatus,
   stageFromState,
@@ -78,7 +77,7 @@ export async function buildPortalPayload(db, employee, env) {
 
   const latest = submissions[0] || null;
   const stage = latest ? stageFromState(latest.state, latest.pi_status, latest.rec_status) : 1;
-  const periodRaw = latest?.period || compensation?.payroll_source_period || new Date().toISOString().slice(0, 7);
+  const periodRaw = latest?.period || new Date().toISOString().slice(0, 7);
   const paydaySrc = latest?.execution_date || latest?.payment_period || null;
   const payday = formatPayday(paydaySrc);
 
@@ -96,18 +95,6 @@ export async function buildPortalPayload(db, employee, env) {
     [empId],
   );
 
-  const piLines = await d1All(
-    db,
-    `SELECT s.period, s.state, pi.document_no, pi.status AS pi_status, pi.execution_date, pil.amount, r.status AS rec_status
-     FROM payment_instruction_lines pil
-     JOIN payment_instructions pi ON pi.id = pil.payment_instruction_id
-     JOIN payroll_submissions s ON s.id = pi.submission_id
-     LEFT JOIN reconciliations r ON r.payment_instruction_id = pi.id
-     WHERE pil.employee_id = ?
-     ORDER BY s.period DESC`,
-    [empId],
-  );
-
   const payslips = [];
   const seen = new Set();
   for (const line of runLines) {
@@ -120,28 +107,6 @@ export async function buildPortalPayload(db, employee, env) {
       period: periodToLabel(key),
       status: slipStatus(st),
       rows: rows.length ? rows : [["Net pay", Number(line.net_amount) || 0]],
-    });
-  }
-  const compPeriod = compensation?.payroll_source_period;
-  if (compensation && (compPeriod || compensation.basic_salary) && !seen.has(compPeriod || periodRaw)) {
-    const p = periodToLabel(compPeriod || periodRaw);
-    seen.add(compPeriod || periodRaw);
-    const st = latest && (latest.period === compPeriod || !compPeriod) ? stage : 2;
-    payslips.push({
-      period: p,
-      status: slipStatus(st),
-      rows: rowsFromCompensation(compensation),
-    });
-  }
-  for (const line of piLines) {
-    const key = line.period;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const st = stageFromState(line.state, line.pi_status, line.rec_status);
-    payslips.push({
-      period: periodToLabel(key),
-      status: slipStatus(st),
-      rows: [["Net pay", Number(line.amount) || 0]],
     });
   }
 
@@ -261,7 +226,7 @@ async function loadEwaState(db, employee, { tenureMonths, net, daysWorked, daysI
     const open = await d1First(
       db,
       `SELECT id, amount, fee, method, status, created_at FROM ewa_requests
-       WHERE employee_id=? AND status IN ('SUBMITTED','APPROVED','DISBURSED')
+       WHERE employee_id=? AND status IN ('SUBMITTED','APPROVED','DISBURSED','REPAYING')
        ORDER BY created_at DESC LIMIT 1`,
       [employee.id],
     );

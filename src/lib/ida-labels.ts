@@ -42,6 +42,8 @@ const CANONICAL: Record<string, string> = {
   grosspay: "Penghasilan bruto",
   deductions: "Potongan",
   netpay: "Gaji bersih",
+  ewarepayment: "Potongan advance salary",
+  ewafee: "Biaya advance salary",
 };
 
 const EARNING_ORDER = [
@@ -89,6 +91,8 @@ const DEDUCTION_ORDER = [
   "pph21",
   "attendancededuction",
   "cooperativededuction",
+  "ewarepayment",
+  "ewafee",
   "otherdeduction",
   "potonganlain",
   "deductions",

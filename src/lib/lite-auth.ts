@@ -134,3 +134,30 @@ export async function logoutOnLite(
     /* best-effort */
   }
 }
+
+export async function initOnLite(
+  env: { LITE_API_BASE?: string; EMPLOYEE_PORTAL_KEY?: string },
+  input: { liteToken: string; origin: string },
+  fetchImpl: FetchLike = fetch,
+): Promise<{ ok: true; payload: Record<string, unknown> } | { ok: false; status: number; unreachable?: boolean }> {
+  const base = liteApiBase(env);
+  if (!base || !input.liteToken) return { ok: false, status: 503, unreachable: true };
+  try {
+    const response = await fetchImpl(`${base}/api/employee/init`, {
+      method: "GET",
+      headers: {
+        ...liteHeaders(env, input.origin),
+        Authorization: `Bearer ${input.liteToken}`,
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!response.ok || !data.config) {
+      return { ok: false, status: response.status, unreachable: response.status >= 500 };
+    }
+    return { ok: true, payload: data };
+  } catch {
+    return { ok: false, status: 503, unreachable: true };
+  }
+}
+

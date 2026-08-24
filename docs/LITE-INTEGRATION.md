@@ -63,11 +63,11 @@ Saat pindah ke Lite: terbitkan token/cookie dari Lite; ESS hanya menyimpan cooki
 | Jabatan | `employee_assignments.position` (`is_current=1`) |
 | Bank (mask last-4) | `employee_bank_accounts` |
 | Masa kerja | `employee_contracts.join_date` / `accepted_date` |
-| Komponen slip | `employee_compensation.payroll_components` JSON + gross/deduction/net |
+| Komponen slip | `payroll_run_lines.components` JSON + gross/deduction/net (bukan `employee_compensation`) |
 | Periode | `payroll_submissions.period` (`YYYY-MM`) |
 | Stage 1–5 | `payroll_submissions.state` + PI + `reconciliations` |
 | Ref / payday | `payment_instructions.document_no`, `execution_date` |
-| Slip periode lain | `payment_instruction_lines.amount` |
+| Slip periode lain | `payroll_run_lines` historis karyawan itu (`included=1`) |
 
 Mapping stage (ESS, mengikuti 5 tahap bisnis Lite):
 
@@ -117,11 +117,11 @@ Rekomendasi: **B** setelah Lite punya `EMPLOYEE` auth.
 
 - [x] Kredensial per karyawan (hash, invite, reset) — di Lite.
 - [x] Jangan reuse `app_users` / `app_sessions` untuk portal.
-- [x] Endpoint employee login (ESS mem-proxy). Init JSON tetap di ESS.
+- [x] Endpoint employee login (ESS mem-proxy). Init JSON kanonik di Lite `GET /api/employee/init`.
 - [x] Filter data **hanya** `employee_id` dari sesi, abaikan `emp_id` di query string.
 - [x] Mask rekening di server.
 - [x] Access Cloudflare: portal di luar Access ops.
-- [x] EWA: hitung plafond di server; approve/lunas di dashboard Lite (bukan LLM).
+- [x] EWA: hitung plafond di server; approve/lunas di dashboard Lite (bukan LLM). Potongan menempel ke `payroll_run_lines` saat `FINALIZE_PAY_RUN_INPUT` / import `UPLOAD_FINAL`.
 - [x] Audit login/advance tanpa memblokir payroll.
 - [x] ESS hapus PIN bersama (kode + secret).
 

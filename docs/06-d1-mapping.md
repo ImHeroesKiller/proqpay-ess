@@ -31,7 +31,7 @@ Password per karyawan ada di Lite (`employee_credentials`). ESS mem-proxy login 
 | `payroll.ref` | `payment_instructions.document_no` atau `submissions.id` |
 | `payroll.stage` 1..5 | lihat tabel stage (mengikuti Lite) |
 | `payroll.payday` | `payment_instructions.execution_date` |
-| `payslips[].rows` | `employee_compensation.payroll_components` JSON; fallback gross/deduction/net; periode lain dari `payment_instruction_lines.amount` |
+| `payslips[].rows` | `payroll_run_lines.components` JSON (bukan `employee_compensation` yang tertimpa import) |
 | `notifications` | diturunkan dari submission terbaru (bukan tabel notifikasi) |
 | `ewa.*` | `ewa_policies` / `ewa_requests` (Lite migrasi 0005) |
 
@@ -54,7 +54,7 @@ PI PAID / rekon MATCH → stage 5.
 | Method | Path | Fungsi |
 |---|---|---|
 | `POST` | `/api/portal/login` | Proxy ke Lite `/api/employee/login` → JWT |
-| `GET` | `/api/portal/init` | Susun `config` + `ewa` dari D1 (hanya `sub` token) |
+| `GET` | `/api/portal/init` | Proxy Lite `GET /api/employee/init`; fallback D1 jika Lite unreachable |
 | `POST` | `/api/portal/ewa` | Proxy ke Lite `/api/employee/ewa` |
 | `GET` | `/api/health` | Cek binding D1 |
 
