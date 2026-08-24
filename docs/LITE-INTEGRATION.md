@@ -22,20 +22,16 @@ Karyawan **bukan** baris `app_users` (SUPER_ADMIN / PAYROLL_* / CLIENT_USER).
 
 ---
 
-## 2. Auth yang harus diganti di Lite
+## 2. Auth — Lite adalah verifier (Fase 1)
 
-ESS memakai satu secret `PORTAL_BOOTSTRAP_PIN` untuk semua karyawan karena **tidak ada** `pass_hash` di `employees`.
+ESS **tidak** lagi membandingkan password ke `PORTAL_BOOTSTRAP_PIN` (default). Worker ESS memanggil Lite:
 
-Yang Lite perlu sediakan (tanpa ESS menebak skema):
+`POST {LITE_API_BASE}/api/employee/login` dengan header `Origin` + opsional `X-Portal-Key`.
 
-1. Hash kata sandi per karyawan (kolom baru di `employees` **atau** tabel `employee_credentials`).
-2. Alur set password pertama / undangan (karyawan import tidak punya password).
-3. Endpoint kanonik, disarankan di Lite:
-   - `POST /api/portal/login` **atau** ESS memanggil `POST https://<lite>/api/employee/login`
-4. Rate limit + lockout server-side (ganti Cache API ESS).
-5. `t_login_attempt` / audit — ESS sengaja **tidak** INSERT ke D1.
-
-Sampai itu ada: ESS tetap PIN bersama. Jangan menyalin PIN ke repo Lite.
+- Cookie portal tetap `proqpay_ess` (HMAC JWT). Klaim tambahan: `lite` (token sesi Lite) dan `must_change`.
+- Ganti password: `POST /api/portal/password` → Lite `/api/employee/password`.
+- PIN bersama hanya jika `PORTAL_PIN_FALLBACK=1` **dan** baris `employee_credentials` belum ada.
+- Setelah seed password di Lite, biarkan `PORTAL_PIN_FALLBACK=0` dan hapus secret PIN.
 
 JWT ESS klaim:
 
@@ -46,6 +42,8 @@ JWT ESS klaim:
   "client_id": "<clients.id>",
   "org_id": "<organizations.id>",
   "role": "EMPLOYEE",
+  "lite": "<token sesi Lite, HttpOnly>",
+  "must_change": 1,
   "exp": "<12 jam>"
 }
 ```
@@ -118,15 +116,15 @@ Rekomendasi: **B** setelah Lite punya `EMPLOYEE` auth.
 
 ## 6. Checklist perubahan Lite (ketika dikerjakan)
 
-- [ ] Kredensial per karyawan (hash, invite, reset).
-- [ ] Jangan reuse `app_users` / `app_sessions` untuk portal.
-- [ ] Endpoint employee login + init (bentuk JSON sama dengan `PortalPayload` di `src/lib/types.ts`).
+- [x] Kredensial per karyawan (hash, invite, reset) — di Lite.
+- [x] Jangan reuse `app_users` / `app_sessions` untuk portal.
+- [x] Endpoint employee login (ESS mem-proxy). Init JSON tetap di ESS.
 - [ ] Filter data **hanya** `employee_id` dari sesi, abaikan `emp_id` di query string.
 - [ ] Mask rekening di server.
 - [ ] Access Cloudflare: portal di luar Access ops.
 - [ ] EWA: hitung plafond di server; approve/lunas di dashboard Lite/IDA (LLM tidak menghitung uang).
 - [ ] Audit login/advance tanpa memblokir payroll.
-- [ ] ESS hapus `PORTAL_BOOTSTRAP_PIN` setelah cutover.
+- [x] ESS hapus PIN bersama sebagai default setelah cutover (`PORTAL_PIN_FALLBACK=0`).
 
 Bentuk JSON `PortalPayload` (jangan dipecah tanpa versi): lihat `src/lib/types.ts` dan `docs/03-api-integration.md`.
 
@@ -137,7 +135,10 @@ Bentuk JSON `PortalPayload` (jangan dipecah tanpa versi): lihat `src/lib/types.t
 | Nama | Tempat | Peran |
 |---|---|---|
 | `DB` | wrangler D1 | Baca `proqpay-lite-production` |
-| `PORTAL_BOOTSTRAP_PIN` | wrangler secret | PIN bersama (sementara) |
+| `LITE_API_BASE` | vars | `https://proqpay-lite.pages.dev` |
+| `EMPLOYEE_PORTAL_KEY` | wrangler secret | Header `X-Portal-Key` ke Lite |
+| `PORTAL_PIN_FALLBACK` | vars | `0` production; `1` hanya cutover |
+| `PORTAL_BOOTSTRAP_PIN` | wrangler secret | **Deprecated.** Hanya jika fallback=1 |
 | `PORTAL_JWT_SECRET` | wrangler secret | HMAC cookie sesi |
 | `DEFAULT_ORG_ID` | vars | `ORG-OTSINDO` |
 

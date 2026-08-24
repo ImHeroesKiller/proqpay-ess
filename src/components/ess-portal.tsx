@@ -42,6 +42,12 @@ export function EssPortal() {
   const [remember, setRemember] = useState(true);
   const [loginErr, setLoginErr] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
+  const [mustChange, setMustChange] = useState(false);
+  const [currentPass, setCurrentPass] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const [changeErr, setChangeErr] = useState("");
+  const [changeBusy, setChangeBusy] = useState(false);
   const [ewaApp, setEwaApp] = useState<EwaApp>(null);
   const [wiz, setWiz] = useState({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
 
@@ -68,6 +74,7 @@ export function EssPortal() {
         setPayload(data);
         setStage(data.config.payroll.stage);
         setEwaApp(data.ewa.app);
+        setMustChange(Boolean(data.mustChangePassword));
         setLoggedIn(true);
       })
       .catch(() => {})
@@ -90,19 +97,51 @@ export function EssPortal() {
       });
       if (r.status === 401) throw new Error("Employee ID atau password salah.");
       if (r.status === 429) throw new Error("Terlalu banyak percobaan. Tunggu beberapa saat lalu coba lagi.");
+      if (r.status === 503) {
+        const down = await r.json().catch(() => ({}));
+        throw new Error(down.error || "Layanan login tidak tersedia.");
+      }
       if (!r.ok) throw new Error("Gagal masuk ke server (" + r.status + ").");
+      const loginData = await r.json().catch(() => ({}));
       const init = await fetch("/api/portal/init", { credentials: "include" });
       if (!init.ok) throw new Error("Login berhasil tetapi data D1 gagal dimuat.");
       const data: PortalPayload = await init.json();
       setPayload(data);
       setStage(data.config.payroll.stage);
       setEwaApp(data.ewa.app);
+      setMustChange(Boolean(loginData.mustChangePassword || data.mustChangePassword));
+      setPassInput("");
       setLoggedIn(true);
       setLoaded(true);
     } catch (e) {
       setLoginErr(e instanceof Error ? e.message : "Gagal masuk. Coba lagi.");
     } finally {
       setLoginBusy(false);
+    }
+  }
+
+  async function doChangePassword() {
+    setChangeErr("");
+    if (newPass !== confirmPass) {
+      setChangeErr("Konfirmasi password tidak sama.");
+      return;
+    }
+    setChangeBusy(true);
+    try {
+      const r = await fetch("/api/portal/password", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || "Gagal mengganti password.");
+      showToast("Password diganti. Silakan masuk kembali.");
+      window.setTimeout(() => window.location.reload(), 900);
+    } catch (e) {
+      setChangeErr(e instanceof Error ? e.message : "Gagal mengganti password.");
+    } finally {
+      setChangeBusy(false);
     }
   }
 
@@ -156,7 +195,7 @@ export function EssPortal() {
               </div>
             </div>
             <h1>Welcome back</h1>
-            <div className="lead">Masuk untuk melihat slip gaji dan status payroll Anda.</div>
+            <div className="lead">Masuk dengan Employee ID dan password portal Anda. Password pertama = kode project + tanggal gabung (YYYYMMDD).</div>
             <div className="lg-field">
               <div className="k">Employee ID</div>
               <input
@@ -205,6 +244,42 @@ export function EssPortal() {
           </div>
         </div>
       )}
+
+      {loggedIn && mustChange ? (
+        <div id="changePassView" role="dialog" aria-label="Ganti password">
+          <div className="lg-card">
+            <div className="lg-brand">
+              <span className="mark">
+                <img src="/brand/proqpay-icon.png" alt="ProQPay" />
+              </span>
+              <div>
+                <div className="nm">ProQPay</div>
+                <div className="sub">Keamanan akun</div>
+              </div>
+            </div>
+            <h1>Ganti password</h1>
+            <div className="lead">Password sementara wajib diganti sebelum melihat slip gaji. Minimal 12 karakter, huruf besar, huruf kecil, angka, dan simbol.</div>
+            <div className="lg-field">
+              <div className="k">Password saat ini</div>
+              <input className="lg-input" type="password" value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} autoComplete="current-password" />
+            </div>
+            <div className="lg-field">
+              <div className="k">Password baru</div>
+              <input className="lg-input" type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} autoComplete="new-password" />
+            </div>
+            <div className="lg-field">
+              <div className="k">Konfirmasi password baru</div>
+              <input className="lg-input" type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doChangePassword()} autoComplete="new-password" />
+            </div>
+            {changeErr ? <div className="lg-err show">{changeErr}</div> : null}
+            <button type="button" className={"lg-btn" + (changeBusy ? " loading" : "")} disabled={changeBusy} onClick={() => void doChangePassword()}>
+              <span className="spinner" />
+              <span>Simpan password baru</span>
+            </button>
+            <button type="button" className="lg-forgot" style={{ marginTop: 14 }} onClick={logout}>Keluar</button>
+          </div>
+        </div>
+      ) : null}
 
       {loggedIn ? (
       <div className={loaded ? "loaded-root" : ""} data-loaded={loaded}>
