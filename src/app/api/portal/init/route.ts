@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cf";
 import { verifyToken } from "@/lib/d1-shared";
 import { polishPayslipRows } from "@/lib/ida-labels";
-import { initOnLite } from "@/lib/lite-auth";
+import { initOnLite, liteApiBase, liteHeaders } from "@/lib/lite-auth";
 import { securityHeaders, tokenFromRequest } from "@/lib/security";
 import type { Payslip } from "@/lib/types";
 
@@ -41,15 +41,52 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const body = lite.payload as { config?: { payslips?: Payslip[] }; mustChangePassword?: boolean };
+  const body = lite.payload as {
+    config?: { payslips?: Payslip[] };
+    ewa?: Record<string, unknown>;
+    mustChangePassword?: boolean;
+  };
   if (Array.isArray(body.config?.payslips)) {
     for (const slip of body.config.payslips) {
       slip.rows = await polishPayslipRows(slip.rows || [], env);
     }
   }
 
+  // EWA eligibility/plafond must come from the same canonical endpoint used for submit.
+  // This prevents the dashboard from showing a different amount than the transaction endpoint.
+  const base = liteApiBase(env);
+  let canonicalEwa: Record<string, unknown> | undefined;
+  try {
+    const response = await fetch(`${base}/api/employee/ewa`, {
+      method: "GET",
+      headers: {
+        ...liteHeaders(env, origin),
+        Authorization: `Bearer ${liteToken}`,
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (response.status === 401 || response.status === 403) {
+      return NextResponse.json(
+        { error: "Sesi tidak valid atau kedaluwarsa. Silakan login ulang." },
+        { status: 401, headers },
+      );
+    }
+    if (response.ok) {
+      const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+      if (data.ok) canonicalEwa = data;
+    }
+  } catch {
+    // Keep portal readable, but never expose a stale EWA eligibility as actionable.
+  }
+
+  const ewa = canonicalEwa || {
+    ...(body.ewa || {}),
+    eligible: false,
+    reason: "Status advance salary sementara tidak tersedia. Coba lagi beberapa saat.",
+  };
+
   return NextResponse.json(
-    { ...body, mustChangePassword: Boolean(body.mustChangePassword || payload.must_change) },
+    { ...body, ewa, mustChangePassword: Boolean(body.mustChangePassword || payload.must_change) },
     { headers },
   );
 }
