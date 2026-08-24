@@ -42,14 +42,22 @@ export async function GET(request: NextRequest) {
   }
 
   const body = lite.payload as {
-    config?: { payslips?: Payslip[] };
+    config?: { payslips?: Payslip[]; estimatedPayslips?: Payslip[] };
     ewa?: Record<string, unknown>;
     mustChangePassword?: boolean;
   };
   if (Array.isArray(body.config?.payslips)) {
+    const finalPayslips: Payslip[] = [];
+    const estimatedPayslips: Payslip[] = [];
     for (const slip of body.config.payslips) {
       slip.rows = await polishPayslipRows(slip.rows || [], env);
+      if (slip.status === "paid") finalPayslips.push(slip);
+      else estimatedPayslips.push(slip);
     }
+    // Payslip History is a final document register. Processing values remain
+    // explicitly separated so an estimate can never be mistaken for a final slip.
+    body.config.payslips = finalPayslips;
+    body.config.estimatedPayslips = estimatedPayslips;
   }
 
   // EWA eligibility/plafond must come from the same canonical endpoint used for submit.
