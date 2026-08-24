@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icon";
 import { emptyPayload } from "@/lib/empty-portal";
 import { enPeriod, fmt, initials, slipRef, totalOf } from "@/lib/format";
@@ -87,6 +87,8 @@ export function EssPortal() {
   const [confirmPass, setConfirmPass] = useState("");
   const [changeErr, setChangeErr] = useState("");
   const [changeBusy, setChangeBusy] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const themeInitialized = useRef(false);
   const [ewaApp, setEwaApp] = useState<EwaApp>(null);
   const [wiz, setWiz] = useState({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
 
@@ -126,7 +128,13 @@ export function EssPortal() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
+    const savedTheme = window.localStorage.getItem("proqpay-ess-theme");
+    const nextTheme = savedTheme === "light" || savedTheme === "dark"
+      ? savedTheme
+      : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    document.documentElement.classList.toggle("light", nextTheme === "light");
+    queueMicrotask(() => setTheme(nextTheme));
     fetch("/api/portal/init", { credentials: "include" })
       .then((r) => {
         if (!r.ok) throw new Error("no-session");
@@ -144,6 +152,20 @@ export function EssPortal() {
         window.setTimeout(() => setLoaded(true), 400);
       });
   }, []);
+
+  useEffect(() => {
+    if (!themeInitialized.current) {
+      themeInitialized.current = true;
+      return;
+    }
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("light", theme === "light");
+    window.localStorage.setItem("proqpay-ess-theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((current) => current === "dark" ? "light" : "dark");
+  }
 
   async function doLogin() {
     setLoginErr("");
@@ -276,6 +298,9 @@ export function EssPortal() {
       {!loggedIn && (
         <div id="loginView" role="dialog" aria-label="Sign in">
           <div className="lg-card">
+            <button type="button" className="lg-theme" onClick={toggleTheme} aria-label={theme === "dark" ? "Gunakan tema terang" : "Gunakan tema gelap"}>
+              <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
+            </button>
             <div className="lg-brand">
               <span className="mark">
                 <img src="/brand/proqpay-icon.png" alt="ProQPay" />
@@ -285,11 +310,12 @@ export function EssPortal() {
                 <div className="sub">Payroll & HR Digital</div>
               </div>
             </div>
-            <h1>Welcome back</h1>
-            <div className="lead">Masuk dengan Employee ID dan password portal Anda. Password pertama = kode project + tanggal gabung (YYYYMMDD).</div>
+            <h1>Selamat datang kembali</h1>
+            <div className="lead">Akses slip gaji, status payroll, dan layanan karyawan Anda dalam satu portal yang aman.</div>
             <div className="lg-field">
-              <div className="k">Employee ID</div>
+              <label className="k" htmlFor="lgEmployee">Employee ID</label>
               <input
+                id="lgEmployee"
                 className="lg-input"
                 value={empInput}
                 onChange={(e) => setEmpInput(e.target.value)}
@@ -300,7 +326,7 @@ export function EssPortal() {
               />
             </div>
             <div className="lg-field">
-              <div className="k">Password</div>
+              <label className="k" htmlFor="lgPass">Password</label>
               <div className="lg-input-wrap">
                 <input
                   id="lgPass"
@@ -312,7 +338,7 @@ export function EssPortal() {
                   autoComplete="current-password"
                   placeholder="••••••••"
                 />
-                <button type="button" className="lg-eye" onClick={() => setShowPass((s) => !s)} aria-label="Show password">
+                <button type="button" className="lg-eye" onClick={() => setShowPass((s) => !s)} aria-label={showPass ? "Sembunyikan password" : "Tampilkan password"}>
                   <Icon name={showPass ? "eyeOff" : "eye"} size={16} />
                 </button>
               </div>
@@ -322,14 +348,12 @@ export function EssPortal() {
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Ingat saya
                 di perangkat ini
               </label>
-              <button type="button" className="lg-forgot" onClick={() => showToast("Hubungi HR perusahaan Anda untuk mereset kata sandi.")}>
-                Forgot password?
-              </button>
             </div>
+            <p className="lg-support">Perlu bantuan akses? Hubungi HR perusahaan Anda.</p>
             {loginErr ? <div className="lg-err show">{loginErr}</div> : null}
             <button type="button" className={"lg-btn" + (loginBusy ? " loading" : "")} disabled={loginBusy} onClick={doLogin}>
               <span className="spinner" />
-              <span>Sign In</span>
+              <span>Masuk</span>
             </button>
             <div className="lg-foot">© 2026 ProQPay</div>
           </div>
@@ -385,6 +409,9 @@ export function EssPortal() {
               </span>
               <span className="nm">ProQPay</span>
             </div>
+            <button className="icon-btn" title={theme === "dark" ? "Tema terang" : "Tema gelap"} aria-label={theme === "dark" ? "Gunakan tema terang" : "Gunakan tema gelap"} onClick={toggleTheme}>
+              <Icon name={theme === "dark" ? "sun" : "moon"} />
+            </button>
             <button className="icon-btn" title="Notifikasi" aria-label="Notifikasi" onClick={() => setModal("notify")}>
               <Icon name="bell" />
               {config.notifications.some((n) => n.unread) ? <span className="dot" /> : null}

@@ -9,7 +9,7 @@
     "build:worker": "opennextjs-cloudflare build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test src/lib/lite-auth.test.ts src/lib/stage.test.ts src/lib/architecture.test.ts",
+    "test": "node --experimental-strip-types --test src/lib/lite-auth.test.ts src/lib/stage.test.ts src/lib/architecture.test.ts tests/*.test.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
