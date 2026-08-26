@@ -90,6 +90,8 @@ export function EssPortal() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const themeInitialized = useRef(false);
   const [ewaApp, setEwaApp] = useState<EwaApp>(null);
+  const [ewaBusy, setEwaBusy] = useState(false);
+  const [ewaErr, setEwaErr] = useState("");
   const [wiz, setWiz] = useState({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
 
   const config = payload.config;
@@ -188,7 +190,7 @@ export function EssPortal() {
       if (!r.ok) throw new Error("Gagal masuk ke server (" + r.status + ").");
       const loginData = await r.json().catch(() => ({}));
       const init = await fetch("/api/portal/init", { credentials: "include" });
-      if (!init.ok) throw new Error("Login berhasil tetapi data D1 gagal dimuat.");
+      if (!init.ok) throw new Error("Login berhasil tetapi data portal gagal dimuat.");
       const data: PortalPayload = await init.json();
       setPayload(data);
       setStage(data.config.payroll.stage);
@@ -230,13 +232,15 @@ export function EssPortal() {
   }
 
   async function submitEwa() {
-    if (!wiz.agreed) return;
+    if (!wiz.agreed || ewaBusy) return;
+    setEwaBusy(true);
+    setEwaErr("");
     try {
       const r = await fetch("/api/portal/ewa", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: wiz.amount, method: wiz.method === "auto" ? "SALARY_ACCOUNT" : wiz.method, agreed: true }),
+        body: JSON.stringify({ action: "SUBMIT", amount: wiz.amount, method: wiz.method === "auto" ? "SALARY_ACCOUNT" : wiz.method, agreed: true }),
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || "Gagal mengajukan advance.");
@@ -250,11 +254,19 @@ export function EssPortal() {
         date: new Date().toISOString().slice(0, 10),
         status: created.status || "SUBMITTED",
       });
+      const init = await fetch("/api/portal/init", { credentials: "include", cache: "no-store" });
+      if (init.ok) {
+        const refreshed: PortalPayload = await init.json();
+        setPayload(refreshed);
+        setEwaApp(refreshed.ewa.app);
+      }
       setModal(null);
       setWiz({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
       showToast("Pengajuan advance terkirim. Menunggu persetujuan payroll.");
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Gagal mengajukan advance.");
+      setEwaErr(e instanceof Error ? e.message : "Gagal mengajukan advance.");
+    } finally {
+      setEwaBusy(false);
     }
   }
 
@@ -1003,6 +1015,7 @@ export function EssPortal() {
           )}
           {wiz.step === 3 && (
             <div className="wiz-body">
+              {ewaErr ? <div className="lg-err show" role="alert">{ewaErr}</div> : null}
               <div className="sum-row">
                 <span>Amount</span>
                 <b>{fmt(wiz.amount)}</b>
@@ -1025,10 +1038,10 @@ export function EssPortal() {
               <button
                 className="btn primary"
                 style={{ width: "100%", marginTop: 8 }}
-                disabled={!wiz.agreed || !eligible}
+                disabled={!wiz.agreed || !eligible || ewaBusy}
                 onClick={() => void submitEwa()}
               >
-                Submit request
+                {ewaBusy ? "Submitting…" : "Submit request"}
               </button>
             </div>
           )}

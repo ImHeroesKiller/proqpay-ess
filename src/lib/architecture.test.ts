@@ -31,3 +31,12 @@ test("Payslip History consumes canonical final submission register", () => {
   assert.match(init, /estimatedPayslips/);
   assert.match(init, /Regular \+ Adjustment \+ Off-cycle/);
 });
+
+test("EWA submit is canonical, refreshes state, and blocks duplicate clicks", () => {
+  const portal = read("src/components/ess-portal.tsx");
+  assert.match(portal, /action: "SUBMIT"/);
+  assert.match(portal, /if \(!wiz\.agreed \|\| ewaBusy\) return/);
+  assert.match(portal, /cache: "no-store"/);
+  assert.match(portal, /disabled=\{!wiz\.agreed \|\| !eligible \|\| ewaBusy\}/);
+  assert.match(portal, /role="alert"/);
+});
