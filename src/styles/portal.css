@@ -956,7 +956,9 @@
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .quick { grid-template-columns: 1fr; }
   .card { padding: 24px; }
-  .ess-payroll .stage-hero { margin-top: 14px; }
+  .ess-payroll .stage-hero { margin-top: 14px; padding: 14px 16px; }
+  .ess-payroll .ring-wrap { display: none; }
+  .ess-payroll .stage-hero .sh .t { font-size: 17px; }
   .ess-payroll .stepper { margin-top: 16px; }
   .ess-payroll .chips { margin-top: 10px; }
   .ewaa { display: flex; flex-direction: column; }
