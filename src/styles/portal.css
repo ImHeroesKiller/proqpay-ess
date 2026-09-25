@@ -175,7 +175,8 @@
     :root:not(.light) .icon-btn .i-moon { display: none; }
   }
 
-  .user-chip { display: flex; align-items: center; gap: 9px; padding: 4px 6px 4px 4px; border-radius: 14px; cursor: pointer; transition: background .2s ease; }
+  .user-chip { display: flex; align-items: center; gap: 9px; padding: 4px 6px 4px 4px; border: 0; background: transparent; color: inherit; font: inherit; border-radius: 14px; cursor: pointer; transition: background .2s ease; }
+  .user-chip:focus-visible, .icon-btn:focus-visible, .tab-btn:focus-visible, .tab-fab:focus-visible, .btn:focus-visible, .x:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   .user-chip:active { background: var(--surface); }
   .avatar { width: 38px; height: 38px; border-radius: 50%; flex: none; position: relative; padding: 2px; background: var(--grad-navy); }
   .avatar > span {
@@ -947,4 +948,14 @@
   .ewa-life-note { font-size: 12px; }
   .app-card .h { align-items: flex-start; gap: 8px; }
   .app-card .h .pill { white-space: normal; text-align: right; }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
