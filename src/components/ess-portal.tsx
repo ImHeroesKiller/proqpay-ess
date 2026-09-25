@@ -28,12 +28,12 @@ function ewaPlafond(config: PortalConfig, ewa: EwaState) {
 
 function portalCopy(config: PortalConfig) {
   return {
-    heroSubtitle: config.copy?.heroSubtitle || "Your pay hub — all your payroll info in one place",
+    heroSubtitle: config.copy?.heroSubtitle || "Pusat informasi gaji dan layanan karyawan dalam satu tempat",
     ewaTitle: config.copy?.ewaTitle || "Advance Salary",
     ewaSubtitle: config.copy?.ewaSubtitle || "Cairkan gaji yang sudah Anda kerjakan, tanpa menunggu gajian",
     ewaBody: config.copy?.ewaBody || "Cairkan gaji yang sudah Anda kerjakan tanpa agunan. Biaya layanan transparan dan dipotong otomatis saat gajian.",
-    ewaCta: config.copy?.ewaCta || "Request Advance",
-    ewaLimitCaption: config.copy?.ewaLimitCaption || "Up to {percent}% of this month's pay",
+    ewaCta: config.copy?.ewaCta || "Ajukan Advance",
+    ewaLimitCaption: config.copy?.ewaLimitCaption || "Hingga {percent}% dari gaji periode berjalan",
   };
 }
 
@@ -491,12 +491,12 @@ export function EssPortal() {
             <div className="hero-head">
               <div>
                 <h1>
-                  Hello, <em>{firstName}</em> 👋
+                  Halo, <em>{firstName}</em> 👋
                 </h1>
                 <p>{copy.heroSubtitle}</p>
               </div>
               <span className="live-pill">
-                <i /> {enPeriod(config.payroll.period).split(" ")[0]} · Live
+                <i /> {enPeriod(config.payroll.period).split(" ")[0]} · Aktif
               </span>
             </div>
             <div className="stats">
@@ -504,35 +504,35 @@ export function EssPortal() {
                 <div className="ic iv">
                   <Icon name="wallet" size={15} />
                 </div>
-                <div className="lbl">Net salary {processing ? "(est.)" : ""}</div>
+                <div className="lbl">Gaji bersih {processing ? "(estimasi)" : ""}</div>
                 <div className="val">{fmt(totalOf(config.payslips[0]?.rows || []))}</div>
               </div>
               <div className="stat reveal">
                 <div className="ic ig">
                   <Icon name="calendar" size={15} />
                 </div>
-                <div className="lbl">Payday</div>
+                <div className="lbl">Tanggal gajian</div>
                 <div className="val">{config.payroll.paydayShort}</div>
               </div>
               <div className="stat reveal">
                 <div className="ic ia">
                   <Icon name="hash" size={15} />
                 </div>
-                <div className="lbl">Payroll ref.</div>
+                <div className="lbl">Referensi payroll</div>
                 <div className="val">{config.payroll.ref.slice(-6)}</div>
               </div>
             </div>
           </section>
 
-          <section className="card reveal" aria-label="Payroll status for the current month">
+          <section className="card reveal" aria-label="Status payroll periode berjalan">
             <div className="card-head">
               <div>
-                <h2>Payroll Status — {enPeriod(config.payroll.period)}</h2>
-                <div className="sub">Your payroll progress at a glance</div>
+                <h2>Status Payroll — {enPeriod(config.payroll.period)}</h2>
+                <div className="sub">Perkembangan payroll Anda saat ini</div>
               </div>
               <span className={"pill " + (stage >= stageCount ? "ok" : "info pulse")}>
                 <i />
-                {config.stages[stage - 1]?.title || "Processing"}
+                {config.stages[stage - 1]?.title || "Diproses"}
               </span>
             </div>
             <div className="stage-hero">
@@ -566,7 +566,7 @@ export function EssPortal() {
             <div className="stepper">
               {config.stages.map((s, i) => {
                 const cls = i < stage - 1 ? " is-complete" : i === stage - 1 ? " is-current" : "";
-                const tag = i < stage - 1 ? { t: "Done", c: "done" } : i === stage - 1 ? { t: "In progress", c: "now" } : { t: "Queued", c: "wait" };
+                const tag = i < stage - 1 ? { t: "Selesai", c: "done" } : i === stage - 1 ? { t: "Diproses", c: "now" } : { t: "Menunggu", c: "wait" };
                 const icon = i < stage - 1 ? "check" : (["file", "gear", "clock", "wallet", "check"][i] as string);
                 return (
                   <div className={"step" + cls} key={s.title}>
@@ -626,7 +626,7 @@ export function EssPortal() {
                 <Icon name="download" size={20} />
               </span>
               <span>
-                <span className="lbl">Download Payslip</span>
+                <span className="lbl">Unduh Slip Gaji</span>
                 <span className="sub">{enPeriod(config.payroll.period)} slip</span>
               </span>
               <span className="chev">
@@ -676,10 +676,10 @@ export function EssPortal() {
           <section className="card reveal">
             <div className="card-head">
               <div>
-                <h2>Payslip History</h2>
-                <div className="sub">Tap a period to view the details</div>
+                <h2>Riwayat Slip Gaji</h2>
+                <div className="sub">Pilih periode untuk melihat rincian</div>
               </div>
-              <span className="pill info">{config.payslips.length} months</span>
+              <span className="pill info">{config.payslips.length} periode</span>
             </div>
             {config.payslips.length === 0 ? (
               <p className="ewaa-sub" style={{ marginTop: 12 }}>
@@ -730,7 +730,7 @@ export function EssPortal() {
         <nav className="tabbar" aria-label="Navigasi utama">
           {(
             [
-              ["home", "home", "Home"],
+              ["home", "home", "Beranda"],
               ["slip", "file", "Slip"],
             ] as const
           ).map(([id, icon, label]) => (
@@ -760,8 +760,8 @@ export function EssPortal() {
           </button>
           {(
             [
-              ["help", "help", "Help"],
-              ["profile", "user", "Profile"],
+              ["help", "help", "Bantuan"],
+              ["profile", "user", "Profil"],
             ] as const
           ).map(([id, icon, label]) => (
             <button
@@ -844,7 +844,7 @@ export function EssPortal() {
       ) : null}
 
       {modal === "profile" ? (
-        <Sheet title="My Profile" onClose={() => setModal(null)}>
+        <Sheet title="Profil Saya" onClose={() => setModal(null)}>
           <div className="prof-hero">
             <div className="avatar">
               <span>{initials(config.employee.name)}</span>
@@ -858,10 +858,10 @@ export function EssPortal() {
           </div>
           <div className="prof-rows">
             {[
-              ["mail", "Work email", config.employee.email],
-              ["phone", "Phone", config.employee.phone],
-              ["hash", "Employee ID", config.employee.empId],
-              ["wallet", "Salary account", config.employee.bank],
+              ["mail", "Email kerja", config.employee.email],
+              ["phone", "Telepon", config.employee.phone],
+              ["hash", "ID Karyawan", config.employee.empId],
+              ["wallet", "Rekening gaji", config.employee.bank],
             ].map((r) => (
               <div className="prof-row" key={r[1]}>
                 <span className="ic">
@@ -881,13 +881,13 @@ export function EssPortal() {
       ) : null}
 
       {modal === "help" ? (
-        <Sheet title="Help Center" onClose={() => setModal(null)}>
+        <Sheet title="Pusat Bantuan" onClose={() => setModal(null)}>
           <div className="help-item" onClick={() => showToast("Hubungi HR: " + (config.company.contact || "helpdesk"))}>
             <span className="ic ib">
               <Icon name="build" size={18} />
             </span>
             <div>
-              <div className="t">Contact HR</div>
+              <div className="t">Hubungi HR</div>
               <div className="s">{config.company.contact || "Hubungi HR perusahaan Anda"}</div>
             </div>
             <span className="chev">
@@ -899,7 +899,7 @@ export function EssPortal() {
               <Icon name="help" size={18} />
             </span>
             <div>
-              <div className="t">Payroll FAQ</div>
+              <div className="t">FAQ Payroll</div>
               <div className="s">Tax, BPJS, payday schedule</div>
             </div>
             <span className="chev">
