@@ -66,7 +66,7 @@ test("Employee Services P2 surfaces session recovery and readable EWA lifecycle"
   const portal = read("src/components/ess-portal.tsx");
   const card = read("src/components/ewa-lifecycle-card.tsx");
   const lifecycle = read("src/lib/employee-services.ts");
-  const css = read("src/styles/portal.css");
+  const css = read("src/styles/employee-services.css");
   assert.match(portal, /loadSession/);
   assert.match(portal, /Coba lagi/);
   assert.match(portal, /EwaLifecycleCard/);
@@ -78,7 +78,7 @@ test("Employee Services P2 surfaces session recovery and readable EWA lifecycle"
 });
 
 test("Employee Services P2 preserves mobile-first UX and adds a bounded desktop layout", () => {
-  const css = read("src/styles/portal.css");
+  const css = read("src/styles/employee-services.css");
   assert.match(css, /@media \(min-width: 900px\)/);
   assert.match(css, /max-width: 1180px/);
   assert.match(css, /@media \(max-width: 560px\)/);
@@ -129,7 +129,7 @@ test("Employee Services UI P1 uses Indonesian payroll labels and semantic intera
 
 test("Employee Services UI P2 provides a true desktop workspace and mobile-first responsive hierarchy", () => {
   const portal = read("src/components/ess-portal.tsx");
-  const css = read("src/styles/portal.css");
+  const css = read("src/styles/employee-services.css");
   assert.match(portal, /desktop-nav/);
   assert.match(portal, /ess-payroll/);
   assert.match(portal, /ess-ewa/);
@@ -148,4 +148,24 @@ test("Employee Services UI P2 explains disabled Advance Salary and removes redun
   assert.doesNotMatch(portal, /Awaiting payout/);
   assert.doesNotMatch(portal, /In review & approval/);
   assert.doesNotMatch(portal, /Awaiting payroll data from your company/);
+});
+
+
+test("Employee Services UI P3 keeps feature-specific visual rules outside core portal CSS", () => {
+  const globals = read("src/app/globals.css");
+  const core = read("src/styles/portal.css");
+  const employee = read("src/styles/employee-services.css");
+  assert.match(globals, /employee-services\.css/);
+  assert.doesNotMatch(core, /Employee Services P2/);
+  assert.match(employee, /Employee Services P3/);
+  assert.match(employee, /desktop-nav/);
+  assert.match(employee, /prefers-reduced-motion/);
+});
+
+test("Employee Services UI P3 standardizes focus, hover and bounded desktop sections", () => {
+  const css = read("src/styles/employee-services.css");
+  assert.match(css, /focus-visible/);
+  assert.match(css, /ess-ewa,.ess-history,.ess-payroll/);
+  assert.match(css, /@media \(hover:hover\)/);
+  assert.match(css, /ewa-locked-reason/);
 });
