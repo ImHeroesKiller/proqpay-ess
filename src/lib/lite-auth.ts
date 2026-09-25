@@ -1,3 +1,5 @@
+export const EMPLOYEE_SERVICES_CONTRACT_VERSION = "2026-09-v1";
+
 export type LiteLoginOk = {
   ok: true;
   emp_id: string;
