@@ -414,7 +414,7 @@
   /* ============================================================
      HISTORY
      ============================================================ */
-  .hist-item { display: flex; align-items: center; gap: 12px; padding: 14px 2px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .2s ease; border-radius: 12px; }
+  .hist-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 2px; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background .2s ease; border-radius: 12px; }
   .hist-item:hover { background: var(--surface); }
   .hist-item:last-child { border-bottom: 0; }
   .hist-item .m { font-weight: 700; font-size: 13.5px; }
@@ -958,4 +958,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.hist-item:focus-visible, .help-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

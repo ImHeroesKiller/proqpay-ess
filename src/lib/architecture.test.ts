@@ -111,3 +111,17 @@ test("Employee Services P3 dialog and interactive profile controls are keyboard 
   assert.match(css, /focus-visible/);
   assert.match(css, /prefers-reduced-motion/);
 });
+
+
+test("Employee Services UI P1 uses Indonesian payroll labels and semantic interactive rows", () => {
+  const portal = read("src/components/ess-portal.tsx");
+  assert.match(portal, /Halo,/);
+  assert.match(portal, /Gaji bersih/);
+  assert.match(portal, /Tanggal gajian/);
+  assert.match(portal, /Status Payroll/);
+  assert.match(portal, /Riwayat Slip Gaji/);
+  assert.match(portal, /<button type="button" className="hist-item"/);
+  assert.match(portal, /<button type="button" className="help-item"/);
+  assert.doesNotMatch(portal, /<div className="hist-item"/);
+  assert.doesNotMatch(portal, /<div className="help-item"/);
+});
