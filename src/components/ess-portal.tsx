@@ -1165,7 +1165,7 @@ function PrintSlip({ config, slip, idx }: { config: PortalConfig; slip?: Payslip
             PAYSLIP <small>— {enPeriod(slip.period)}</small>
           </div>
           <div className="ps-ref">
-            Ref: <b>{slipRef(idx, slip.period)}</b> · Status: <b>{paid ? "Paid" : "Estimate"}</b>
+            Ref: <b>{slipRef(idx, slip.period)}</b> · Status: <b>{paid ? "Dibayar" : "Estimasi"}</b>
           </div>
         </div>
         <table className="ps-tbl ps-ident">
