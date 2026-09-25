@@ -442,6 +442,12 @@ export function EssPortal() {
               </span>
               <span className="nm">ProQPay</span>
             </div>
+            <nav className="desktop-nav" aria-label="Navigasi desktop">
+              <button type="button" className="active" onClick={() => setTab("home")}>Ringkasan</button>
+              <button type="button" onClick={() => openSlip(0)}>Slip Gaji</button>
+              <button type="button" disabled={!ewaOn || !eligible} onClick={() => { if (ewaOn && eligible) setModal("ewa"); }}>Advance Salary</button>
+              <button type="button" onClick={() => setModal("help")}>Bantuan</button>
+            </nav>
             <button className="icon-btn" title={theme === "dark" ? "Tema terang" : "Tema gelap"} aria-label={theme === "dark" ? "Gunakan tema terang" : "Gunakan tema gelap"} onClick={toggleTheme}>
               <Icon name={theme === "dark" ? "sun" : "moon"} />
             </button>
@@ -465,29 +471,8 @@ export function EssPortal() {
           <img key={url} src={url} alt="" width={1} height={1} style={{ position: "absolute", opacity: 0, pointerEvents: "none" }} />
         ))}
 
-        {!adHidden && visibleAds[0] ? (
-          <section className="ad-wrap reveal" style={{ ["--d" as string]: ".04s" }} aria-label="Promosi">
-            <button className="ad-close" onClick={() => setAdHidden(true)} aria-label="Tutup iklan">
-              ✕
-            </button>
-            <div className="ad-track">
-              <div className="ad-slide" style={{ background: visibleAds[0].bg }}>
-                <AdArt src={visibleAds[0].imageUrl} />
-                <div className="txt">
-                  <span className="tag">{visibleAds[0].tag}</span>
-                  <h3>{visibleAds[0].title}</h3>
-                  <p>{visibleAds[0].desc}</p>
-                  <button className="cta" onClick={() => onAdCta(visibleAds[0])}>
-                    {visibleAds[0].cta}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
         <main className="app">
-          <section className="hero reveal" style={{ ["--d" as string]: ".04s" }}>
+          <section className="hero reveal ess-hero" style={{ ["--d" as string]: ".04s" }}>
             <div className="hero-head">
               <div>
                 <h1>
@@ -524,7 +509,7 @@ export function EssPortal() {
             </div>
           </section>
 
-          <section className="card reveal" aria-label="Status payroll periode berjalan">
+          <section className="card reveal ess-payroll" aria-label="Status payroll periode berjalan">
             <div className="card-head">
               <div>
                 <h2>Status Payroll — {enPeriod(config.payroll.period)}</h2>
@@ -598,29 +583,29 @@ export function EssPortal() {
                 ))}
               {stage === 5 && (
                 <span className="chip-tag pos">
-                  <Icon name="check" size={13} /> Salary paid to your account
+                  <Icon name="check" size={13} /> Gaji telah dibayarkan ke rekening Anda
                 </span>
               )}
               {stage === 4 && (
                 <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> Awaiting payout
+                  <Icon name="clock" size={13} /> Menunggu pencairan
                 </span>
               )}
               {stage === 3 && (
                 <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> In review & approval
+                  <Icon name="clock" size={13} /> Dalam review & persetujuan
                 </span>
               )}
               {stage === 1 && (
                 <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> Awaiting payroll data from your company
+                  <Icon name="clock" size={13} /> Menunggu data payroll dari perusahaan
                 </span>
               )}
             </div>
 
           </section>
 
-          <section className="quick reveal" aria-label="Aksi cepat">
+          <section className="quick reveal ess-quick" aria-label="Aksi cepat">
             <button className="qbtn" onClick={() => openSlip(0)}>
               <span className="ic dl">
                 <Icon name="download" size={20} />
@@ -636,7 +621,7 @@ export function EssPortal() {
           </section>
 
           {ewaOn ? (
-          <section className="card reveal" aria-label="Advance Salary EWA">
+          <section className="card reveal ess-ewa" aria-label="Advance Salary EWA">
             <div className="ewaa">
               <div className="ewaa-head">
                 <span className="ewaa-ic">
@@ -646,11 +631,11 @@ export function EssPortal() {
                   <b>{copy.ewaTitle}</b>
                   <span>{copy.ewaSubtitle}</span>
                 </div>
-                <span className={"pill " + (eligible ? "ok" : "warn")}>{eligible ? "Ready" : "Locked"}</span>
+                <span className={"pill " + (eligible ? "ok" : "warn")}>{eligible ? "Siap diajukan" : "Belum tersedia"}</span>
               </div>
               <div className="ewaa-avail">
                 <div>
-                  <div className="l">Advance Limit</div>
+                  <div className="l">Limit Advance</div>
                   <div className="v">{fmt(plafond)}</div>
                 </div>
                 <div style={{ textAlign: "right", fontSize: 10.5, color: "var(--muted)", lineHeight: 1.5 }}>
@@ -663,8 +648,11 @@ export function EssPortal() {
               <div className="ewaa-sub">
                 {copy.ewaBody}
               </div>
-              {!eligible && ewa.reason ? (
-                <div className="ewaa-sub" style={{ color: "var(--warn)" }}>{ewa.reason}</div>
+              {!eligible ? (
+                <div className="ewa-locked-reason" role="status">
+                  <strong>Belum dapat diajukan</strong>
+                  <span>{ewa.reason || "Belum memenuhi syarat Advance Salary pada periode berjalan."}</span>
+                </div>
               ) : null}
               <button className="btn primary" style={{ width: "100%" }} onClick={() => setModal("ewa")} disabled={!eligible || Boolean(ewaApp)}>
                 {ewaApp ? "Pengajuan diproses" : copy.ewaCta}
@@ -673,7 +661,7 @@ export function EssPortal() {
           </section>
           ) : null}
 
-          <section className="card reveal">
+          <section className="card reveal ess-history">
             <div className="card-head">
               <div>
                 <h2>Riwayat Slip Gaji</h2>
@@ -700,6 +688,29 @@ export function EssPortal() {
             ))}
           </section>
         </main>
+
+        <div className="promo-slot">
+        {!adHidden && visibleAds[0] ? (
+          <section className="ad-wrap reveal" style={{ ["--d" as string]: ".04s" }} aria-label="Promosi">
+            <button className="ad-close" onClick={() => setAdHidden(true)} aria-label="Tutup iklan">
+              ✕
+            </button>
+            <div className="ad-track">
+              <div className="ad-slide" style={{ background: visibleAds[0].bg }}>
+                <AdArt src={visibleAds[0].imageUrl} />
+                <div className="txt">
+                  <span className="tag">{visibleAds[0].tag}</span>
+                  <h3>{visibleAds[0].title}</h3>
+                  <p>{visibleAds[0].desc}</p>
+                  <button className="cta" onClick={() => onAdCta(visibleAds[0])}>
+                    {visibleAds[0].cta}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
+        </div>
 
         <footer className="app-footer reveal">
           <img className="foot-logo" src="/brand/proqpay-logo.png" alt="ProQPay" />
@@ -799,7 +810,7 @@ export function EssPortal() {
       ) : null}
 
       {modal === "payslip" && slip ? (
-        <Sheet title={"Payslip — " + enPeriod(slip.period)} onClose={() => setModal(null)}>
+        <Sheet title={"Slip Gaji — " + enPeriod(slip.period)} onClose={() => setModal(null)}>
           <div className="slip-meta">
             <div>
               <b>{config.company.name}</b>
@@ -828,7 +839,7 @@ export function EssPortal() {
           </div>
           <div className="modal-foot" style={{ margin: "16px -20px -20px", borderTop: "1px solid var(--border)" }}>
             <button className="btn ghost" onClick={() => window.print()}>
-              <Icon name="print" size={17} /> Print / PDF
+              <Icon name="print" size={17} /> Cetak / PDF
             </button>
             <button
               className="btn primary"
@@ -875,7 +886,7 @@ export function EssPortal() {
             ))}
           </div>
           <button type="button" className="logout-btn" onClick={logout}>
-            <Icon name="logout" size={16} /> Log Out
+            <Icon name="logout" size={16} /> Keluar
           </button>
         </Sheet>
       ) : null}
@@ -941,7 +952,7 @@ export function EssPortal() {
       ) : null}
 
       {modal === "notify" ? (
-        <Sheet title="Notifications" onClose={() => setModal(null)}>
+        <Sheet title="Notifikasi" onClose={() => setModal(null)}>
           {config.notifications.length === 0 ? (
             <p className="ewaa-sub">Tidak ada notifikasi.</p>
           ) : null}
