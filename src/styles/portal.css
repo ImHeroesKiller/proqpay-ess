@@ -137,6 +137,10 @@
     transition: background .4s ease, border-color .4s ease;
   }
   .h-inner { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 8px; padding: 12px 18px; }
+  .desktop-nav { display: none; align-items: center; gap: 4px; margin: 0 auto; }
+  .desktop-nav button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 750; padding: 9px 12px; border-radius: 10px; cursor: pointer; }
+  .desktop-nav button:hover, .desktop-nav button.active { background: var(--surface); color: var(--ink); }
+  .desktop-nav button:disabled { opacity: .45; cursor: not-allowed; }
 
   .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
   .brand .mark {
@@ -625,6 +629,9 @@
   .ewaa-avail .l { font-size: 11px; color: var(--muted); font-weight: 600; }
   .ewaa-avail .v { font-size: 21px; font-weight: 800; letter-spacing: -.03em; color: var(--brand); }
   .ewaa-sub { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+  .ewa-locked-reason { display: grid; gap: 3px; padding: 11px 13px; border-radius: 12px; background: var(--warn-bg); border: 1px solid rgba(229,72,77,.18); color: var(--warn); }
+  .ewa-locked-reason strong { font-size: 11.5px; }
+  .ewa-locked-reason span { font-size: 11px; line-height: 1.45; }
 
   .ewah-bal { text-align: center; padding: 6px 0 2px; }
   .ewah-ic { width: 46px; height: 46px; border-radius: 14px; background: var(--grad); color: var(--brand-contrast); display: grid; place-items: center; margin: 0 auto 10px; box-shadow: 0 10px 22px rgba(242, 101, 34, .4); }
@@ -931,20 +938,41 @@
 .ewa-life-note { margin-top: 9px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
 
 @media (min-width: 900px) {
-  .app { max-width: 980px; padding-left: 28px; padding-right: 28px; }
-  .h-inner { max-width: 980px; }
-  .hero { padding-top: 28px; }
+  .h-inner { max-width: 1180px; padding-left: 28px; padding-right: 28px; }
+  .desktop-nav { display: flex; }
+  .app {
+    max-width: 1180px;
+    padding: 22px 28px 48px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(320px, .75fr);
+    gap: 16px 18px;
+    align-items: start;
+  }
+  .ess-hero { grid-column: 1 / -1; padding-top: 4px; }
+  .ess-payroll { grid-column: 1; grid-row: 2 / span 3; margin-top: 0; }
+  .ess-quick { grid-column: 2; margin-top: 0; }
+  .ess-ewa { grid-column: 2; margin-top: 0; }
+  .ess-history { grid-column: 2; margin-top: 0; }
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .quick { grid-template-columns: 1fr; }
   .card { padding: 24px; }
-  .ewaa { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .8fr); column-gap: 24px; align-items: start; }
-  .ewaa-head, .ewaa-avail, .ewaa-sub { grid-column: 1; }
-  .ewaa .app-card { grid-column: 2; grid-row: 1 / span 4; margin-top: 0; }
-  .ewaa > .btn { grid-column: 1; max-width: 320px; }
-  .tabbar { width: min(680px, 72vw); }
+  .ess-payroll .stage-hero { margin-top: 14px; padding: 14px 16px; }
+  .ess-payroll .ring-wrap { display: none; }
+  .ess-payroll .stage-hero .sh .t { font-size: 17px; }
+  .ess-payroll .stepper { margin-top: 16px; }
+  .ess-payroll .chips { margin-top: 10px; }
+  .ewaa { display: flex; flex-direction: column; }
+  .ewaa .app-card { margin-top: 0; }
+  .promo-slot { width: min(1124px, calc(100% - 56px)); margin: 14px auto 0; }
+  .promo-slot .ad-wrap { margin-top: 0; }
+  .tabbar { display: none !important; }
+  .app-footer { padding-bottom: 28px; }
 }
 
 @media (max-width: 560px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats .stat:first-child { grid-column: 1 / -1; }
+  .stat .val { font-size: 15px; }
   .ewa-life-note { font-size: 12px; }
   .app-card .h { align-items: flex-start; gap: 8px; }
   .app-card .h .pill { white-space: normal; text-align: right; }
@@ -963,4 +991,11 @@
 .hist-item:focus-visible, .help-item:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+@media (min-width: 900px) and (max-width: 1080px) {
+  .app { grid-template-columns: minmax(0, 1.35fr) minmax(300px, .8fr); padding-left: 20px; padding-right: 20px; }
+  .h-inner { padding-left: 20px; padding-right: 20px; }
+  .desktop-nav button { padding-left: 8px; padding-right: 8px; }
+  .user-meta .co { display: none; }
 }

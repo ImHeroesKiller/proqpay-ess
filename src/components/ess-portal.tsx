@@ -442,6 +442,12 @@ export function EssPortal() {
               </span>
               <span className="nm">ProQPay</span>
             </div>
+            <nav className="desktop-nav" aria-label="Navigasi desktop">
+              <button type="button" className={tab==="home"?"active":""} onClick={() => setTab("home")}>Ringkasan</button>
+              <button type="button" className={tab==="slip"?"active":""} onClick={() => { setTab("slip"); openSlip(0); }}>Slip Gaji</button>
+              <button type="button" className={tab==="ewa"?"active":""} title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : undefined} disabled={!ewaOn || !eligible} onClick={() => { if (ewaOn && eligible) { setTab("ewa"); setModal("ewa"); } }}>Advance Salary</button>
+              <button type="button" className={tab==="help"?"active":""} onClick={() => { setTab("help"); setModal("help"); }}>Bantuan</button>
+            </nav>
             <button className="icon-btn" title={theme === "dark" ? "Tema terang" : "Tema gelap"} aria-label={theme === "dark" ? "Gunakan tema terang" : "Gunakan tema gelap"} onClick={toggleTheme}>
               <Icon name={theme === "dark" ? "sun" : "moon"} />
             </button>
@@ -465,29 +471,8 @@ export function EssPortal() {
           <img key={url} src={url} alt="" width={1} height={1} style={{ position: "absolute", opacity: 0, pointerEvents: "none" }} />
         ))}
 
-        {!adHidden && visibleAds[0] ? (
-          <section className="ad-wrap reveal" style={{ ["--d" as string]: ".04s" }} aria-label="Promosi">
-            <button className="ad-close" onClick={() => setAdHidden(true)} aria-label="Tutup iklan">
-              ✕
-            </button>
-            <div className="ad-track">
-              <div className="ad-slide" style={{ background: visibleAds[0].bg }}>
-                <AdArt src={visibleAds[0].imageUrl} />
-                <div className="txt">
-                  <span className="tag">{visibleAds[0].tag}</span>
-                  <h3>{visibleAds[0].title}</h3>
-                  <p>{visibleAds[0].desc}</p>
-                  <button className="cta" onClick={() => onAdCta(visibleAds[0])}>
-                    {visibleAds[0].cta}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
         <main className="app">
-          <section className="hero reveal" style={{ ["--d" as string]: ".04s" }}>
+          <section className="hero reveal ess-hero" style={{ ["--d" as string]: ".04s" }}>
             <div className="hero-head">
               <div>
                 <h1>
@@ -524,7 +509,7 @@ export function EssPortal() {
             </div>
           </section>
 
-          <section className="card reveal" aria-label="Status payroll periode berjalan">
+          <section className="card reveal ess-payroll" aria-label="Status payroll periode berjalan">
             <div className="card-head">
               <div>
                 <h2>Status Payroll — {enPeriod(config.payroll.period)}</h2>
@@ -596,31 +581,11 @@ export function EssPortal() {
                     {(it.v > 0 ? "+" : "-") + " " + fmt(Math.abs(it.v)) + " · " + it.lbl}
                   </span>
                 ))}
-              {stage === 5 && (
-                <span className="chip-tag pos">
-                  <Icon name="check" size={13} /> Salary paid to your account
-                </span>
-              )}
-              {stage === 4 && (
-                <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> Awaiting payout
-                </span>
-              )}
-              {stage === 3 && (
-                <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> In review & approval
-                </span>
-              )}
-              {stage === 1 && (
-                <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> Awaiting payroll data from your company
-                </span>
-              )}
             </div>
 
           </section>
 
-          <section className="quick reveal" aria-label="Aksi cepat">
+          <section className="quick reveal ess-quick" aria-label="Aksi cepat">
             <button className="qbtn" onClick={() => openSlip(0)}>
               <span className="ic dl">
                 <Icon name="download" size={20} />
@@ -636,7 +601,7 @@ export function EssPortal() {
           </section>
 
           {ewaOn ? (
-          <section className="card reveal" aria-label="Advance Salary EWA">
+          <section className="card reveal ess-ewa" aria-label="Advance Salary EWA">
             <div className="ewaa">
               <div className="ewaa-head">
                 <span className="ewaa-ic">
@@ -646,11 +611,11 @@ export function EssPortal() {
                   <b>{copy.ewaTitle}</b>
                   <span>{copy.ewaSubtitle}</span>
                 </div>
-                <span className={"pill " + (eligible ? "ok" : "warn")}>{eligible ? "Ready" : "Locked"}</span>
+                <span className={"pill " + (eligible ? "ok" : "warn")}>{eligible ? "Siap diajukan" : "Belum tersedia"}</span>
               </div>
               <div className="ewaa-avail">
                 <div>
-                  <div className="l">Advance Limit</div>
+                  <div className="l">Limit Advance</div>
                   <div className="v">{fmt(plafond)}</div>
                 </div>
                 <div style={{ textAlign: "right", fontSize: 10.5, color: "var(--muted)", lineHeight: 1.5 }}>
@@ -663,8 +628,11 @@ export function EssPortal() {
               <div className="ewaa-sub">
                 {copy.ewaBody}
               </div>
-              {!eligible && ewa.reason ? (
-                <div className="ewaa-sub" style={{ color: "var(--warn)" }}>{ewa.reason}</div>
+              {!eligible ? (
+                <div className="ewa-locked-reason" role="status">
+                  <strong>Belum dapat diajukan</strong>
+                  <span>{ewa.reason || "Belum memenuhi syarat Advance Salary pada periode berjalan."}</span>
+                </div>
               ) : null}
               <button className="btn primary" style={{ width: "100%" }} onClick={() => setModal("ewa")} disabled={!eligible || Boolean(ewaApp)}>
                 {ewaApp ? "Pengajuan diproses" : copy.ewaCta}
@@ -673,7 +641,7 @@ export function EssPortal() {
           </section>
           ) : null}
 
-          <section className="card reveal">
+          <section className="card reveal ess-history">
             <div className="card-head">
               <div>
                 <h2>Riwayat Slip Gaji</h2>
@@ -700,6 +668,29 @@ export function EssPortal() {
             ))}
           </section>
         </main>
+
+        <div className="promo-slot">
+        {!adHidden && visibleAds[0] ? (
+          <section className="ad-wrap reveal" style={{ ["--d" as string]: ".04s" }} aria-label="Promosi">
+            <button className="ad-close" onClick={() => setAdHidden(true)} aria-label="Tutup iklan">
+              ✕
+            </button>
+            <div className="ad-track">
+              <div className="ad-slide" style={{ background: visibleAds[0].bg }}>
+                <AdArt src={visibleAds[0].imageUrl} />
+                <div className="txt">
+                  <span className="tag">{visibleAds[0].tag}</span>
+                  <h3>{visibleAds[0].title}</h3>
+                  <p>{visibleAds[0].desc}</p>
+                  <button className="cta" onClick={() => onAdCta(visibleAds[0])}>
+                    {visibleAds[0].cta}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
+        </div>
 
         <footer className="app-footer reveal">
           <img className="foot-logo" src="/brand/proqpay-logo.png" alt="ProQPay" />
@@ -748,6 +739,8 @@ export function EssPortal() {
           ))}
           <button
             className="tab-fab"
+            title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : "Ajukan Advance Salary"}
+            aria-label={!eligible ? `Advance Salary belum tersedia: ${ewa.reason || "belum memenuhi syarat"}` : "Ajukan Advance Salary"}
             disabled={!ewaOn || !eligible}
             onClick={() => {
               if (!ewaOn || !eligible) return;
@@ -799,7 +792,7 @@ export function EssPortal() {
       ) : null}
 
       {modal === "payslip" && slip ? (
-        <Sheet title={"Payslip — " + enPeriod(slip.period)} onClose={() => setModal(null)}>
+        <Sheet title={"Slip Gaji — " + enPeriod(slip.period)} onClose={() => setModal(null)}>
           <div className="slip-meta">
             <div>
               <b>{config.company.name}</b>
@@ -807,7 +800,7 @@ export function EssPortal() {
               <span>{config.employee.name}</span>
             </div>
             <div style={{ textAlign: "right" }}>
-              <b>{slip.status === "paid" ? "Paid" : "Estimate"}</b>
+              <b>{slip.status === "paid" ? "Dibayar" : "Estimasi"}</b>
               <br />
               <span>{config.employee.bank}</span>
             </div>
@@ -828,16 +821,16 @@ export function EssPortal() {
           </div>
           <div className="modal-foot" style={{ margin: "16px -20px -20px", borderTop: "1px solid var(--border)" }}>
             <button className="btn ghost" onClick={() => window.print()}>
-              <Icon name="print" size={17} /> Print / PDF
+              <Icon name="print" size={17} /> Cetak / PDF
             </button>
             <button
               className="btn primary"
               onClick={() => {
                 window.print();
-                showToast("Gunakan Print → Save as PDF untuk unduh slip.");
+                showToast("Gunakan Cetak → Simpan sebagai PDF untuk mengunduh slip.");
               }}
             >
-              <Icon name="download" size={17} /> Download
+              <Icon name="download" size={17} /> Unduh
             </button>
           </div>
         </Sheet>
@@ -875,7 +868,7 @@ export function EssPortal() {
             ))}
           </div>
           <button type="button" className="logout-btn" onClick={logout}>
-            <Icon name="logout" size={16} /> Log Out
+            <Icon name="logout" size={16} /> Keluar
           </button>
         </Sheet>
       ) : null}
@@ -941,7 +934,7 @@ export function EssPortal() {
       ) : null}
 
       {modal === "notify" ? (
-        <Sheet title="Notifications" onClose={() => setModal(null)}>
+        <Sheet title="Notifikasi" onClose={() => setModal(null)}>
           {config.notifications.length === 0 ? (
             <p className="ewaa-sub">Tidak ada notifikasi.</p>
           ) : null}
@@ -1172,7 +1165,7 @@ function PrintSlip({ config, slip, idx }: { config: PortalConfig; slip?: Payslip
             PAYSLIP <small>— {enPeriod(slip.period)}</small>
           </div>
           <div className="ps-ref">
-            Ref: <b>{slipRef(idx, slip.period)}</b> · Status: <b>{paid ? "Paid" : "Estimate"}</b>
+            Ref: <b>{slipRef(idx, slip.period)}</b> · Status: <b>{paid ? "Dibayar" : "Estimasi"}</b>
           </div>
         </div>
         <table className="ps-tbl ps-ident">
