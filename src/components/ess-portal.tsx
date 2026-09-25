@@ -41,6 +41,20 @@ function limitCaption(ewa: EwaState, caption: string) {
   return caption.replace("{percent}", String(percent));
 }
 
+function ewaStatusMeta(status?: string) {
+  const key = String(status || "").toUpperCase();
+  const map: Record<string, { label: string; step: number; note: string }> = {
+    SUBMITTED: { label: "Menunggu persetujuan", step: 1, note: "Pengajuan Anda sudah diterima dan menunggu review payroll." },
+    APPROVED: { label: "Disetujui", step: 2, note: "Pengajuan disetujui dan menunggu proses pencairan." },
+    DISBURSED: { label: "Sudah dicairkan", step: 3, note: "Dana sudah dicairkan ke rekening gaji Anda." },
+    REPAYING: { label: "Diproses di payroll", step: 4, note: "Potongan advance sudah masuk ke proses payroll periode berjalan." },
+    REPAID: { label: "Lunas", step: 5, note: "Advance telah lunas setelah payroll direkonsiliasi." },
+    REJECTED: { label: "Ditolak", step: 1, note: "Pengajuan tidak disetujui. Hubungi HR bila perlu penjelasan." },
+    CANCELLED: { label: "Dibatalkan", step: 1, note: "Pengajuan telah dibatalkan." },
+  };
+  return map[key] || { label: key || "Diproses", step: 1, note: "Status pengajuan sedang diperbarui." };
+}
+
 function safeHttp(url?: string) {
   const value = String(url || "").trim();
   if (!/^https?:\/\//i.test(value)) return "";
@@ -92,6 +106,8 @@ export function EssPortal() {
   const [ewaApp, setEwaApp] = useState<EwaApp>(null);
   const [ewaBusy, setEwaBusy] = useState(false);
   const [ewaErr, setEwaErr] = useState("");
+  const [initErr, setInitErr] = useState("");
+  const [initBusy, setInitBusy] = useState(false);
   const [wiz, setWiz] = useState({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
 
   const config = payload.config;
@@ -129,6 +145,31 @@ export function EssPortal() {
     window.setTimeout(() => setToast(""), 2800);
   }, []);
 
+  const loadSession = useCallback(async () => {
+    setInitBusy(true);
+    setInitErr("");
+    try {
+      const r = await fetch("/api/portal/init", { credentials: "include", cache: "no-store" });
+      if (r.status === 401) {
+        setLoggedIn(false);
+        return;
+      }
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || "Layanan portal sementara tidak tersedia.");
+      const data = body as PortalPayload;
+      setPayload(data);
+      setStage(data.config.payroll.stage);
+      setEwaApp(data.ewa.app);
+      setMustChange(Boolean(data.mustChangePassword));
+      setLoggedIn(true);
+    } catch (error) {
+      setInitErr(error instanceof Error ? error.message : "Layanan portal sementara tidak tersedia.");
+    } finally {
+      setLoaded(true);
+      setInitBusy(false);
+    }
+  }, []);
+
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("proqpay-ess-theme");
     const nextTheme = savedTheme === "light" || savedTheme === "dark"
@@ -137,23 +178,8 @@ export function EssPortal() {
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
     document.documentElement.classList.toggle("light", nextTheme === "light");
     queueMicrotask(() => setTheme(nextTheme));
-    fetch("/api/portal/init", { credentials: "include" })
-      .then((r) => {
-        if (!r.ok) throw new Error("no-session");
-        return r.json();
-      })
-      .then((data: PortalPayload) => {
-        setPayload(data);
-        setStage(data.config.payroll.stage);
-        setEwaApp(data.ewa.app);
-        setMustChange(Boolean(data.mustChangePassword));
-        setLoggedIn(true);
-      })
-      .catch(() => {})
-      .finally(() => {
-        window.setTimeout(() => setLoaded(true), 400);
-      });
-  }, []);
+    queueMicrotask(() => void loadSession());
+  }, [loadSession]);
 
   useEffect(() => {
     if (!themeInitialized.current) {
@@ -362,8 +388,16 @@ export function EssPortal() {
               </label>
             </div>
             <p className="lg-support">Perlu bantuan akses? Hubungi HR perusahaan Anda.</p>
-            {loginErr ? <div className="lg-err show">{loginErr}</div> : null}
-            <button type="button" className={"lg-btn" + (loginBusy ? " loading" : "")} disabled={loginBusy} onClick={doLogin}>
+            {initErr ? (
+              <div className="lg-err show" role="alert">
+                {initErr}
+                <button type="button" className="lg-forgot" style={{ marginLeft: 8 }} disabled={initBusy} onClick={() => void loadSession()}>
+                  {initBusy ? "Memuat…" : "Coba lagi"}
+                </button>
+              </div>
+            ) : null}
+            {loginErr ? <div className="lg-err show" role="alert">{loginErr}</div> : null}
+            <button type="button" className={"lg-btn" + (loginBusy ? " loading" : "")} disabled={loginBusy || initBusy} onClick={doLogin}>
               <span className="spinner" />
               <span>Masuk</span>
             </button>
@@ -636,17 +670,31 @@ export function EssPortal() {
                   {limitCaption(ewa, copy.ewaLimitCaption)}
                 </div>
               </div>
-              {ewaApp ? (
-                <div className="app-card">
-                  <div className="h">
-                    <b>{ewaApp.ref}</b>
-                    <span className="pill warn">{ewaApp.status}</span>
+              {ewaApp ? (() => {
+                const lifecycle = ewaStatusMeta(ewaApp.status);
+                return (
+                  <div className="app-card ewa-life-card">
+                    <div className="h">
+                      <b>{ewaApp.ref}</b>
+                      <span className={"pill " + (ewaApp.status === "REPAID" ? "ok" : ewaApp.status === "REJECTED" || ewaApp.status === "CANCELLED" ? "warn" : "info")}>
+                        {lifecycle.label}
+                      </span>
+                    </div>
+                    <div className="amt">
+                      {fmt(ewaApp.amount)} <small>fee {fmt(ewaApp.fee)}</small>
+                    </div>
+                    <div className="ewa-life" aria-label="Status pengajuan advance">
+                      {[1,2,3,4,5].map((step) => (
+                        <span key={step} className={step <= lifecycle.step ? "done" : ""} />
+                      ))}
+                    </div>
+                    <div className="ewa-life-note">{lifecycle.note}</div>
+                    <button type="button" className="btn ghost" style={{ width: "100%", marginTop: 10 }} onClick={() => void loadSession()} disabled={initBusy}>
+                      {initBusy ? "Memperbarui…" : "Perbarui status"}
+                    </button>
                   </div>
-                  <div className="amt">
-                    {fmt(ewaApp.amount)} <small>incl. fee {fmt(ewaApp.fee)}</small>
-                  </div>
-                </div>
-              ) : null}
+                );
+              })() : null}
               <div className="ewaa-sub">
                 {copy.ewaBody}
               </div>

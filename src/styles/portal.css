@@ -920,3 +920,31 @@
     align-items: center; justify-content: center; gap: 7px;
   }
   .logout-btn:hover { background: rgba(229, 72, 77, .1); }
+
+
+/* Employee Services P2 — lifecycle, recovery and responsive usability */
+.ewa-life-card { margin-top: 12px; }
+.ewa-life { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 12px; }
+.ewa-life span { height: 5px; border-radius: 999px; background: var(--border-strong); }
+.ewa-life span.done { background: var(--grad); }
+.ewa-life-note { margin-top: 9px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+
+@media (min-width: 900px) {
+  .app { max-width: 980px; padding-left: 28px; padding-right: 28px; }
+  .h-inner { max-width: 980px; }
+  .hero { padding-top: 28px; }
+  .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { padding: 24px; }
+  .ewaa { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .8fr); column-gap: 24px; align-items: start; }
+  .ewaa-head, .ewaa-avail, .ewaa-sub { grid-column: 1; }
+  .ewaa .app-card { grid-column: 2; grid-row: 1 / span 4; margin-top: 0; }
+  .ewaa > .btn { grid-column: 1; max-width: 320px; }
+  .tabbar { width: min(680px, 72vw); }
+}
+
+@media (max-width: 560px) {
+  .ewa-life-note { font-size: 12px; }
+  .app-card .h { align-items: flex-start; gap: 8px; }
+  .app-card .h .pill { white-space: normal; text-align: right; }
+}
