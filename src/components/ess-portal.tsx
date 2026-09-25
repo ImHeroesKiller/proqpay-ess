@@ -443,10 +443,10 @@ export function EssPortal() {
               <span className="nm">ProQPay</span>
             </div>
             <nav className="desktop-nav" aria-label="Navigasi desktop">
-              <button type="button" className="active" onClick={() => setTab("home")}>Ringkasan</button>
-              <button type="button" onClick={() => openSlip(0)}>Slip Gaji</button>
-              <button type="button" disabled={!ewaOn || !eligible} onClick={() => { if (ewaOn && eligible) setModal("ewa"); }}>Advance Salary</button>
-              <button type="button" onClick={() => setModal("help")}>Bantuan</button>
+              <button type="button" className={tab==="home"?"active":""} onClick={() => setTab("home")}>Ringkasan</button>
+              <button type="button" className={tab==="slip"?"active":""} onClick={() => { setTab("slip"); openSlip(0); }}>Slip Gaji</button>
+              <button type="button" className={tab==="ewa"?"active":""} title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : undefined} disabled={!ewaOn || !eligible} onClick={() => { if (ewaOn && eligible) { setTab("ewa"); setModal("ewa"); } }}>Advance Salary</button>
+              <button type="button" className={tab==="help"?"active":""} onClick={() => { setTab("help"); setModal("help"); }}>Bantuan</button>
             </nav>
             <button className="icon-btn" title={theme === "dark" ? "Tema terang" : "Tema gelap"} aria-label={theme === "dark" ? "Gunakan tema terang" : "Gunakan tema gelap"} onClick={toggleTheme}>
               <Icon name={theme === "dark" ? "sun" : "moon"} />
@@ -581,26 +581,6 @@ export function EssPortal() {
                     {(it.v > 0 ? "+" : "-") + " " + fmt(Math.abs(it.v)) + " · " + it.lbl}
                   </span>
                 ))}
-              {stage === 5 && (
-                <span className="chip-tag pos">
-                  <Icon name="check" size={13} /> Gaji telah dibayarkan ke rekening Anda
-                </span>
-              )}
-              {stage === 4 && (
-                <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> Menunggu pencairan
-                </span>
-              )}
-              {stage === 3 && (
-                <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> Dalam review & persetujuan
-                </span>
-              )}
-              {stage === 1 && (
-                <span className="chip-tag neg">
-                  <Icon name="clock" size={13} /> Menunggu data payroll dari perusahaan
-                </span>
-              )}
             </div>
 
           </section>
@@ -759,6 +739,8 @@ export function EssPortal() {
           ))}
           <button
             className="tab-fab"
+            title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : "Ajukan Advance Salary"}
+            aria-label={!eligible ? `Advance Salary belum tersedia: ${ewa.reason || "belum memenuhi syarat"}` : "Ajukan Advance Salary"}
             disabled={!ewaOn || !eligible}
             onClick={() => {
               if (!ewaOn || !eligible) return;
@@ -818,7 +800,7 @@ export function EssPortal() {
               <span>{config.employee.name}</span>
             </div>
             <div style={{ textAlign: "right" }}>
-              <b>{slip.status === "paid" ? "Paid" : "Estimate"}</b>
+              <b>{slip.status === "paid" ? "Dibayar" : "Estimasi"}</b>
               <br />
               <span>{config.employee.bank}</span>
             </div>
@@ -845,10 +827,10 @@ export function EssPortal() {
               className="btn primary"
               onClick={() => {
                 window.print();
-                showToast("Gunakan Print → Save as PDF untuk unduh slip.");
+                showToast("Gunakan Cetak → Simpan sebagai PDF untuk mengunduh slip.");
               }}
             >
-              <Icon name="download" size={17} /> Download
+              <Icon name="download" size={17} /> Unduh
             </button>
           </div>
         </Sheet>
