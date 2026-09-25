@@ -80,7 +80,7 @@ test("Employee Services P2 surfaces session recovery and readable EWA lifecycle"
 test("Employee Services P2 preserves mobile-first UX and adds a bounded desktop layout", () => {
   const css = read("src/styles/portal.css");
   assert.match(css, /@media \(min-width: 900px\)/);
-  assert.match(css, /max-width: 980px/);
+  assert.match(css, /max-width: 1180px/);
   assert.match(css, /@media \(max-width: 560px\)/);
 });
 
@@ -124,4 +124,28 @@ test("Employee Services UI P1 uses Indonesian payroll labels and semantic intera
   assert.match(portal, /<button type="button" className="help-item"/);
   assert.doesNotMatch(portal, /<div className="hist-item"/);
   assert.doesNotMatch(portal, /<div className="help-item"/);
+});
+
+
+test("Employee Services UI P2 provides a true desktop workspace and mobile-first responsive hierarchy", () => {
+  const portal = read("src/components/ess-portal.tsx");
+  const css = read("src/styles/portal.css");
+  assert.match(portal, /desktop-nav/);
+  assert.match(portal, /ess-payroll/);
+  assert.match(portal, /ess-ewa/);
+  assert.match(portal, /ess-history/);
+  assert.match(portal, /promo-slot/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1\.55fr\) minmax\(320px, \.75fr\)/);
+  assert.match(css, /\.tabbar \{ display: none !important; \}/);
+  assert.match(css, /\.stats \.stat:first-child \{ grid-column: 1 \/ -1; \}/);
+});
+
+test("Employee Services UI P2 explains disabled Advance Salary and removes redundant payroll status chips", () => {
+  const portal = read("src/components/ess-portal.tsx");
+  assert.match(portal, /ewa-locked-reason/);
+  assert.match(portal, /Advance Salary belum tersedia/);
+  assert.doesNotMatch(portal, /Salary paid to your account/);
+  assert.doesNotMatch(portal, /Awaiting payout/);
+  assert.doesNotMatch(portal, /In review & approval/);
+  assert.doesNotMatch(portal, /Awaiting payroll data from your company/);
 });
