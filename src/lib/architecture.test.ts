@@ -40,3 +40,23 @@ test("EWA submit is canonical, refreshes state, and blocks duplicate clicks", ()
   assert.match(portal, /disabled=\{!wiz\.agreed \|\| !eligible \|\| ewaBusy\}/);
   assert.match(portal, /role="alert"/);
 });
+
+
+test("ESS fails closed when the ProQPay Lite Employee Services contract drifts", () => {
+  const auth = read("src/lib/lite-auth.ts");
+  const init = read("src/app/api/portal/init/route.ts");
+  const ewa = read("src/app/api/portal/ewa/route.ts");
+  assert.match(auth, /EMPLOYEE_SERVICES_CONTRACT_VERSION = "2026-09-v1"/);
+  assert.match(init, /body\.contractVersion !== EMPLOYEE_SERVICES_CONTRACT_VERSION/);
+  assert.match(init, /data\.contractVersion !== EMPLOYEE_SERVICES_CONTRACT_VERSION/);
+  assert.match(ewa, /data\.contractVersion !== EMPLOYEE_SERVICES_CONTRACT_VERSION/);
+  assert.match(init, /status: 502/);
+});
+
+test("ESS CSP removes unsafe-eval while allowing configured HTTPS ad images and tracking pixels", () => {
+  const security = read("src/lib/security.ts");
+  assert.doesNotMatch(security, /unsafe-eval/);
+  assert.match(security, /img-src 'self' data: https:/);
+  assert.match(security, /object-src 'none'/);
+  assert.match(security, /Cross-Origin-Opener-Policy/);
+});
