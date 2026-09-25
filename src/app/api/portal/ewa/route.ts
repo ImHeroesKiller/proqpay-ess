@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cf";
 import { verifyToken } from "@/lib/d1-shared";
-import { liteApiBase, liteHeaders } from "@/lib/lite-auth";
+import { EMPLOYEE_SERVICES_CONTRACT_VERSION, liteApiBase, liteHeaders } from "@/lib/lite-auth";
 import { securityHeaders, tokenFromRequest } from "@/lib/security";
 
 export async function POST(request: NextRequest) {
@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(15000),
     });
-    const data = await response.json().catch(() => ({}));
+    const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (response.ok && data.contractVersion !== EMPLOYEE_SERVICES_CONTRACT_VERSION) {
+      return NextResponse.json(
+        { error: "Versi layanan advance salary tidak kompatibel." },
+        { status: 502, headers },
+      );
+    }
     return NextResponse.json(data, { status: response.status, headers });
   } catch {
     return NextResponse.json({ error: "Layanan advance tidak tersedia." }, { status: 503, headers });

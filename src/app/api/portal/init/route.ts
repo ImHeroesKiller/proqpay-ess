@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEnv } from "@/lib/cf";
 import { verifyToken } from "@/lib/d1-shared";
 import { polishPayslipRows } from "@/lib/ida-labels";
-import { initOnLite, liteApiBase, liteHeaders } from "@/lib/lite-auth";
+import { EMPLOYEE_SERVICES_CONTRACT_VERSION, initOnLite, liteApiBase, liteHeaders } from "@/lib/lite-auth";
 import { securityHeaders, tokenFromRequest } from "@/lib/security";
 import type { Payslip } from "@/lib/types";
 
@@ -42,10 +42,17 @@ export async function GET(request: NextRequest) {
   }
 
   const body = lite.payload as {
+    contractVersion?: string;
     config?: { payslips?: Payslip[]; estimatedPayslips?: Payslip[] };
     ewa?: Record<string, unknown>;
     mustChangePassword?: boolean;
   };
+  if (body.contractVersion !== EMPLOYEE_SERVICES_CONTRACT_VERSION) {
+    return NextResponse.json(
+      { error: "Versi layanan Employee Services tidak kompatibel. Silakan coba lagi setelah pembaruan selesai." },
+      { status: 502, headers },
+    );
+  }
   const base = liteApiBase(env);
   const sharedHeaders = {
     ...liteHeaders(env, origin),
@@ -68,7 +75,13 @@ export async function GET(request: NextRequest) {
       );
     }
     if (response.ok) {
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; payslips?: Payslip[] };
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; contractVersion?: string; payslips?: Payslip[] };
+      if (data.contractVersion !== EMPLOYEE_SERVICES_CONTRACT_VERSION) {
+        return NextResponse.json(
+          { error: "Versi layanan slip gaji tidak kompatibel." },
+          { status: 502, headers },
+        );
+      }
       if (data.ok && Array.isArray(data.payslips)) canonicalPayslips = data.payslips;
     }
   } catch {
@@ -104,6 +117,12 @@ export async function GET(request: NextRequest) {
     }
     if (response.ok) {
       const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+      if (data.contractVersion !== EMPLOYEE_SERVICES_CONTRACT_VERSION) {
+        return NextResponse.json(
+          { error: "Versi layanan advance salary tidak kompatibel." },
+          { status: 502, headers },
+        );
+      }
       if (data.ok) canonicalEwa = data;
     }
   } catch {
