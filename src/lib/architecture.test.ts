@@ -64,14 +64,16 @@ test("ESS CSP removes unsafe-eval while allowing configured HTTPS ad images and 
 
 test("Employee Services P2 surfaces session recovery and readable EWA lifecycle", () => {
   const portal = read("src/components/ess-portal.tsx");
+  const card = read("src/components/ewa-lifecycle-card.tsx");
+  const lifecycle = read("src/lib/employee-services.ts");
   const css = read("src/styles/portal.css");
   assert.match(portal, /loadSession/);
   assert.match(portal, /Coba lagi/);
-  assert.match(portal, /ewaStatusMeta/);
-  assert.match(portal, /Perbarui status/);
-  assert.match(portal, /Menunggu persetujuan/);
-  assert.match(portal, /Sudah dicairkan/);
-  assert.match(portal, /Diproses di payroll/);
+  assert.match(portal, /EwaLifecycleCard/);
+  assert.match(card, /Perbarui status/);
+  assert.match(lifecycle, /Menunggu persetujuan/);
+  assert.match(lifecycle, /Sudah dicairkan/);
+  assert.match(lifecycle, /Diproses di payroll/);
   assert.match(css, /ewa-life/);
 });
 
@@ -80,4 +82,32 @@ test("Employee Services P2 preserves mobile-first UX and adds a bounded desktop 
   assert.match(css, /@media \(min-width: 900px\)/);
   assert.match(css, /max-width: 980px/);
   assert.match(css, /@media \(max-width: 560px\)/);
+});
+
+
+test("Employee Services P3 contract manifest matches ESS runtime lifecycle", () => {
+  const manifest = JSON.parse(read("employee-services-contract.json")) as { version: string; ewaStatuses: string[] };
+  const auth = read("src/lib/lite-auth.ts");
+  const lifecycle = read("src/lib/employee-services.ts");
+  assert.ok(auth.includes(manifest.version));
+  for (const status of manifest.ewaStatuses) assert.ok(lifecycle.includes(status));
+});
+
+test("Employee Services P3 extracts lifecycle presentation from monolithic portal", () => {
+  const portal = read("src/components/ess-portal.tsx");
+  const card = read("src/components/ewa-lifecycle-card.tsx");
+  assert.match(portal, /EwaLifecycleCard/);
+  assert.doesNotMatch(portal, /function ewaStatusMeta/);
+  assert.match(card, /ewaStatusMeta/);
+  assert.match(card, /aria-live="polite"/);
+});
+
+test("Employee Services P3 dialog and interactive profile controls are keyboard accessible", () => {
+  const portal = read("src/components/ess-portal.tsx");
+  const css = read("src/styles/portal.css");
+  assert.match(portal, /aria-modal="true"/);
+  assert.match(portal, /event\.key === "Escape"/);
+  assert.match(portal, /aria-label="Buka profil karyawan"/);
+  assert.match(css, /focus-visible/);
+  assert.match(css, /prefers-reduced-motion/);
 });

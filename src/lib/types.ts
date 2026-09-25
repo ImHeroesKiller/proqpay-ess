@@ -1,3 +1,5 @@
+import type { EwaStatus } from "./employee-services";
+
 export type Payslip = { period: string; status: "processing" | "paid"; rows: [string, number][] };
 export type Stage = { title: string; desc: string; meta: string; note: string; eta: string };
 export type Ad = {
@@ -22,9 +24,9 @@ export type EwaApp = {
   method: string;
   inst: number;
   date: string;
-  status: string;
+  status: EwaStatus;
 } | null;
-export type EwaHistory = { ref: string; date: string; amount: number; status: string };
+export type EwaHistory = { ref: string; date: string; amount: number; status: EwaStatus };
 
 export type PortalCopy = {
   companyTagline?: string;

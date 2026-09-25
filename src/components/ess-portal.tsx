@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "./icon";
+import { EwaLifecycleCard } from "./ewa-lifecycle-card";
 import { emptyPayload } from "@/lib/empty-portal";
 import { enPeriod, fmt, initials, slipRef, totalOf } from "@/lib/format";
 import type { Ad, EwaApp, EwaState, Payslip, PortalConfig, PortalPayload } from "@/lib/types";
@@ -39,20 +40,6 @@ function portalCopy(config: PortalConfig) {
 function limitCaption(ewa: EwaState, caption: string) {
   const percent = Math.round(Number(ewa.rules.maxPercent || 0.3) * 100);
   return caption.replace("{percent}", String(percent));
-}
-
-function ewaStatusMeta(status?: string) {
-  const key = String(status || "").toUpperCase();
-  const map: Record<string, { label: string; step: number; note: string }> = {
-    SUBMITTED: { label: "Menunggu persetujuan", step: 1, note: "Pengajuan Anda sudah diterima dan menunggu review payroll." },
-    APPROVED: { label: "Disetujui", step: 2, note: "Pengajuan disetujui dan menunggu proses pencairan." },
-    DISBURSED: { label: "Sudah dicairkan", step: 3, note: "Dana sudah dicairkan ke rekening gaji Anda." },
-    REPAYING: { label: "Diproses di payroll", step: 4, note: "Potongan advance sudah masuk ke proses payroll periode berjalan." },
-    REPAID: { label: "Lunas", step: 5, note: "Advance telah lunas setelah payroll direkonsiliasi." },
-    REJECTED: { label: "Ditolak", step: 1, note: "Pengajuan tidak disetujui. Hubungi HR bila perlu penjelasan." },
-    CANCELLED: { label: "Dibatalkan", step: 1, note: "Pengajuan telah dibatalkan." },
-  };
-  return map[key] || { label: key || "Diproses", step: 1, note: "Status pengajuan sedang diperbarui." };
 }
 
 function safeHttp(url?: string) {
@@ -462,7 +449,7 @@ export function EssPortal() {
               <Icon name="bell" />
               {config.notifications.some((n) => n.unread) ? <span className="dot" /> : null}
             </button>
-            <div className="user-chip" onClick={() => setModal("profile")}>
+            <button type="button" className="user-chip" onClick={() => setModal("profile")} aria-label="Buka profil karyawan">
               <div className="avatar">
                 <span>{initials(config.employee.name)}</span>
               </div>
@@ -470,7 +457,7 @@ export function EssPortal() {
                 <div className="name">{config.employee.name}</div>
                 <div className="co">{config.employee.company}</div>
               </div>
-            </div>
+            </button>
           </div>
         </header>
         {pixels.map((url) => (
@@ -670,31 +657,9 @@ export function EssPortal() {
                   {limitCaption(ewa, copy.ewaLimitCaption)}
                 </div>
               </div>
-              {ewaApp ? (() => {
-                const lifecycle = ewaStatusMeta(ewaApp.status);
-                return (
-                  <div className="app-card ewa-life-card">
-                    <div className="h">
-                      <b>{ewaApp.ref}</b>
-                      <span className={"pill " + (ewaApp.status === "REPAID" ? "ok" : ewaApp.status === "REJECTED" || ewaApp.status === "CANCELLED" ? "warn" : "info")}>
-                        {lifecycle.label}
-                      </span>
-                    </div>
-                    <div className="amt">
-                      {fmt(ewaApp.amount)} <small>fee {fmt(ewaApp.fee)}</small>
-                    </div>
-                    <div className="ewa-life" aria-label="Status pengajuan advance">
-                      {[1,2,3,4,5].map((step) => (
-                        <span key={step} className={step <= lifecycle.step ? "done" : ""} />
-                      ))}
-                    </div>
-                    <div className="ewa-life-note">{lifecycle.note}</div>
-                    <button type="button" className="btn ghost" style={{ width: "100%", marginTop: 10 }} onClick={() => void loadSession()} disabled={initBusy}>
-                      {initBusy ? "Memperbarui…" : "Perbarui status"}
-                    </button>
-                  </div>
-                );
-              })() : null}
+              {ewaApp ? (
+                <EwaLifecycleCard app={ewaApp} refreshing={initBusy} onRefresh={() => void loadSession()} />
+              ) : null}
               <div className="ewaa-sub">
                 {copy.ewaBody}
               </div>
@@ -1106,7 +1071,7 @@ function AdArt({ src }: { src?: string }) {
   if (href) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img className="ad-art" src={href} alt="" />
+      <img className="ad-art" src={href} alt="" loading="lazy" decoding="async" />
     );
   }
   return (
@@ -1149,12 +1114,24 @@ function FragmentRow({ label, amount }: { label: string; amount: number }) {
 }
 
 function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const titleId = useId();
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    closeRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>{title}</h3>
-          <button className="x" onClick={onClose} aria-label="Tutup">
+          <h3 id={titleId}>{title}</h3>
+          <button ref={closeRef} type="button" className="x" onClick={onClose} aria-label="Tutup">
             ✕
           </button>
         </div>
