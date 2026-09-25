@@ -687,16 +687,16 @@ export function EssPortal() {
               </p>
             ) : null}
             {config.payslips.map((p, i) => (
-              <div className="hist-item" key={p.period} onClick={() => openSlip(i)}>
+              <button type="button" className="hist-item" key={p.period} onClick={() => openSlip(i)}>
                 <div>
                   <div className="m">{enPeriod(p.period)}</div>
-                  <div className="st">{p.status === "paid" ? "Paid" : "Processing"}</div>
+                  <div className="st">{p.status === "paid" ? "Dibayar" : "Diproses"}</div>
                 </div>
                 <div className="amt">{fmt(totalOf(p.rows))}</div>
                 <span className="chev">
                   <Icon name="chevR" size={15} />
                 </span>
-              </div>
+              </button>
             ))}
           </section>
         </main>
@@ -882,7 +882,7 @@ export function EssPortal() {
 
       {modal === "help" ? (
         <Sheet title="Pusat Bantuan" onClose={() => setModal(null)}>
-          <div className="help-item" onClick={() => showToast("Hubungi HR: " + (config.company.contact || "helpdesk"))}>
+          <button type="button" className="help-item" onClick={() => showToast("Hubungi HR: " + (config.company.contact || "helpdesk"))}>
             <span className="ic ib">
               <Icon name="build" size={18} />
             </span>
@@ -893,44 +893,44 @@ export function EssPortal() {
             <span className="chev">
               <Icon name="chevR" size={15} />
             </span>
-          </div>
-          <div className="help-item" onClick={() => setFaqOpen((v) => !v)}>
+          </button>
+          <button type="button" className="help-item" onClick={() => setFaqOpen((v) => !v)} aria-expanded={faqOpen}>
             <span className="ic ib">
               <Icon name="help" size={18} />
             </span>
             <div>
               <div className="t">FAQ Payroll</div>
-              <div className="s">Tax, BPJS, payday schedule</div>
+              <div className="s">Pajak, BPJS, dan jadwal gajian</div>
             </div>
             <span className="chev">
               <Icon name="chevR" size={15} />
             </span>
-          </div>
+          </button>
           {faqOpen ? (
             <div style={{ marginTop: 4 }}>
               <details className="faq-item" open>
-                <summary>When is my salary paid out?</summary>
+                <summary>Kapan gaji saya dibayarkan?</summary>
                 <div className="faq-body">
                   Gaji periode berjalan dicairkan setelah proses payroll selesai — diperkirakan sebelum tanggal gajian.
-                  Pantau statusnya di kartu Payroll Status.
+                  Pantau statusnya di kartu Status Payroll.
                 </div>
               </details>
               <details className="faq-item">
-                <summary>What is PPh 21?</summary>
+                <summary>Apa itu PPh 21?</summary>
                 <div className="faq-body">
                   PPh 21 adalah pajak penghasilan yang dipotong dari gaji sesuai ketentuan yang berlaku. Rincian lengkapnya
                   selalu tercantum di slip gaji Anda.
                 </div>
               </details>
               <details className="faq-item">
-                <summary>How much is my BPJS deduction?</summary>
+                <summary>Berapa potongan BPJS saya?</summary>
                 <div className="faq-body">
                   BPJS Kesehatan 1% dari gaji Anda dan BPJS Ketenagakerjaan 2%. Nilai pastinya tertera di rincian slip
                   gaji.
                 </div>
               </details>
               <details className="faq-item">
-                <summary>How do I change my salary account?</summary>
+                <summary>Bagaimana mengganti rekening gaji?</summary>
                 <div className="faq-body">
                   Hubungi HR perusahaan minimal 5 hari kerja sebelum tanggal cut-off agar berlaku pada periode berikutnya.
                 </div>
