@@ -178,7 +178,7 @@ export function EssPortal() {
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
     document.documentElement.classList.toggle("light", nextTheme === "light");
     queueMicrotask(() => setTheme(nextTheme));
-    void loadSession();
+    queueMicrotask(() => void loadSession());
   }, [loadSession]);
 
   useEffect(() => {
