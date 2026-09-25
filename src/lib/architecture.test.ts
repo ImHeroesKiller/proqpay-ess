@@ -64,14 +64,16 @@ test("ESS CSP removes unsafe-eval while allowing configured HTTPS ad images and 
 
 test("Employee Services P2 surfaces session recovery and readable EWA lifecycle", () => {
   const portal = read("src/components/ess-portal.tsx");
+  const card = read("src/components/ewa-lifecycle-card.tsx");
+  const lifecycle = read("src/lib/employee-services.ts");
   const css = read("src/styles/portal.css");
   assert.match(portal, /loadSession/);
   assert.match(portal, /Coba lagi/);
-  assert.match(portal, /ewaStatusMeta/);
-  assert.match(portal, /Perbarui status/);
-  assert.match(portal, /Menunggu persetujuan/);
-  assert.match(portal, /Sudah dicairkan/);
-  assert.match(portal, /Diproses di payroll/);
+  assert.match(portal, /EwaLifecycleCard/);
+  assert.match(card, /Perbarui status/);
+  assert.match(lifecycle, /Menunggu persetujuan/);
+  assert.match(lifecycle, /Sudah dicairkan/);
+  assert.match(lifecycle, /Diproses di payroll/);
   assert.match(css, /ewa-life/);
 });
 
