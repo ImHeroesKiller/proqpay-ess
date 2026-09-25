@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Icon } from "./icon";
 import { EwaLifecycleCard } from "./ewa-lifecycle-card";
 import { emptyPayload } from "@/lib/empty-portal";
@@ -449,7 +449,7 @@ export function EssPortal() {
               <Icon name="bell" />
               {config.notifications.some((n) => n.unread) ? <span className="dot" /> : null}
             </button>
-            <div className="user-chip" onClick={() => setModal("profile")}>
+            <button type="button" className="user-chip" onClick={() => setModal("profile")} aria-label="Buka profil karyawan">
               <div className="avatar">
                 <span>{initials(config.employee.name)}</span>
               </div>
@@ -457,7 +457,7 @@ export function EssPortal() {
                 <div className="name">{config.employee.name}</div>
                 <div className="co">{config.employee.company}</div>
               </div>
-            </div>
+            </button>
           </div>
         </header>
         {pixels.map((url) => (
@@ -1071,7 +1071,7 @@ function AdArt({ src }: { src?: string }) {
   if (href) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img className="ad-art" src={href} alt="" />
+      <img className="ad-art" src={href} alt="" loading="lazy" decoding="async" />
     );
   }
   return (
@@ -1114,12 +1114,24 @@ function FragmentRow({ label, amount }: { label: string; amount: number }) {
 }
 
 function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const titleId = useId();
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    closeRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>{title}</h3>
-          <button className="x" onClick={onClose} aria-label="Tutup">
+          <h3 id={titleId}>{title}</h3>
+          <button ref={closeRef} type="button" className="x" onClick={onClose} aria-label="Tutup">
             ✕
           </button>
         </div>
