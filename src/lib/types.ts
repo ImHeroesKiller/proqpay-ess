@@ -57,7 +57,7 @@ export type PortalConfig = {
     bank: string;
   };
   company: { name: string; tagline: string; address: string; contact: string; legal: string };
-  payroll: { period: string; ref: string; stage: number; payday: string; paydayShort: string };
+  payroll: { period: string; ref: string; stage: number; payday: string; paydayShort: string; paymentStatus?: "PAID" | "UNPAID"; paidOn?: string | null; estimatedPayOn?: string | null };
   stages: Stage[];
   payslips: Payslip[];
   ads: Ad[];

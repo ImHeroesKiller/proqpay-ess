@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Icon } from "./icon";
 import { EwaLifecycleCard } from "./ewa-lifecycle-card";
+import { payrollPaymentSummary } from "@/lib/payment-summary";
 import { emptyPayload } from "@/lib/empty-portal";
 import { enPeriod, fmt, initials, slipRef, totalOf } from "@/lib/format";
 import type { Ad, EwaApp, EwaState, Payslip, PortalConfig, PortalPayload } from "@/lib/types";
 
-const RING_C = 163.4;
+
 
 type Modal = "payslip" | "profile" | "help" | "notify" | "ewa" | null;
 type Tab = "home" | "slip" | "ewa" | "help" | "profile";
@@ -69,7 +70,6 @@ export function EssPortal() {
   const [loaded, setLoaded] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [payload, setPayload] = useState<PortalPayload>(emptyPayload);
-  const [stage, setStage] = useState(1);
   const [modal, setModal] = useState<Modal>(null);
   const [tab, setTab] = useState<Tab>("home");
   const [slipIdx, setSlipIdx] = useState(0);
@@ -100,13 +100,13 @@ export function EssPortal() {
   const config = payload.config;
   const copy = portalCopy(config);
   const ewa = { ...payload.ewa, app: ewaApp };
-  const stageCount = Math.max(1, config.stages.length || 5);
+  const payment = payrollPaymentSummary(config.payroll);
   const plafond = typeof ewa.plafond === "number" ? ewa.plafond : ewaPlafond(config, ewa);
   const ewaOn = ewa.rules.enabled !== false;
   const eligible = typeof ewa.eligible === "boolean"
     ? ewa.eligible
     : ewa.emp.daysWorked >= ewa.rules.minDaysWorked && ewa.emp.tenureMonths >= (ewa.rules.minTenureMonths ?? 1);
-  const processing = config.payslips[0]?.status !== "paid";
+  const processing = !payment.paid;
   const firstName = config.employee.name.split(" ")[0];
   const visibleAds = (config.features?.adsEnabled === false ? [] : config.ads)
     .filter((ad) => !ad.placement || ad.placement === "HOME");
@@ -145,7 +145,6 @@ export function EssPortal() {
       if (!r.ok) throw new Error(body.error || "Layanan portal sementara tidak tersedia.");
       const data = body as PortalPayload;
       setPayload(data);
-      setStage(data.config.payroll.stage);
       setEwaApp(data.ewa.app);
       setMustChange(Boolean(data.mustChangePassword));
       setLoggedIn(true);
@@ -206,7 +205,6 @@ export function EssPortal() {
       if (!init.ok) throw new Error("Login berhasil tetapi data portal gagal dimuat.");
       const data: PortalPayload = await init.json();
       setPayload(data);
-      setStage(data.config.payroll.stage);
       setEwaApp(data.ewa.app);
       setMustChange(Boolean(loginData.mustChangePassword || data.mustChangePassword));
       setPassInput("");
@@ -299,17 +297,6 @@ export function EssPortal() {
   const paydayNote =
     config.payroll.payday.includes(",") ? config.payroll.payday.split(",")[1].trim() : config.payroll.paydayShort;
 
-  const chips = useMemo(() => {
-    if (stage === 2) {
-      return (config.payslips[0]?.rows || [])
-        .filter((r) => /PPh|BPJS|Lembur|Overtime/i.test(r[0]))
-        .map((r) => ({
-          lbl: /PPh|Pajak/i.test(r[0]) ? "PPh 21" : /BPJS/i.test(r[0]) ? "BPJS" : "Lembur",
-          v: r[1],
-        }));
-    }
-    return [];
-  }, [stage, config.payslips]);
 
   return (
     <>
@@ -496,8 +483,8 @@ export function EssPortal() {
                 <div className="ic ig">
                   <Icon name="calendar" size={15} />
                 </div>
-                <div className="lbl">Tanggal gajian</div>
-                <div className="val">{config.payroll.paydayShort}</div>
+                <div className="lbl">{payment.dateLabel}</div>
+                <div className="val">{payment.date}</div>
               </div>
               <div className="stat reveal">
                 <div className="ic ia">
@@ -511,76 +498,17 @@ export function EssPortal() {
 
           <section className="card reveal ess-payroll" aria-label="Status payroll periode berjalan">
             <div className="card-head">
-              <div>
-                <h2>Status Payroll — {enPeriod(config.payroll.period)}</h2>
-                <div className="sub">Perkembangan payroll Anda saat ini</div>
-              </div>
-              <span className={"pill " + (stage >= stageCount ? "ok" : "info pulse")}>
-                <i />
-                {config.stages[stage - 1]?.title || "Diproses"}
+              <h2>Status Payroll — {enPeriod(config.payroll.period)}</h2>
+              <span className={"pill " + (payment.paid ? "ok" : "warn")}>{payment.status}</span>
+            </div>
+            <div className="payment-summary" role="status">
+              <span className={"payment-summary-icon " + (payment.paid ? "paid" : "unpaid")}>
+                <Icon name={payment.paid ? "check" : "clock"} size={24} />
               </span>
-            </div>
-            <div className="stage-hero">
-              <div className="ring-wrap">
-                <svg viewBox="0 0 74 74">
-                  <defs>
-                    <linearGradient id="ringGrad" x1="0.5" y1="0" x2="1" y2="0.75">
-                      <stop offset="0%" stopColor="#24355f" />
-                      <stop offset="100%" stopColor="#f97316" />
-                    </linearGradient>
-                  </defs>
-                  <circle className="ring-bg" cx="37" cy="37" r="26" />
-                  <circle
-                    className="ring-fg"
-                    cx="37"
-                    cy="37"
-                    r="26"
-                    style={{ strokeDashoffset: RING_C * (1 - stage / stageCount) }}
-                  />
-                </svg>
-                <span className="pct">{Math.round((stage / stageCount) * 100)}%</span>
+              <div>
+                <div className="payment-summary-label">{payment.dateLabel}</div>
+                <div className="payment-summary-date">{payment.date}</div>
               </div>
-              <div className="sh">
-                <div className="t">{config.stages[stage - 1]?.title}</div>
-                <div className="d">{config.stages[stage - 1]?.desc}</div>
-                <span className="eta">
-                  <Icon name="clock" size={13} /> <span>{config.stages[stage - 1]?.eta}</span>
-                </span>
-              </div>
-            </div>
-            <div className="stepper">
-              {config.stages.map((s, i) => {
-                const cls = i < stage - 1 ? " is-complete" : i === stage - 1 ? " is-current" : "";
-                const tag = i < stage - 1 ? { t: "Selesai", c: "done" } : i === stage - 1 ? { t: "Diproses", c: "now" } : { t: "Menunggu", c: "wait" };
-                const icon = i < stage - 1 ? "check" : (["file", "gear", "clock", "wallet", "check"][i] as string);
-                return (
-                  <div className={"step" + cls} key={s.title}>
-                    <div className="rail">
-                      <span className="badge">
-                        <Icon name={icon} size={19} />
-                      </span>
-                    </div>
-                    <div className="body">
-                      <div className="t">
-                        {s.title} <span className={"step-tag " + tag.c}>{tag.t}</span>
-                      </div>
-                      <div className="d">{s.desc}</div>
-                      <div className="meta">
-                        <Icon name="clock" size={11} /> {s.meta}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="stage-note">{config.stages[stage - 1]?.note}</div>
-            <div className="chips">
-              {stage === 2 &&
-                chips.map((it) => (
-                  <span className={"chip-tag " + (it.v > 0 ? "pos" : "neg")} key={it.lbl + it.v}>
-                    {(it.v > 0 ? "+" : "-") + " " + fmt(Math.abs(it.v)) + " · " + it.lbl}
-                  </span>
-                ))}
             </div>
 
           </section>
