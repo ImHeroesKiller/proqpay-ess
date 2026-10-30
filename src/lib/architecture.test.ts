@@ -117,7 +117,7 @@ test("Employee Services UI P1 uses Indonesian payroll labels and semantic intera
   const portal = read("src/components/ess-portal.tsx");
   assert.match(portal, /Halo,/);
   assert.match(portal, /Gaji bersih/);
-  assert.match(portal, /Tanggal gajian/);
+  assert.match(portal, /payment\.dateLabel/);
   assert.match(portal, /Status Payroll/);
   assert.match(portal, /Riwayat Slip Gaji/);
   assert.match(portal, /<button type="button" className="hist-item"/);
