@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Icon } from "./icon";
 import { EwaLifecycleCard } from "./ewa-lifecycle-card";
 import { payrollPaymentSummary } from "@/lib/payment-summary";
+import { advanceAmount } from "@/lib/advance-amount";
 import { emptyPayload } from "@/lib/empty-portal";
 import { enPeriod, fmt, initials, slipRef, totalOf } from "@/lib/format";
 import type { Ad, EwaApp, EwaState, Payslip, PortalConfig, PortalPayload } from "@/lib/types";
@@ -14,6 +15,7 @@ type Modal = "payslip" | "profile" | "help" | "notify" | "ewa" | null;
 type Tab = "home" | "slip" | "ewa" | "help" | "profile";
 
 function ewaFee(amount: number, rules: EwaState["rules"]) {
+  if (amount <= 0) return 0;
   const pct = Math.round(amount * rules.feeRate);
   const min = amount <= rules.minFeeAmount ? rules.minFee : 0;
   return Math.max(pct, min);
@@ -102,6 +104,7 @@ export function EssPortal() {
   const ewa = { ...payload.ewa, app: ewaApp };
   const payment = payrollPaymentSummary(config.payroll);
   const plafond = typeof ewa.plafond === "number" ? ewa.plafond : ewaPlafond(config, ewa);
+  const requestedAmount = advanceAmount(wiz.amount, plafond);
   const ewaOn = ewa.rules.enabled !== false;
   const eligible = typeof ewa.eligible === "boolean"
     ? ewa.eligible
@@ -112,6 +115,12 @@ export function EssPortal() {
     .filter((ad) => !ad.placement || ad.placement === "HOME");
   const pixels = trackingPixels(config);
 
+  function openEwa() {
+    setWiz(current => ({ ...current, step: 1, agreed: false }));
+    setEwaErr("");
+    setModal("ewa");
+  }
+
   function onAdCta(ad: Ad) {
     const click = safeHttp(ad.clickUrl);
     if (click) {
@@ -119,7 +128,7 @@ export function EssPortal() {
       img.src = click;
     }
     const action = ad.action || (safeHttp(ad.href) ? "EXTERNAL" : "EWA");
-    if (action === "EWA") setModal("ewa");
+    if (action === "EWA") openEwa();
     else if (action === "PAYSLIP") { setTab("slip"); setModal(null); }
     else if (action === "EXTERNAL") {
       const href = safeHttp(ad.href);
@@ -243,7 +252,7 @@ export function EssPortal() {
   }
 
   async function submitEwa() {
-    if (!wiz.agreed || ewaBusy) return;
+    if (!wiz.agreed || ewaBusy || !eligible || requestedAmount < 100000) return;
     setEwaBusy(true);
     setEwaErr("");
     try {
@@ -251,15 +260,15 @@ export function EssPortal() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "SUBMIT", amount: wiz.amount, method: wiz.method === "auto" ? "SALARY_ACCOUNT" : wiz.method, agreed: true }),
+        body: JSON.stringify({ action: "SUBMIT", amount: requestedAmount, method: wiz.method === "auto" ? "SALARY_ACCOUNT" : wiz.method, agreed: true }),
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || "Gagal mengajukan advance.");
       const created = data.request || {};
       setEwaApp({
         ref: created.id || "EWA",
-        amount: Number(created.amount || wiz.amount),
-        fee: Number(created.fee || ewaFee(wiz.amount, ewa.rules)),
+        amount: Number(created.amount || requestedAmount),
+        fee: Number(created.fee || ewaFee(requestedAmount, ewa.rules)),
         method: String(created.method || "SALARY_ACCOUNT"),
         inst: 1,
         date: new Date().toISOString().slice(0, 10),
@@ -432,7 +441,7 @@ export function EssPortal() {
             <nav className="desktop-nav" aria-label="Navigasi desktop">
               <button type="button" className={tab==="home"?"active":""} onClick={() => setTab("home")}>Ringkasan</button>
               <button type="button" className={tab==="slip"?"active":""} onClick={() => { setTab("slip"); openSlip(0); }}>Slip Gaji</button>
-              <button type="button" className={tab==="ewa"?"active":""} title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : undefined} disabled={!ewaOn || !eligible} onClick={() => { if (ewaOn && eligible) { setTab("ewa"); setModal("ewa"); } }}>Advance Salary</button>
+              <button type="button" className={tab==="ewa"?"active":""} title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : undefined} disabled={!ewaOn || !eligible} onClick={() => { if (ewaOn && eligible) { setTab("ewa"); openEwa(); } }}>Advance Salary</button>
               <button type="button" className={tab==="help"?"active":""} onClick={() => { setTab("help"); setModal("help"); }}>Bantuan</button>
             </nav>
             <button className="icon-btn" title={theme === "dark" ? "Tema terang" : "Tema gelap"} aria-label={theme === "dark" ? "Gunakan tema terang" : "Gunakan tema gelap"} onClick={toggleTheme}>
@@ -547,12 +556,13 @@ export function EssPortal() {
                   <div className="v">{fmt(plafond)}</div>
                 </div>
                 <div style={{ textAlign: "right", fontSize: 10.5, color: "var(--muted)", lineHeight: 1.5 }}>
-                  {limitCaption(ewa, copy.ewaLimitCaption)}
+                  {ewa.configurationVersion ? "Limit dari klien / Payroll Processor" : limitCaption(ewa, copy.ewaLimitCaption)}
                 </div>
               </div>
               {ewaApp ? (
                 <EwaLifecycleCard app={ewaApp} refreshing={initBusy} onRefresh={() => void loadSession()} />
               ) : null}
+              {ewa.salaryReference !== undefined ? <p className="ewa-life-note">Gaji acuan: {fmt(ewa.salaryReference)} · Periode {ewa.salarySourcePeriod || "belum tersedia"}</p> : null}
               <div className="ewaa-sub">
                 {copy.ewaBody}
               </div>
@@ -562,7 +572,7 @@ export function EssPortal() {
                   <span>{ewa.reason || "Belum memenuhi syarat Advance Salary pada periode berjalan."}</span>
                 </div>
               ) : null}
-              <button className="btn primary" style={{ width: "100%" }} onClick={() => setModal("ewa")} disabled={!eligible || Boolean(ewaApp)}>
+              <button className="btn primary" style={{ width: "100%" }} onClick={() => openEwa()} disabled={!eligible || Boolean(ewaApp)}>
                 {ewaApp ? "Pengajuan diproses" : copy.ewaCta}
               </button>
             </div>
@@ -673,7 +683,7 @@ export function EssPortal() {
             onClick={() => {
               if (!ewaOn || !eligible) return;
               setTab("ewa");
-              setModal("ewa");
+              openEwa();
             }}
           >
             <Icon name="wallet" />
@@ -895,18 +905,20 @@ export function EssPortal() {
               {!eligible && ewa.reason ? (
                 <p style={{ color: "var(--warn)", fontSize: 13, marginTop: 0 }}>{ewa.reason}</p>
               ) : null}
-              <div className="amt-big">{fmt(wiz.amount)}</div>
+              <div className="amt-big">{fmt(requestedAmount)}</div>
               <input
                 className="amt-range"
                 type="range"
-                min={100000}
-                max={Math.max(100000, plafond)}
+                min={plafond >= 100000 ? 100000 : 0}
+                max={Math.max(0, Math.floor(plafond / 10000) * 10000)}
+                disabled={!eligible || plafond < 100000}
+                aria-label="Nominal pengajuan advance"
                 step={10000}
-                value={Math.min(wiz.amount, Math.max(100000, plafond))}
+                value={requestedAmount}
                 onChange={(e) => setWiz({ ...wiz, amount: Number(e.target.value) })}
               />
               <div className="range-hints">
-                <span>{fmt(100000)}</span>
+                <span>{fmt(plafond >= 100000 ? 100000 : 0)}</span>
                 <span>{fmt(plafond)}</span>
               </div>
               <div className="plafond-line">
@@ -914,14 +926,14 @@ export function EssPortal() {
               </div>
               <div className="fee-row">
                 <span>Service fee</span>
-                <b>{fmt(ewaFee(wiz.amount, ewa.rules))}</b>
+                <b>{fmt(ewaFee(requestedAmount, ewa.rules))}</b>
               </div>
               <div className="fee-row">
                 <span>You receive</span>
-                <b>{fmt(wiz.amount)}</b>
+                <b>{fmt(requestedAmount)}</b>
               </div>
-              <button className="btn primary" style={{ width: "100%", marginTop: 16 }} onClick={() => setWiz({ ...wiz, step: 2 })} disabled={!eligible}>
-                Continue
+              <button className="btn primary" style={{ width: "100%", marginTop: 16 }} onClick={() => setWiz({ ...wiz, step: 2 })} disabled={!eligible || requestedAmount < 100000}>
+                Lanjutkan
               </button>
             </div>
           )}
@@ -952,11 +964,11 @@ export function EssPortal() {
               {ewaErr ? <div className="lg-err show" role="alert">{ewaErr}</div> : null}
               <div className="sum-row">
                 <span>Amount</span>
-                <b>{fmt(wiz.amount)}</b>
+                <b>{fmt(requestedAmount)}</b>
               </div>
               <div className="sum-row">
                 <span>Fee</span>
-                <b>{fmt(ewaFee(wiz.amount, ewa.rules))}</b>
+                <b>{fmt(ewaFee(requestedAmount, ewa.rules))}</b>
               </div>
               <div className="sum-row">
                 <span>Payday deduction</span>

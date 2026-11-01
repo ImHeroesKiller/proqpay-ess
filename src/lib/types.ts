@@ -69,6 +69,10 @@ export type PortalConfig = {
 };
 
 export type EwaState = {
+  salaryReference?: number;
+  salarySource?: string;
+  salarySourcePeriod?: string | null;
+  configurationVersion?: number | null;
   rules: {
     feeRate: number;
     minFee: number;
