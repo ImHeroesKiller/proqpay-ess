@@ -35,7 +35,7 @@ export function EwaLifecycleCard({
           <span key={step} className={step <= lifecycle.step ? "done" : ""} aria-hidden="true" />
         ))}
       </div>
-      <div className="ewa-life-note">{lifecycle.note}</div>
+      <div className="ewa-life-note">{app.status === "SUBMITTED" && app.client_approval_status === "APPROVED" ? "Klien sudah menyetujui. Pengajuan menunggu proses internal sebelum pencairan." : lifecycle.note}</div>
       <button
         type="button"
         className="btn ghost"

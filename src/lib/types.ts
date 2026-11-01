@@ -18,6 +18,7 @@ export type Ad = {
 };
 export type Notif = { title: string; s: string; type: "a" | "g"; unread: boolean };
 export type EwaApp = {
+  client_approval_status?: "PENDING" | "APPROVED" | "REJECTED";
   ref: string;
   amount: number;
   fee: number;
