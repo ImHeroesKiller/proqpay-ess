@@ -43,11 +43,14 @@ jobs:
 
       - name: Browser regression (synthetic ESS APIs)
         run: |
-          npm install --no-save --package-lock=false @playwright/test@1.56.1
-          npx playwright install --with-deps chromium
+          npm install --prefix /tmp/ess-browser-tools --no-save @playwright/test@1.56.1
+          mkdir -p node_modules/@playwright
+          ln -s /tmp/ess-browser-tools/node_modules/@playwright/test node_modules/@playwright/test
+          /tmp/ess-browser-tools/node_modules/.bin/playwright install --with-deps chromium
           npm run start -- --hostname 127.0.0.1 --port 8138 > /tmp/ess-browser-server.log 2>&1 &
           for attempt in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8138/ >/dev/null; then break; fi
             sleep 1
           done
-          npx playwright test tests/e2e/advance-actions.spec.mjs
+          curl -fsS http://127.0.0.1:8138/ >/dev/null || { cat /tmp/ess-browser-server.log; exit 1; }
+          /tmp/ess-browser-tools/node_modules/.bin/playwright test tests/e2e/advance-actions.spec.mjs
