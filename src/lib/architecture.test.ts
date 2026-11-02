@@ -35,9 +35,9 @@ test("Payslip History consumes canonical final submission register", () => {
 test("EWA submit is canonical, refreshes state, and blocks duplicate clicks", () => {
   const portal = read("src/components/ess-portal.tsx");
   assert.match(portal, /action: "SUBMIT"/);
-  assert.match(portal, /if \(!wiz\.agreed \|\| ewaBusy \|\| !eligible \|\| requestedAmount < 100000\) return/);
+  assert.match(portal, /if \(!wiz\.agreed \|\| ewaBusy \|\| initBusy \|\| initErr \|\| !eligible \|\| requestedAmount < 100000\) return/);
   assert.match(portal, /cache: "no-store"/);
-  assert.match(portal, /disabled=\{!wiz\.agreed \|\| !eligible \|\| ewaBusy\}/);
+  assert.match(portal, /disabled=\{!wiz\.agreed \|\| !eligible \|\| ewaBusy \|\| initBusy \|\| Boolean\(initErr\)\}/);
   assert.match(portal, /role="alert"/);
 });
 
@@ -168,4 +168,13 @@ test("Employee Services UI P3 standardizes focus, hover and bounded desktop sect
   assert.match(css, /ess-ewa,.ess-history,.ess-payroll/);
   assert.match(css, /@media \(hover:hover\)/);
   assert.match(css, /ewa-locked-reason/);
+});
+
+
+test("Advance entry opens eligibility details and refreshes configuration instead of disabling navigation",()=>{
+ const portal=read("src/components/ess-portal.tsx");
+ assert.doesNotMatch(portal,/disabled=\{!ewaOn \|\| !eligible\}/);
+ assert.doesNotMatch(portal,/if \(!ewaOn \|\| !eligible\) return/);
+ assert.match(portal,/function openEwa\(\)[\s\S]*?void loadSession\(\)/);
+ assert.match(portal,/Memperbarui limit dan status EWA/);
 });

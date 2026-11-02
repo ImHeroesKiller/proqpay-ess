@@ -115,27 +115,6 @@ export function EssPortal() {
     .filter((ad) => !ad.placement || ad.placement === "HOME");
   const pixels = trackingPixels(config);
 
-  function openEwa() {
-    setWiz(current => ({ ...current, step: 1, agreed: false }));
-    setEwaErr("");
-    setModal("ewa");
-  }
-
-  function onAdCta(ad: Ad) {
-    const click = safeHttp(ad.clickUrl);
-    if (click) {
-      const img = new Image();
-      img.src = click;
-    }
-    const action = ad.action || (safeHttp(ad.href) ? "EXTERNAL" : "EWA");
-    if (action === "EWA") openEwa();
-    else if (action === "PAYSLIP") { setTab("slip"); setModal(null); }
-    else if (action === "EXTERNAL") {
-      const href = safeHttp(ad.href);
-      if (href) window.open(href, "_blank", "noopener,noreferrer");
-    }
-  }
-
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(""), 2800);
@@ -164,6 +143,28 @@ export function EssPortal() {
       setInitBusy(false);
     }
   }, []);
+
+  function openEwa() {
+    setWiz(current => ({ ...current, step: 1, agreed: false }));
+    setEwaErr("");
+    setModal("ewa");
+    void loadSession();
+  }
+
+  function onAdCta(ad: Ad) {
+    const click = safeHttp(ad.clickUrl);
+    if (click) {
+      const img = new Image();
+      img.src = click;
+    }
+    const action = ad.action || (safeHttp(ad.href) ? "EXTERNAL" : "EWA");
+    if (action === "EWA") openEwa();
+    else if (action === "PAYSLIP") { setTab("slip"); setModal(null); }
+    else if (action === "EXTERNAL") {
+      const href = safeHttp(ad.href);
+      if (href) window.open(href, "_blank", "noopener,noreferrer");
+    }
+  }
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("proqpay-ess-theme");
@@ -252,7 +253,7 @@ export function EssPortal() {
   }
 
   async function submitEwa() {
-    if (!wiz.agreed || ewaBusy || !eligible || requestedAmount < 100000) return;
+    if (!wiz.agreed || ewaBusy || initBusy || initErr || !eligible || requestedAmount < 100000) return;
     setEwaBusy(true);
     setEwaErr("");
     try {
@@ -282,7 +283,7 @@ export function EssPortal() {
       }
       setModal(null);
       setWiz({ step: 1, amount: 1000000, method: "auto", inst: 1, agreed: false });
-      showToast("Pengajuan advance terkirim. Menunggu persetujuan payroll.");
+      showToast("Pengajuan advance terkirim. Menunggu persetujuan klien.");
     } catch (e) {
       setEwaErr(e instanceof Error ? e.message : "Gagal mengajukan advance.");
     } finally {
@@ -303,8 +304,7 @@ export function EssPortal() {
   }
 
   const slip = config.payslips[slipIdx] || config.payslips[0];
-  const paydayNote =
-    config.payroll.payday.includes(",") ? config.payroll.payday.split(",")[1].trim() : config.payroll.paydayShort;
+  const paydayNote = "Payroll berikutnya setelah pencairan";
 
 
   return (
@@ -441,7 +441,7 @@ export function EssPortal() {
             <nav className="desktop-nav" aria-label="Navigasi desktop">
               <button type="button" className={tab==="home"?"active":""} onClick={() => setTab("home")}>Ringkasan</button>
               <button type="button" className={tab==="slip"?"active":""} onClick={() => { setTab("slip"); openSlip(0); }}>Slip Gaji</button>
-              <button type="button" className={tab==="ewa"?"active":""} title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : undefined} disabled={!ewaOn || !eligible} onClick={() => { if (ewaOn && eligible) { setTab("ewa"); openEwa(); } }}>Advance Salary</button>
+              <button type="button" className={tab==="ewa"?"active":""} title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : undefined} onClick={() => { setTab("ewa"); openEwa(); }}>Advance Salary</button>
               <button type="button" className={tab==="help"?"active":""} onClick={() => { setTab("help"); setModal("help"); }}>Bantuan</button>
             </nav>
             <button className="icon-btn" title={theme === "dark" ? "Tema terang" : "Tema gelap"} aria-label={theme === "dark" ? "Gunakan tema terang" : "Gunakan tema gelap"} onClick={toggleTheme}>
@@ -679,9 +679,7 @@ export function EssPortal() {
             className="tab-fab"
             title={!eligible ? (ewa.reason || "Belum memenuhi syarat Advance Salary") : "Ajukan Advance Salary"}
             aria-label={!eligible ? `Advance Salary belum tersedia: ${ewa.reason || "belum memenuhi syarat"}` : "Ajukan Advance Salary"}
-            disabled={!ewaOn || !eligible}
             onClick={() => {
-              if (!ewaOn || !eligible) return;
               setTab("ewa");
               openEwa();
             }}
@@ -902,9 +900,9 @@ export function EssPortal() {
           </div>
           {wiz.step === 1 && (
             <div className="wiz-body">
-              {!eligible && ewa.reason ? (
-                <p style={{ color: "var(--warn)", fontSize: 13, marginTop: 0 }}>{ewa.reason}</p>
-              ) : null}
+              {initBusy?<p role="status">Memperbarui limit dan status EWA…</p>:null}
+              {initErr?<p role="alert">{initErr}<button type="button" className="btn" onClick={()=>void loadSession()}>Coba lagi</button></p>:null}
+              {!eligible ? <p role="status" style={{ color: "var(--warn)", fontSize: 13, marginTop: 0 }}>{ewa.reason || "EWA belum tersedia. Hubungi klien atau Payroll Processor untuk memeriksa aktivasi dan limit."}</p> : null}
               <div className="amt-big">{fmt(requestedAmount)}</div>
               <input
                 className="amt-range"
@@ -932,7 +930,7 @@ export function EssPortal() {
                 <span>You receive</span>
                 <b>{fmt(requestedAmount)}</b>
               </div>
-              <button className="btn primary" style={{ width: "100%", marginTop: 16 }} onClick={() => setWiz({ ...wiz, step: 2 })} disabled={!eligible || requestedAmount < 100000}>
+              <button className="btn primary" style={{ width: "100%", marginTop: 16 }} onClick={() => setWiz({ ...wiz, step: 2 })} disabled={initBusy || Boolean(initErr) || !eligible || requestedAmount < 100000}>
                 Lanjutkan
               </button>
             </div>
@@ -976,7 +974,7 @@ export function EssPortal() {
               </div>
               <label className="agree">
                 <input type="checkbox" checked={wiz.agreed} onChange={(e) => setWiz({ ...wiz, agreed: e.target.checked })} />
-                Saya setuju biaya layanan dipotong otomatis pada gaji periode berjalan.
+                Saya setuju nominal advance dan biaya layanan dipotong otomatis pada payroll berikutnya.
               </label>
               <button className="btn ghost" style={{ width: "100%", marginTop: 14 }} onClick={() => setWiz({ ...wiz, step: 2 })}>
                 Back
@@ -984,7 +982,7 @@ export function EssPortal() {
               <button
                 className="btn primary"
                 style={{ width: "100%", marginTop: 8 }}
-                disabled={!wiz.agreed || !eligible || ewaBusy}
+                disabled={!wiz.agreed || !eligible || ewaBusy || initBusy || Boolean(initErr)}
                 onClick={() => void submitEwa()}
               >
                 {ewaBusy ? "Submitting…" : "Submit request"}

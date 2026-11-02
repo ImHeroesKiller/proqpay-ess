@@ -1,0 +1,14 @@
+import {test,expect} from '@playwright/test';
+const base=process.env.ESS_TEST_URL||'http://127.0.0.1:8138';
+for(const limit of [0,270000])for(const width of [390,1440])test(`advance navigation and submit guards ${limit} ${width}`,async({page})=>{
+ if(!['127.0.0.1','localhost'].includes(new URL(base).hostname))throw Error('Local synthetic tests only');
+ await page.setViewportSize({width,height:1000});let initCount=0,submits=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const payload={config:{employee:{name:'Karyawan Test',company:'Klien Test',role:'Karyawan',email:'',phone:'',empId:'TEST',bank:'Bank Test'},company:{name:'Klien Test',tagline:'',address:'',contact:'',legal:''},payroll:{period:'2026-01',ref:'TEST',stage:5,payday:'',paydayShort:'',paymentStatus:'PAID'},stages:[],payslips:[],ads:[],notifications:[]},ewa:{rules:{enabled:limit>0,feeRate:.03,minFee:50000,minFeeAmount:1750000,maxTenorMonths:1,maxPercent:.3,minDaysWorked:0,minTenureMonths:0},emp:{net:915659,daysWorked:0,tenureMonths:0},plafond:limit,eligible:limit>0,reason:limit?'':'Advance salary belum diaktifkan',salaryReference:915659,salarySourcePeriod:'2026-01',app:null,history:[]}};
+ await page.route('**/*',async route=>{const r=route.request(),u=new URL(r.url());if(u.origin!==base)return route.abort();if(!u.pathname.startsWith('/api/'))return route.continue();if(u.pathname==='/api/portal/init'){initCount++;return route.fulfill({json:payload});}if(u.pathname==='/api/portal/ewa'){submits++;return route.fulfill({json:{ok:true,request:{ref:'TEST-REQUEST',amount:270000,fee:50000,date:'2026-11-02',status:'SUBMITTED',method:'auto',inst:1,client_approval_status:'PENDING'}}});}return route.fulfill({json:{ok:true}});});
+ await page.goto(base,{waitUntil:'networkidle'});
+ const advance=width===390?page.locator('.tab-fab'):page.getByRole('button',{name:'Advance Salary',exact:true});await expect(advance).toBeEnabled();await advance.click();
+ const dialog=page.getByRole('dialog',{name:'Advance Salary',exact:true});await expect(dialog).toBeVisible();await expect.poll(()=>initCount).toBeGreaterThanOrEqual(2);
+ if(!limit){await expect(dialog.getByText('Advance salary belum diaktifkan',{exact:true})).toBeVisible();await expect(dialog.getByRole('button',{name:'Lanjutkan',exact:true})).toBeDisabled();expect(submits).toBe(0);}
+ else {await expect(dialog.getByLabel('Nominal pengajuan advance')).toHaveAttribute('max','270000');await dialog.getByRole('button',{name:'Lanjutkan',exact:true}).click();await dialog.getByRole('button',{name:'Continue',exact:true}).click();const consent=dialog.getByRole('checkbox');await consent.check();await dialog.getByRole('button',{name:'Submit request',exact:true}).click();await expect.poll(()=>submits).toBe(1);}
+ expect(errors).toEqual([]);await page.screenshot({path:`/tmp/ess-advance-${limit}-${width}.png`,fullPage:true});
+});
