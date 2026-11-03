@@ -505,6 +505,40 @@ export function EssPortal() {
             </div>
           </section>
 
+          <section className="mobile-payroll" aria-label="Ringkasan gaji">
+            <div className="mobile-payroll-heading">
+              <span className="mobile-payroll-icon"><Icon name="wallet" size={22} /></span>
+              <div>
+                <span>Gaji bersih {processing ? "(estimasi)" : ""}</span>
+                <strong>{config.payslips.length ? fmt(totalOf(config.payslips[0].rows)) : "—"}</strong>
+              </div>
+              <span className={"pill " + (payment.paid ? "ok" : "warn")}>{payment.status}</span>
+            </div>
+            <div className="mobile-payroll-meta">
+              <Icon name="calendar" size={16} />
+              <span>{enPeriod(config.payroll.period)} · {payment.date}</span>
+            </div>
+            {config.payslips[0]?.rows.length ? (() => {
+              const rows = config.payslips[0].rows;
+              const earnings = rows.reduce((sum, [, amount]) => sum + Math.max(0, amount), 0);
+              const deductions = rows.reduce((sum, [, amount]) => sum + Math.max(0, -amount), 0);
+              const total = earnings + deductions;
+              return total > 0 ? (
+                <figure className="mobile-payroll-chart">
+                  <figcaption>Komposisi slip gaji · {enPeriod(config.payslips[0].period)}</figcaption>
+                  <div className="mobile-payroll-bar" aria-hidden="true">
+                    <span style={{ flexGrow: earnings }} />
+                    <span style={{ flexGrow: deductions }} />
+                  </div>
+                  <div className="mobile-payroll-legend">
+                    <span>Penghasilan <b>{fmt(earnings)}</b></span>
+                    <span>Potongan <b>{fmt(deductions)}</b></span>
+                  </div>
+                </figure>
+              ) : null;
+            })() : null}
+          </section>
+
           <section className="card reveal ess-payroll" aria-label="Status payroll periode berjalan">
             <div className="card-head">
               <h2>Status Payroll — {enPeriod(config.payroll.period)}</h2>
