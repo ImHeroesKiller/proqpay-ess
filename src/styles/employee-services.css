@@ -92,3 +92,52 @@
 .payment-summary-icon.unpaid{color:#c65311;background:rgba(249,115,22,.12)}
 .payment-summary-label{font-size:13px;color:var(--muted);margin-bottom:4px}
 .payment-summary-date{font-size:18px;font-weight:700}
+
+.mobile-payroll { display: none; }
+
+@media (max-width: 767px) {
+  .app-header .h-inner { gap: 8px; }
+  .app-header .brand { margin-right: auto; min-width: 0; }
+  .app-header .brand .nm { overflow: hidden; text-overflow: ellipsis; }
+  .app-header .icon-btn, .app-header .user-chip { min-width: 44px; min-height: 44px; flex-shrink: 0; }
+  .app-header .user-meta { display: none; }
+
+  .ess-hero .stats, .ess-payroll, .promo-slot { display: none; }
+  .ess-hero .hero-head { flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .ess-hero .hero-head p { display: none; }
+  .mobile-payroll {
+    display: block;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .mobile-payroll-heading, .mobile-payroll-meta { display: flex; align-items: center; gap: 10px; }
+  .mobile-payroll-heading { flex-wrap: wrap; }
+  .mobile-payroll-heading > .pill { margin-left: auto; }
+  .mobile-payroll-heading strong { display: block; font-size: clamp(20px, 6vw, 30px); line-height: 1.25; }
+  .mobile-payroll-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--grad-navy);
+    color: white;
+  }
+  .mobile-payroll-meta { margin-top: 12px; font-size: 13px; }
+  .mobile-payroll-meta svg { flex-shrink: 0; }
+  .mobile-payroll-chart { margin: 14px 0 0; font-size: 12px; }
+  .mobile-payroll-bar { display: flex; overflow: hidden; border-radius: 99px; height: 8px; margin: 8px 0; }
+  .mobile-payroll-bar span { flex-basis: 0; background: #16866f; }
+  .mobile-payroll-bar span + span { background: #f26522; }
+  .mobile-payroll-legend { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; }
+  .mobile-payroll-legend b { display: block; font-variant-numeric: tabular-nums; }
+  .ess-ewa.card, .ess-history.card { box-shadow: none; background: transparent; border: 0; border-top: 1px solid var(--border-strong); border-radius: 0; padding-inline: 0; }
+  .ess-ewa .ewaa-avail { background: transparent; padding-inline: 0; border: 0; }
+  .ess-ewa .ewaa-avail .v { white-space: nowrap; }
+  .ess-quick .qbtn .sub { display: block; }
+  .help-item { width: 100%; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--ink); text-align: left; }
+  .help-item .s { overflow-wrap: anywhere; }
+}
