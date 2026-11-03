@@ -124,8 +124,8 @@ export function EssPortal() {
     setInitBusy(true);
     setInitErr("");
     try {
-      const r = await fetch("/api/portal/init", { credentials: "include", cache: "no-store" });
-      if (r.status === 401) {
+      const r = await fetch("/api/portal/init?sessionProbe=1", { credentials: "include", cache: "no-store" });
+      if (r.status === 204 || r.status === 401) {
         setLoggedIn(false);
         return;
       }
@@ -211,7 +211,7 @@ export function EssPortal() {
       }
       if (!r.ok) throw new Error("Gagal masuk ke server (" + r.status + ").");
       const loginData = await r.json().catch(() => ({}));
-      const init = await fetch("/api/portal/init", { credentials: "include" });
+      const init = await fetch("/api/portal/init?sessionProbe=1", { credentials: "include" });
       if (!init.ok) throw new Error("Login berhasil tetapi data portal gagal dimuat.");
       const data: PortalPayload = await init.json();
       setPayload(data);
@@ -275,7 +275,7 @@ export function EssPortal() {
         date: new Date().toISOString().slice(0, 10),
         status: created.status || "SUBMITTED",
       });
-      const init = await fetch("/api/portal/init", { credentials: "include", cache: "no-store" });
+      const init = await fetch("/api/portal/init?sessionProbe=1", { credentials: "include", cache: "no-store" });
       if (init.ok) {
         const refreshed: PortalPayload = await init.json();
         setPayload(refreshed);
